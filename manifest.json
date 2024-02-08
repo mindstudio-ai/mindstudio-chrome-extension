@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Mindstudio",
+  "description": "Mindstudio Chrome Extension",
+  "version": "1.0.0",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "./images/icon512x512.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contentScript.js"]
+    }
+  ],
+  "icons": {
+    "16": "./images/icon512x512.png",
+    "32": "./images/icon512x512.png",
+    "48": "./images/icon512x512.png",
+    "128": "./images/icon512x512.png"
+  },
+  "permissions": ["storage", "activeTab"]
+}

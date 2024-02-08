@@ -1,0 +1,67 @@
+type RunWorkFlowProps = {
+  appId: string;
+  apiKey: string;
+  message: string;
+  workflow?: string;
+};
+
+export const runWorkflow = async ({
+  appId,
+  message,
+  workflow,
+  apiKey,
+}: RunWorkFlowProps): Promise<string> => {
+  const response = await fetch("https://api.youai.ai/developer/v1/apps/run", {
+    method: "POST",
+    body: JSON.stringify({
+      appId,
+      variables: {
+        message,
+      },
+      workflow,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+  });
+
+  const data = await response.json();
+
+  return data.threadId;
+};
+
+type GetThreadDataProps = {
+  appId: string;
+  apiKey: string;
+  threadId: string;
+};
+
+export const getThreadData = async ({
+  appId,
+  apiKey,
+  threadId,
+}: GetThreadDataProps): Promise<any> => {
+  const response = await fetch(
+    "https://api.youai.ai/developer/v1/apps/load-thread",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        appId,
+        threadId,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  return data.thread;
+};
+
+export const delay = (delayInms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, delayInms));
+};
