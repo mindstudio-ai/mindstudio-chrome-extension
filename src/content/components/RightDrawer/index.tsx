@@ -2,12 +2,12 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 
 import styled from "styled-components";
 
-import Logo from "./Logo";
-import useConfig from "../hooks/useConfig";
+import Logo from "../Logo";
+import useConfig from "../../hooks/useConfig";
 
-import { runWorkflow, getThreadData, delay } from "../../utils/request";
+import { runWorkflow, getThreadData, delay } from "../../../utils/request";
 
-import Settings from "./Settings";
+import Settings from "../Settings";
 
 const drawerWidth = 400;
 

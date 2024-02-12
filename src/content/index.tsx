@@ -2,7 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { StyleSheetManager } from "styled-components";
 
-import App from "./components/App";
+import App from "./App";
 
 const body = document.querySelector("body");
 

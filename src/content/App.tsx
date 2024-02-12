@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
-import RightDrawer, { RightDrawerMethods } from "./RightDrawer";
-import Listener from "./Listener";
-import { ACTIONS } from "../../utils/action";
+import RightDrawer, { RightDrawerMethods } from "./components/RightDrawer";
+import Listener from "./components/Listener";
+import { ACTIONS } from "../utils/action";
 
 const App = () => {
   const drawerRef = useRef<RightDrawerMethods>(null);
