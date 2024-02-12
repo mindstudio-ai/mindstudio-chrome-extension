@@ -5,7 +5,7 @@ import {
   defaultConfig,
   setLocalConfig,
   getLocalConfig,
-} from "./config";
+} from "../../utils/config";
 
 const useConfig = () => {
   const [config, setConfig] = useState<ConfigType>(defaultConfig);

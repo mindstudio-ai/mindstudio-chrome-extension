@@ -2,8 +2,8 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 
 import styled from "styled-components";
 
-import Logo from "../../components/Logo";
-import useConfig from "../../utils/useConfig";
+import Logo from "./Logo";
+import useConfig from "../hooks/useConfig";
 
 import { runWorkflow, getThreadData, delay } from "../../utils/request";
 

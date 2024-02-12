@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-import useConfig from "../../utils/useConfig";
+import useConfig from "../hooks/useConfig";
 
 const Main = styled.section`
   background: white;
