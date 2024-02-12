@@ -1,35 +1,35 @@
-import { useEffect, useRef } from "react";
+import { useRef, useState } from "react";
+
+import { ACTIONS } from "../utils/action";
+
+import useMessage from "./hooks/useMessage";
 
 import RightDrawer, { RightDrawerMethods } from "./components/RightDrawer";
-import Listener from "./components/Listener";
-import { ACTIONS } from "../utils/action";
+
+enum VIEWS {
+  "main" = "main",
+  "settings" = "settings",
+}
 
 const App = () => {
   const drawerRef = useRef<RightDrawerMethods>(null);
 
-  const onChoose = (text: string) => {
-    if (drawerRef.current) {
+  const [view, setView] = useState<VIEWS>(VIEWS.main);
+
+  /**
+   * Listen for messages
+   */
+  useMessage((msg) => {
+    if (msg.action === ACTIONS.openDrawer && drawerRef.current) {
       drawerRef.current.toggleDrawer();
-      drawerRef.current.preloadMessage(text);
     }
-  };
-
-  useEffect(() => {
-    chrome.runtime.onMessage.addListener((msg) => {
-      if (msg.action === ACTIONS.openDrawer) {
-        if (drawerRef.current) {
-          drawerRef.current.toggleDrawer();
-        }
-      }
-
-      return true;
-    });
-  }, []);
+  });
 
   return (
     <>
-      <RightDrawer ref={drawerRef} />
-      {false && <Listener onChoose={onChoose} />}
+      <RightDrawer ref={drawerRef}>
+        <h1>Hello world</h1>
+      </RightDrawer>
     </>
   );
 };

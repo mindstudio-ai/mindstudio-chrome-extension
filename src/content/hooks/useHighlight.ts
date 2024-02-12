@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const activeButtons: HTMLButtonElement[] = [];
 
-type ListenerProps = {
-  onChoose: (text: string) => void;
-};
-
-const Listener = ({ onChoose }: ListenerProps) => {
+const useHighlight = (onChoose: (text: string) => void) => {
   useEffect(() => {
     const handler = (event: MouseEvent) => {
       if (!window) {
@@ -57,8 +53,6 @@ const Listener = ({ onChoose }: ListenerProps) => {
       document.removeEventListener("mouseup", handler);
     };
   }, []);
-
-  return null;
 };
 
-export default Listener;
+export default useHighlight;
