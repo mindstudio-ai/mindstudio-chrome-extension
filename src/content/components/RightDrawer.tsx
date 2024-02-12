@@ -10,8 +10,6 @@ import { runWorkflow, getThreadData, delay } from "../../utils/request";
 const drawerWidth = 400;
 
 const DrawerButton = styled.button`
-  all: initial;
-
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
@@ -21,8 +19,6 @@ const DrawerButton = styled.button`
 `;
 
 const DrawerContainer = styled.div<{ open: boolean }>`
-  all: initial;
-
   position: fixed;
   top: 0;
   right: ${({ open }) => (open ? "0" : `-${drawerWidth}px`)};
@@ -35,28 +31,20 @@ const DrawerContainer = styled.div<{ open: boolean }>`
 `;
 
 const DrawerContent = styled.div`
-  all: initial;
-
   padding: 20px;
 `;
 
 const Buttons = styled.div`
-  all: initial;
-
   display: block;
   margin: 0px 20px 20px 20px;
 `;
 
 const Main = styled.div`
-  all: initial;
-
   display: block;
   margin: 0px 20px 20px 20px;
 `;
 
 const DrawerCloseButton = styled.button`
-  all: initial;
-
   background: gray;
   color: white;
   padding: 5px;
@@ -65,8 +53,6 @@ const DrawerCloseButton = styled.button`
 `;
 
 const Title = styled.h1`
-  all: initial;
-
   font-size: 1.5em;
   display: block;
   font-weight: bold;
@@ -75,8 +61,6 @@ const Title = styled.h1`
 `;
 
 const Select = styled.select`
-  all: initial;
-
   font-size: 16px;
   color: #333;
   background-color: #fff;
@@ -94,8 +78,6 @@ const Select = styled.select`
 `;
 
 const Textarea = styled.textarea`
-  all: initial;
-
   font-size: 16px;
   color: #333;
   background-color: #fff;
@@ -113,8 +95,6 @@ const Textarea = styled.textarea`
 `;
 
 const SubmitButton = styled.button`
-  all: initial;
-
   background: black;
   color: white;
   padding: 5px;
@@ -123,8 +103,6 @@ const SubmitButton = styled.button`
 `;
 
 const ResponseDiv = styled.div`
-  all: initial;
-
   display: block;
   margin: 20px 0px;
   box-sizing: border-box;

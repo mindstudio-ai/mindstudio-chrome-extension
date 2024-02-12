@@ -1,14 +1,24 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { StyleSheetManager } from "styled-components";
+
 import App from "./components/App";
 
 const body = document.querySelector("body");
 
-const app = document.createElement("div");
-
+const container = document.createElement("div");
+container!.style.all = "initial"; // reset container style
 const rootId = "mindstudio-content-root";
 
-app.id = rootId;
+container.id = rootId;
+
+/**
+ * Use Shadow DOM technique so the CSS styles are not preserved
+ */
+const shadowRoot = container.attachShadow({ mode: "open" });
+
+const styleSlot = document.createElement("section");
+shadowRoot.appendChild(styleSlot);
 
 // Make sure the element that you want to mount the app to has loaded. You can
 // also use `append` or insert the app using another method:
@@ -17,16 +27,15 @@ app.id = rootId;
 // Also control when the content script is injected from the manifest.json:
 // https://developer.chrome.com/docs/extensions/mv3/content_scripts/#run_time
 if (body) {
-  body.prepend(app);
+  body.prepend(container);
 }
 
-const container = document.getElementById(rootId);
-container!.style.all = "initial"; // reset container style
-
-const root = createRoot(container!);
+const root = createRoot(shadowRoot);
 
 root.render(
   <React.StrictMode>
-    <App />
+    <StyleSheetManager target={styleSlot}>
+      <App />
+    </StyleSheetManager>
   </React.StrictMode>
 );
