@@ -1,7 +1,8 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import RightDrawer, { RightDrawerMethods } from "./RightDrawer";
 import Listener from "./Listener";
+import { ACTIONS } from "../../utils/action";
 
 const App = () => {
   const drawerRef = useRef<RightDrawerMethods>(null);
@@ -13,10 +14,22 @@ const App = () => {
     }
   };
 
+  useEffect(() => {
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg.action === ACTIONS.openDrawer) {
+        if (drawerRef.current) {
+          drawerRef.current.toggleDrawer();
+        }
+      }
+
+      return true;
+    });
+  }, []);
+
   return (
     <>
       <RightDrawer ref={drawerRef} />
-      <Listener onChoose={onChoose} />
+      {false && <Listener onChoose={onChoose} />}
     </>
   );
 };

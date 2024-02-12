@@ -7,6 +7,8 @@ import useConfig from "../../utils/useConfig";
 
 import { runWorkflow, getThreadData, delay } from "../../utils/request";
 
+import Settings from "./Settings";
+
 const drawerWidth = 400;
 
 const DrawerButton = styled.button`
@@ -120,6 +122,7 @@ const RightDrawer = forwardRef((props, ref) => {
   const [chosenAiIdx, setChosenAiIdx] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [response, setResponse] = useState("");
+  const [view, setView] = useState("default");
 
   const [status, setStatus] = useState("");
 
@@ -192,41 +195,57 @@ const RightDrawer = forwardRef((props, ref) => {
             <DrawerCloseButton onClick={() => setOpen(false)}>
               Close
             </DrawerCloseButton>
-          </Buttons>
 
-          <Main>
-            <Title>Run AI Workflow</Title>
-
-            <Select
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                if (e.target.value === "") {
-                  setChosenAiIdx(null);
+            <button
+              onClick={() => {
+                if (view === "default") {
+                  setView("settings");
                 } else {
-                  setChosenAiIdx(Number(e.target.value));
+                  setView("default");
                 }
               }}
             >
-              <option value="">Choose AI</option>
+              {view === "default" ? "Settings" : "Go Back"}
+            </button>
+          </Buttons>
 
-              {config.ais.map((ai, idx) => (
-                <option selected={chosenAiIdx === idx} value={idx} key={idx}>
-                  {ai.name}
-                </option>
-              ))}
-            </Select>
+          {view === "settings" && <Settings />}
 
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Input"
-              rows={12}
-            />
+          {view === "default" && (
+            <Main>
+              <Title>Run AI Workflow</Title>
 
-            <SubmitButton onClick={() => onSubmit()}>Submit</SubmitButton>
-            <span>{status}</span>
+              <Select
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  if (e.target.value === "") {
+                    setChosenAiIdx(null);
+                  } else {
+                    setChosenAiIdx(Number(e.target.value));
+                  }
+                }}
+              >
+                <option value="">Choose AI</option>
 
-            {response && <ResponseDiv>{response}</ResponseDiv>}
-          </Main>
+                {config.ais.map((ai, idx) => (
+                  <option selected={chosenAiIdx === idx} value={idx} key={idx}>
+                    {ai.name}
+                  </option>
+                ))}
+              </Select>
+
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Input"
+                rows={12}
+              />
+
+              <SubmitButton onClick={() => onSubmit()}>Submit</SubmitButton>
+              <span>{status}</span>
+
+              {response && <ResponseDiv>{response}</ResponseDiv>}
+            </Main>
+          )}
         </DrawerContent>
       </DrawerContainer>
     </>

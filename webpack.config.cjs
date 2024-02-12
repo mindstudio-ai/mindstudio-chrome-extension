@@ -8,7 +8,7 @@ module.exports = {
   entry: {
     contentScript: "./src/content/index.tsx",
     background: "./src/background/index.ts",
-    popup: "./src/popup/index.tsx",
+    popup: "./src/popup/index.ts",
   },
   output: {
     path: path.resolve(__dirname, "dist"),

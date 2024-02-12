@@ -49,7 +49,7 @@ const Input = styled.input`
   box-sizing: border-box;
 `;
 
-const App = () => {
+const Settings = () => {
   const { config, setConfig } = useConfig();
 
   const onRemove = (index: number) => {
@@ -125,4 +125,4 @@ const App = () => {
     </Main>
   );
 };
-export default App;
+export default Settings;
