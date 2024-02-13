@@ -24,6 +24,9 @@ const DrawerContainer = styled.div<{ open: boolean }>`
 
 const DrawerContent = styled.div`
   height: calc(100% - ${topbarHeight}px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
 `;
 
 const DrawerButton = styled.button`
