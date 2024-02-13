@@ -1,5 +1,8 @@
 import styled from "styled-components";
 
+import useConfig from "../../../hooks/useConfig";
+import { useState } from "react";
+
 const Container = styled.div`
   display: block;
   margin: 0px 20px 20px 20px;
@@ -62,8 +65,17 @@ const ResponseDiv = styled.div`
 `;
 
 const Main = () => {
+  const { config } = useConfig();
+
+  const chosenAiIdx = 0;
+
+  const [message, setMessage] = useState("");
+  const [response, setResponse] = useState("");
+
+  const status = "ss";
+
   const onSubmit = async () => {
-    if (chosenAiIdx === null) {
+    /*if (chosenAiIdx === null) {
       alert("Choose AI");
       return;
     }
@@ -105,7 +117,7 @@ const Main = () => {
       if (threadResponse && threadResponse.chatMessage.isInProgress === false) {
         setResponse(threadResponse.chatMessage.content);
       }
-    } catch (e) {}
+    } catch (e) {}*/
   };
 
   return (
@@ -115,9 +127,9 @@ const Main = () => {
       <Select
         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value === "") {
-            setChosenAiIdx(null);
+            // setChosenAiIdx(null);
           } else {
-            setChosenAiIdx(Number(e.target.value));
+            // setChosenAiIdx(Number(e.target.value));
           }
         }}
       >

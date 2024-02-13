@@ -64,16 +64,13 @@ const DrawerTopbar = styled.div`
   height: ${topbarHeight}px;
 `;
 
-const DrawerTopbarButtons = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-`;
-
 type RightDrawerProps = {
   children: any;
-  onSettingsClick: () => void;
+  onSettingsClick?: () => void;
   onBackClick?: () => void;
+  showLogo?: boolean;
+  showSettings?: boolean;
+  showBack?: boolean;
 };
 
 export type RightDrawerMethods = {
@@ -83,7 +80,17 @@ export type RightDrawerMethods = {
 };
 
 const RightDrawer = forwardRef(
-  ({ children, onSettingsClick, onBackClick }: RightDrawerProps, ref) => {
+  (
+    {
+      children,
+      onSettingsClick,
+      onBackClick,
+      showLogo = false,
+      showSettings = false,
+      showBack = false,
+    }: RightDrawerProps,
+    ref
+  ) => {
     const [open, setOpen] = useState(false);
 
     const toggleDrawer = () => setOpen(!open);
@@ -118,25 +125,25 @@ const RightDrawer = forwardRef(
     return (
       <DrawerContainer open={open}>
         <DrawerTopbar>
-          {onBackClick ? (
+          {showBack ? (
             <GoBackButton onClick={onBackClick}>
               <BackIcon /> Go Back
             </GoBackButton>
           ) : (
-            <FullLogo width={140} />
-          )}
-
-          <DrawerTopbarButtons>
-            {!onBackClick && (
-              <DrawerButton onClick={onSettingsClick}>
-                <CogIcon />
-              </DrawerButton>
-            )}
-
             <DrawerButton onClick={() => setOpen(false)}>
               <CrossIcon />
             </DrawerButton>
-          </DrawerTopbarButtons>
+          )}
+
+          {showLogo ? <FullLogo width={120} /> : <div />}
+
+          {showSettings ? (
+            <DrawerButton onClick={onSettingsClick}>
+              <CogIcon />
+            </DrawerButton>
+          ) : (
+            <div />
+          )}
         </DrawerTopbar>
 
         <DrawerContent>{children}</DrawerContent>
