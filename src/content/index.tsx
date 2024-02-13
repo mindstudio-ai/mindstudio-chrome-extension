@@ -35,6 +35,13 @@ const root = createRoot(shadowRoot);
 root.render(
   <React.StrictMode>
     <StyleSheetManager target={styleSlot}>
+      <style>
+        {`
+          * {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+          }
+        `}
+      </style>
       <App />
     </StyleSheetManager>
   </React.StrictMode>
