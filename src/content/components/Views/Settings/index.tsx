@@ -83,6 +83,14 @@ const Settings = () => {
 
   return (
     <Main>
+      <div
+        style={{
+          color: "red",
+        }}
+      >
+        Note: Switch between your AIs and plugins: Gmail, YouTube etc...
+      </div>
+
       <Title>Your Mindstudio AIs</Title>
 
       {config.ais.length === 0 && <Placeholder>No AIs added</Placeholder>}
