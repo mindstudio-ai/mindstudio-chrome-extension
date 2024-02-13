@@ -1,19 +1,17 @@
 import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
+
+import { runWorkflow, delay, getThreadData } from "../../../../utils/request";
+
 import { useState } from "react";
 
 const Container = styled.div`
-  display: block;
-  margin: 0px 20px 20px 20px;
-`;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
 
-const Title = styled.h1`
-  font-size: 1.5em;
-  display: block;
-  font-weight: bold;
-
-  margin-bottom: 15px;
+  height: calc(100% - 48px); // TEMPORARY FOR THE DEMO
 `;
 
 const Select = styled.select`
@@ -48,34 +46,38 @@ const Textarea = styled.textarea`
   box-sizing: border-box;
 
   margin-bottom: 15px;
+
+  flex-grow: 1;
 `;
 
 const SubmitButton = styled.button`
   background: black;
   color: white;
-  padding: 5px;
   cursor: pointer;
   border-radius: 5px;
+  width: 100%;
+  padding: 10px;
+  border: unset;
 `;
 
-const ResponseDiv = styled.div`
-  display: block;
-  margin: 20px 0px;
-  box-sizing: border-box;
+const StatusLabel = styled.div`
+  margin: 5px 0px;
 `;
 
-const Main = () => {
+type MainProps = {
+  onResponse: (content: string) => void;
+};
+
+const Main = ({ onResponse }: MainProps) => {
   const { config } = useConfig();
 
-  const chosenAiIdx = 0;
-
+  const [chosenAiIdx, setChosenAiIdx] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-  const [response, setResponse] = useState("");
-
-  const status = "ss";
+  const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async () => {
-    /*if (chosenAiIdx === null) {
+    if (chosenAiIdx === null) {
       alert("Choose AI");
       return;
     }
@@ -87,7 +89,7 @@ const Main = () => {
       return;
     }
 
-    setResponse("");
+    setIsSubmitting(true);
 
     setStatus("Running workflow...");
 
@@ -115,26 +117,28 @@ const Main = () => {
       );
 
       if (threadResponse && threadResponse.chatMessage.isInProgress === false) {
-        setResponse(threadResponse.chatMessage.content);
+        onResponse(threadResponse.chatMessage.content);
       }
-    } catch (e) {}*/
+    } catch (e) {
+      setStatus("Unknown error");
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
     <Container>
-      <Title>Run AI Workflow</Title>
+      <label>Choose AI</label>
 
       <Select
         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
           if (e.target.value === "") {
-            // setChosenAiIdx(null);
+            setChosenAiIdx(null);
           } else {
-            // setChosenAiIdx(Number(e.target.value));
+            setChosenAiIdx(Number(e.target.value));
           }
         }}
       >
-        <option value="">Choose AI</option>
-
         {config.ais.map((ai, idx) => (
           <option selected={chosenAiIdx === idx} value={idx} key={idx}>
             {ai.name}
@@ -142,17 +146,20 @@ const Main = () => {
         ))}
       </Select>
 
+      <label>Message</label>
+
       <Textarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Input"
+        placeholder="Message"
         rows={12}
       />
 
-      <SubmitButton onClick={() => onSubmit()}>Submit</SubmitButton>
-      <span>{status}</span>
+      <SubmitButton disabled={isSubmitting} onClick={() => onSubmit()}>
+        Submit
+      </SubmitButton>
 
-      {response && <ResponseDiv>{response}</ResponseDiv>}
+      <StatusLabel>{status}</StatusLabel>
     </Container>
   );
 };

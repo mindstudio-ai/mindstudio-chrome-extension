@@ -2,9 +2,7 @@ import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
 
-const Main = styled.section`
-  background: white;
-  width: 400px;
+const Container = styled.section`
   padding: 20px;
 `;
 
@@ -15,6 +13,12 @@ const AiRow = styled.div`
   margin-bottom: 30px;
 
   > input {
+    margin-bottom: 15px;
+    display: block;
+    width: 100%;
+  }
+
+  > textarea {
     margin-bottom: 15px;
     display: block;
     width: 100%;
@@ -49,6 +53,11 @@ const Input = styled.input`
   box-sizing: border-box;
 `;
 
+const TextArea = styled.textarea`
+  padding: 10px 10px;
+  box-sizing: border-box;
+`;
+
 const Settings = () => {
   const { config, setConfig } = useConfig();
 
@@ -67,6 +76,16 @@ const Settings = () => {
           name: "",
           appId: "",
           apiKey: "",
+          jsonConfig: {
+            inputs: [
+              {
+                type: "long_text",
+                variable: "message",
+                label: "Message",
+                placeholder: "Message",
+              },
+            ],
+          },
         },
       ],
     });
@@ -82,7 +101,7 @@ const Settings = () => {
   };
 
   return (
-    <Main>
+    <Container>
       <div
         style={{
           color: "red",
@@ -115,6 +134,15 @@ const Settings = () => {
             onChange={(e) => onChange(idx, "apiKey", e.target.value)}
           />
 
+          <TextArea
+            value={JSON.stringify(ai.jsonConfig, undefined, 4)}
+            placeholder="Advanced JSON Config"
+            rows={10}
+            onChange={(e) => {
+              console.log(e.target.value);
+            }}
+          />
+
           <AiButtons>
             <RemoveButton onClick={() => onRemove(idx)}>Remove</RemoveButton>
           </AiButtons>
@@ -130,7 +158,7 @@ const Settings = () => {
           Add AI
         </AddButton>
       </Buttons>
-    </Main>
+    </Container>
   );
 };
 export default Settings;

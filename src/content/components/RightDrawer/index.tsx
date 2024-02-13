@@ -27,6 +27,7 @@ const DrawerContent = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
+  background-color: white;
 `;
 
 const DrawerButton = styled.button`
