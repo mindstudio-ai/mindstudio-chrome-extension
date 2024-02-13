@@ -26,11 +26,9 @@ const App = () => {
   });
 
   return (
-    <>
-      <RightDrawer ref={drawerRef}>
-        <h1>Hello world</h1>
-      </RightDrawer>
-    </>
+    <RightDrawer ref={drawerRef}>
+      <h1>Hello world</h1>
+    </RightDrawer>
   );
 };
 
