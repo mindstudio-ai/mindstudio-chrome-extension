@@ -5,6 +5,7 @@ import styled from "styled-components";
 import FullLogo from "../Logo/Full";
 import CrossIcon from "../Icons/Cross";
 import CogIcon from "../Icons/Cog";
+import BackIcon from "../Icons/Back";
 
 const drawerWidth = 450;
 const topbarHeight = 48;
@@ -39,6 +40,20 @@ const DrawerButton = styled.button`
   cursor: pointer;
 `;
 
+const GoBackButton = styled.div`
+  display: flex;
+  align-items: center;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+
+  > svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+  }
+`;
+
 const DrawerTopbar = styled.div`
   display: flex;
   align-items: center;
@@ -57,6 +72,8 @@ const DrawerTopbarButtons = styled.div`
 
 type RightDrawerProps = {
   children: any;
+  onSettingsClick: () => void;
+  onBackClick?: () => void;
 };
 
 export type RightDrawerMethods = {
@@ -65,57 +82,67 @@ export type RightDrawerMethods = {
   closeDrawer: () => void;
 };
 
-const RightDrawer = forwardRef(({ children }: RightDrawerProps, ref) => {
-  const [open, setOpen] = useState(false);
+const RightDrawer = forwardRef(
+  ({ children, onSettingsClick, onBackClick }: RightDrawerProps, ref) => {
+    const [open, setOpen] = useState(false);
 
-  const toggleDrawer = () => setOpen(!open);
-  const openDrawer = () => setOpen(true);
-  const closeDrawer = () => setOpen(false);
+    const toggleDrawer = () => setOpen(!open);
+    const openDrawer = () => setOpen(true);
+    const closeDrawer = () => setOpen(false);
 
-  useImperativeHandle(ref, () => ({
-    toggleDrawer,
-    openDrawer,
-    closeDrawer,
-  }));
+    useImperativeHandle(ref, () => ({
+      toggleDrawer,
+      openDrawer,
+      closeDrawer,
+    }));
 
-  /**
-   * Will move the page so the contents are visible and easier to copy
-   */
-  useEffect(() => {
-    const currentPaddingRight = window.getComputedStyle(
-      document.body
-    ).paddingRight;
+    /**
+     * Will move the page so the contents are visible and easier to copy
+     */
+    useEffect(() => {
+      const currentPaddingRight = window.getComputedStyle(
+        document.body
+      ).paddingRight;
 
-    if (open) {
-      window.document.body.style.paddingRight = `${drawerWidth}px`;
-    } else {
-      window.document.body.style.paddingRight = currentPaddingRight;
-    }
+      if (open) {
+        window.document.body.style.paddingRight = `${drawerWidth}px`;
+      } else {
+        window.document.body.style.paddingRight = currentPaddingRight;
+      }
 
-    return () => {
-      window.document.body.style.paddingRight = currentPaddingRight;
-    };
-  }, [open]);
+      return () => {
+        window.document.body.style.paddingRight = currentPaddingRight;
+      };
+    }, [open]);
 
-  return (
-    <DrawerContainer open={open}>
-      <DrawerTopbar>
-        <FullLogo width={140} />
+    return (
+      <DrawerContainer open={open}>
+        <DrawerTopbar>
+          {onBackClick ? (
+            <GoBackButton onClick={onBackClick}>
+              <BackIcon /> Go Back
+            </GoBackButton>
+          ) : (
+            <FullLogo width={140} />
+          )}
 
-        <DrawerTopbarButtons>
-          <DrawerButton onClick={() => setOpen(false)}>
-            <CogIcon />
-          </DrawerButton>
+          <DrawerTopbarButtons>
+            {!onBackClick && (
+              <DrawerButton onClick={onSettingsClick}>
+                <CogIcon />
+              </DrawerButton>
+            )}
 
-          <DrawerButton onClick={() => setOpen(false)}>
-            <CrossIcon />
-          </DrawerButton>
-        </DrawerTopbarButtons>
-      </DrawerTopbar>
+            <DrawerButton onClick={() => setOpen(false)}>
+              <CrossIcon />
+            </DrawerButton>
+          </DrawerTopbarButtons>
+        </DrawerTopbar>
 
-      <DrawerContent>{children}</DrawerContent>
-    </DrawerContainer>
-  );
-});
+        <DrawerContent>{children}</DrawerContent>
+      </DrawerContainer>
+    );
+  }
+);
 
 export default RightDrawer;
