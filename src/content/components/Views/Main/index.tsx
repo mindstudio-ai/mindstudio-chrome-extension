@@ -4,7 +4,7 @@ import useConfig from "../../../hooks/useConfig";
 
 import { runWorkflow, delay, getThreadData } from "../../../../utils/request";
 
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 
 const Container = styled.div`
   display: flex;
@@ -64,17 +64,30 @@ const StatusLabel = styled.div`
   margin: 5px 0px;
 `;
 
+export type MainMethods = {
+  loadSelection: (selection: string, aiIndex: number) => void;
+};
+
 type MainProps = {
   onResponse: (content: string) => void;
 };
 
-const Main = ({ onResponse }: MainProps) => {
+const Main = forwardRef(({ onResponse }: MainProps, ref) => {
   const { config } = useConfig();
 
   const [chosenAiIdx, setChosenAiIdx] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loadSelection = (selection: string, aiIndex: number) => {
+    setMessage(selection);
+    setChosenAiIdx(aiIndex);
+  };
+
+  useImperativeHandle(ref, () => ({
+    loadSelection,
+  }));
 
   const onSubmit = async () => {
     if (chosenAiIdx === null) {
@@ -162,6 +175,6 @@ const Main = ({ onResponse }: MainProps) => {
       <StatusLabel>{status}</StatusLabel>
     </Container>
   );
-};
+});
 
 export default Main;

@@ -5,7 +5,7 @@ const useMessage = (onMessage: (msg: any) => void) => {
     const handler = (msg: any) => {
       onMessage(msg);
 
-      return true;
+      return false;
     };
 
     chrome.runtime.onMessage.addListener(handler);

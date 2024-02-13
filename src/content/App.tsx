@@ -5,8 +5,7 @@ import { ACTIONS } from "../utils/action";
 import useMessage from "./hooks/useMessage";
 
 import RightDrawer, { RightDrawerMethods } from "./components/RightDrawer";
-
-import Main from "./components/Views/Main";
+import Main, { MainMethods } from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
 
 enum VIEWS {
@@ -17,6 +16,7 @@ enum VIEWS {
 
 const App = () => {
   const drawerRef = useRef<RightDrawerMethods>(null);
+  const mainRef = useRef<MainMethods>(null);
 
   const [view, setView] = useState<VIEWS>(VIEWS.main);
   const [response, setResponse] = useState("");
@@ -27,6 +27,15 @@ const App = () => {
   useMessage((msg) => {
     if (msg.action === ACTIONS.openDrawer && drawerRef.current) {
       drawerRef.current.toggleDrawer();
+    }
+
+    if (
+      msg.action === ACTIONS.loadSelection &&
+      mainRef.current &&
+      drawerRef.current
+    ) {
+      drawerRef.current.openDrawer();
+      mainRef.current.loadSelection(msg.selection, msg.aiIndex);
     }
   });
 
@@ -45,6 +54,7 @@ const App = () => {
     >
       {view === VIEWS.main && (
         <Main
+          ref={mainRef}
           onResponse={(content) => {
             setResponse(content);
             setView(VIEWS.response);

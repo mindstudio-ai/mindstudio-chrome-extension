@@ -22,5 +22,5 @@
     "48": "./images/icon512x512.png",
     "128": "./images/icon512x512.png"
   },
-  "permissions": ["storage", "activeTab"]
+  "permissions": ["storage", "activeTab", "contextMenus"]
 }
