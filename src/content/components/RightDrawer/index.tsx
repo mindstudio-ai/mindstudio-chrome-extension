@@ -8,7 +8,7 @@ import CogIcon from "../Icons/Cog";
 import BackIcon from "../Icons/Back";
 
 const drawerWidth = 450;
-const topbarHeight = 48;
+export const topbarHeight = 48;
 
 const DrawerContainer = styled.div<{ open: boolean }>`
   position: fixed;

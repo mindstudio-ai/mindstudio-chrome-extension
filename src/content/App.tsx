@@ -5,8 +5,9 @@ import { ACTIONS } from "../utils/action";
 import useMessage from "./hooks/useMessage";
 
 import RightDrawer, { RightDrawerMethods } from "./components/RightDrawer";
-import Main, { MainMethods } from "./components/Views/Main";
+import Main from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
+import { RunTabMethods } from "./components/Views/Main/RunTab";
 
 import GmailPlugin from "./components/Plugins/Gmail";
 import YouTubePlugin from "./components/Plugins/YouTube";
@@ -14,15 +15,13 @@ import YouTubePlugin from "./components/Plugins/YouTube";
 enum VIEWS {
   "main" = "main",
   "settings" = "settings",
-  "response" = "response",
 }
 
 const App = () => {
   const drawerRef = useRef<RightDrawerMethods>(null);
-  const mainRef = useRef<MainMethods>(null);
+  const runTabRef = useRef<RunTabMethods>(null);
 
   const [view, setView] = useState<VIEWS>(VIEWS.main);
-  const [response, setResponse] = useState("");
 
   /**
    * Listen for messages
@@ -34,11 +33,11 @@ const App = () => {
 
     if (
       msg.action === ACTIONS.loadSelection &&
-      mainRef.current &&
+      runTabRef.current &&
       drawerRef.current
     ) {
       drawerRef.current.openDrawer();
-      mainRef.current.loadSelection(msg.selection, msg.aiIndex);
+      runTabRef.current.loadSelection(msg.selection, msg.aiIndex);
     }
   });
 
@@ -56,19 +55,9 @@ const App = () => {
           }
         }}
       >
-        {view === VIEWS.main && (
-          <Main
-            ref={mainRef}
-            onResponse={(content) => {
-              setResponse(content);
-              setView(VIEWS.response);
-            }}
-          />
-        )}
+        {view === VIEWS.main && <Main runTabRef={runTabRef} />}
 
         {view === VIEWS.settings && <Settings />}
-
-        {view === VIEWS.response && response && <div>{response}</div>}
       </RightDrawer>
 
       <GmailPlugin />
