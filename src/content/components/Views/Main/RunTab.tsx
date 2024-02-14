@@ -6,7 +6,11 @@ import useConfig from "../../../hooks/useConfig";
 
 import { runWorkflow, delay, getThreadData } from "../../../../utils/request";
 
-const Container = styled.div``;
+const Container = styled.div`
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+`;
 
 const Select = styled.select`
   font-size: 16px;

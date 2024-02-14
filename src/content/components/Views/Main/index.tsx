@@ -4,14 +4,14 @@ import styled from "styled-components";
 import { topbarHeight } from "../../RightDrawer";
 import Tabs, { tabsHeight } from "../../Tabs";
 import RunTab, { RunTabMethods } from "./RunTab";
+import ResultsTab from "./ResultsTab";
 
-const Container = styled.div``;
+const Container = styled.div`
+  height: 100%;
+`;
 
 const InnerContainer = styled.div`
   padding: 20px;
-
-  display: flex;
-  flex-direction: column;
   height: calc(100% - ${topbarHeight}px - ${tabsHeight}px);
 `;
 
@@ -40,6 +40,7 @@ const Main = ({ runTabRef }: MainProps) => {
 
       <InnerContainer>
         {tab === TabType.run && <RunTab ref={runTabRef} />}
+        {tab === TabType.results && <ResultsTab />}
       </InnerContainer>
     </Container>
   );
