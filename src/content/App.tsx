@@ -8,6 +8,9 @@ import RightDrawer, { RightDrawerMethods } from "./components/RightDrawer";
 import Main, { MainMethods } from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
 
+import GmailPlugin from "./components/Plugins/Gmail";
+import YouTubePlugin from "./components/Plugins/YouTube";
+
 enum VIEWS {
   "main" = "main",
   "settings" = "settings",
@@ -40,32 +43,37 @@ const App = () => {
   });
 
   return (
-    <RightDrawer
-      ref={drawerRef}
-      showLogo={view === VIEWS.main}
-      showSettings={view === VIEWS.main}
-      showBack={view !== VIEWS.main}
-      onSettingsClick={() => setView(VIEWS.settings)}
-      onBackClick={() => {
-        if (view === VIEWS.settings) {
-          setView(VIEWS.main);
-        }
-      }}
-    >
-      {view === VIEWS.main && (
-        <Main
-          ref={mainRef}
-          onResponse={(content) => {
-            setResponse(content);
-            setView(VIEWS.response);
-          }}
-        />
-      )}
+    <>
+      <RightDrawer
+        ref={drawerRef}
+        showLogo={view === VIEWS.main}
+        showSettings={view === VIEWS.main}
+        showBack={view !== VIEWS.main}
+        onSettingsClick={() => setView(VIEWS.settings)}
+        onBackClick={() => {
+          if (view === VIEWS.settings) {
+            setView(VIEWS.main);
+          }
+        }}
+      >
+        {view === VIEWS.main && (
+          <Main
+            ref={mainRef}
+            onResponse={(content) => {
+              setResponse(content);
+              setView(VIEWS.response);
+            }}
+          />
+        )}
 
-      {view === VIEWS.settings && <Settings />}
+        {view === VIEWS.settings && <Settings />}
 
-      {view === VIEWS.response && response && <div>{response}</div>}
-    </RightDrawer>
+        {view === VIEWS.response && response && <div>{response}</div>}
+      </RightDrawer>
+
+      <GmailPlugin />
+      <YouTubePlugin />
+    </>
   );
 };
 
