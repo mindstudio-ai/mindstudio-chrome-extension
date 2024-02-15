@@ -148,7 +148,11 @@ const ResultsTab = () => {
         }
 
         return (
-          <Link href="#" target="_blank" key={t.threadId}>
+          <Link
+            href={`https://youai.ai/ais/${t.appId}/use?threadId=${t.threadId}`}
+            target="_blank"
+            key={t.threadId}
+          >
             <Main>
               <AppName>{appName}</AppName>
               <ThreadName>{t.threadName}</ThreadName>
