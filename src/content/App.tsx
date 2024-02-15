@@ -37,6 +37,8 @@ const App = () => {
       setOpen(true);
       setMessage(msg.selection);
       setAiIndex(msg.aiIndex);
+      setView(VIEWS.main);
+      setTab(TABS.run);
     }
   });
 
