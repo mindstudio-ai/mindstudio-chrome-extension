@@ -1,10 +1,17 @@
 import { useState } from "react";
+import { useAtom } from "jotai";
 
 import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
 
-import { runWorkflow, delay, getThreadData } from "../../../../utils/request";
+import { messageAtom, aiIdxAtom } from "../../../atom";
+import { runWorkflow } from "../../../../utils/request";
+
+import Select from "../../Inputs/Select";
+import TextArea from "../../Inputs/TextArea";
+import Label from "../../Inputs/Label";
+import Button from "../../Buttons/Primary";
 
 const Container = styled.div`
   height: 100%;
@@ -12,71 +19,31 @@ const Container = styled.div`
   flex-direction: column;
 `;
 
-const Select = styled.select`
-  font-size: 16px;
-  color: #333;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 8px;
-  margin: 4px 0;
-  width: 100%;
-  text-align: left;
-  outline: none;
-  cursor: pointer;
-  border-radius: 4px;
-  box-sizing: border-box;
-
+const StyledSelect = styled(Select)`
   margin-bottom: 15px;
 `;
 
-const Textarea = styled.textarea`
-  font-size: 16px;
-  color: #333;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 8px;
-  margin: 4px 0;
-  width: 100%;
-  text-align: left;
-  outline: none;
-  cursor: pointer;
-  border-radius: 4px;
-  box-sizing: border-box;
-
-  margin-bottom: 15px;
-
+const StyledTextarea = styled(TextArea)`
   flex-grow: 1;
+  margin-bottom: 15px;
 `;
 
-const SubmitButton = styled.button`
-  background: black;
-  color: white;
-  cursor: pointer;
-  border-radius: 5px;
-  width: 100%;
-  padding: 10px;
-  border: unset;
-`;
-
-const StatusLabel = styled.div`
-  margin: 5px 0px;
-`;
+const Footer = styled.div``;
 
 const RunTab = () => {
   const { config } = useConfig();
 
-  const [chosenAiIdx, setChosenAiIdx] = useState<number | null>(null);
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("");
+  const [chosenAiIdx, setChosenAiIdx] = useAtom(aiIdxAtom);
+  const [message, setMessage] = useAtom(messageAtom);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async () => {
-    if (chosenAiIdx === null) {
+    if (!chosenAiIdx) {
       alert("Choose AI");
       return;
     }
 
-    const chosenAi = config.ais[chosenAiIdx];
+    const chosenAi = config.ais[Number(chosenAiIdx)];
 
     if (!chosenAi) {
       alert("Ai not found");
@@ -85,75 +52,50 @@ const RunTab = () => {
 
     setIsSubmitting(true);
 
-    setStatus("Running workflow...");
-
-    const threadId = await runWorkflow({
+    await runWorkflow({
       appId: chosenAi.appId,
       apiKey: chosenAi.apiKey,
       message,
     });
-
-    setStatus("Waiting 20 seconds...");
-
-    await delay(20000);
-
-    const data = await getThreadData({
-      appId: chosenAi.appId,
-      apiKey: chosenAi.apiKey,
-      threadId,
-    });
-
-    setStatus("Done");
-
-    try {
-      const threadResponse = data.posts.find(
-        (p: any) => p.chatMessage.source === "system"
-      );
-
-      if (threadResponse && threadResponse.chatMessage.isInProgress === false) {
-        console.log(threadResponse.chatMessage.content);
-      }
-    } catch (e) {
-      setStatus("Unknown error");
-    }
 
     setIsSubmitting(false);
   };
 
   return (
     <Container>
-      <label>Choose AI</label>
+      <Label>Choose AI</Label>
 
-      <Select
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-          if (e.target.value === "") {
-            setChosenAiIdx(null);
-          } else {
-            setChosenAiIdx(Number(e.target.value));
-          }
-        }}
+      <StyledSelect
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+          setChosenAiIdx(e.target.value)
+        }
       >
         {config.ais.map((ai, idx) => (
-          <option selected={chosenAiIdx === idx} value={idx} key={idx}>
+          <option selected={Number(chosenAiIdx) === idx} value={idx} key={idx}>
             {ai.name}
           </option>
         ))}
-      </Select>
+      </StyledSelect>
 
-      <label>Message</label>
+      <Label>Message</Label>
 
-      <Textarea
+      <StyledTextarea
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Message"
         rows={12}
       />
 
-      <SubmitButton disabled={isSubmitting} onClick={() => onSubmit()}>
-        Submit
-      </SubmitButton>
-
-      <StatusLabel>{status}</StatusLabel>
+      <Footer>
+        <Button
+          fullWidth
+          rounded
+          disabled={isSubmitting}
+          onClick={() => onSubmit()}
+        >
+          Submit
+        </Button>
+      </Footer>
     </Container>
   );
 };

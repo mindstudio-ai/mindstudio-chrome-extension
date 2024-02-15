@@ -1,14 +1,13 @@
 import styled, { css } from "styled-components";
 
-const TextInput = styled.input<{ fullWidth?: boolean }>`
+const Select = styled.select<{ fullWidth?: boolean }>`
   padding: 13px 15px;
   box-sizing: border-box;
   border-radius: 10px;
   border: 1px solid rgb(204, 204, 204);
-
-  &:focus {
-    outline: none;
-  }
+  cursor: pointer;
+  outline: none;
+  background-color: white;
 
   ${({ fullWidth }) =>
     fullWidth &&
@@ -18,4 +17,4 @@ const TextInput = styled.input<{ fullWidth?: boolean }>`
     `}
 `;
 
-export default TextInput;
+export default Select;

@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 
-const TextInput = styled.input<{ fullWidth?: boolean }>`
+const TextArea = styled.textarea<{ fullWidth?: boolean }>`
   padding: 13px 15px;
   box-sizing: border-box;
   border-radius: 10px;
@@ -18,4 +18,4 @@ const TextInput = styled.input<{ fullWidth?: boolean }>`
     `}
 `;
 
-export default TextInput;
+export default TextArea;
