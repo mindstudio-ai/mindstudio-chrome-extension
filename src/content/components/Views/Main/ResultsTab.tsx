@@ -172,7 +172,7 @@ const ResultsTab = () => {
 
         return (
           <Link
-            href={`https://youai.ai/ais/${t.appId}/use?threadId=${t.threadId}`}
+            href={`https://youai.ai/ais/${t.appId}/use?initialThreadId=${t.threadId}`}
             target="_blank"
             key={t.threadId}
           >
