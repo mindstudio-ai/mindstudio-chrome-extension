@@ -2,63 +2,64 @@ import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
 
-const Container = styled.section`
-  padding: 20px;
-`;
+import Primary from "../../Buttons/Primary";
+import TextInput from "../../Inputs/TextInput";
+import CrossIcon from "../../Icons/Cross";
 
-const Title = styled.h1``;
+const Container = styled.section``;
 
 const AiRow = styled.div`
-  border-bottom: 1px solid gray;
+  padding: 20px;
+  background: rgb(247, 248, 248);
+  border-radius: 20px;
   margin-bottom: 30px;
 
   > input {
     margin-bottom: 15px;
-    display: block;
-    width: 100%;
-  }
-
-  > textarea {
-    margin-bottom: 15px;
-    display: block;
-    width: 100%;
-  }
-
-  > button {
-    margin-bottom: 15px;
   }
 `;
-
-const Buttons = styled.div`
-  margin-top: 20px;
-`;
-
-const AddButton = styled.button``;
 
 const AiButtons = styled.div`
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: flex-between;
   margin-bottom: 15px;
 `;
 
-const RemoveButton = styled.button``;
+const RemoveButton = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  width: 20px;
+  height: 20px;
+`;
 
 const Placeholder = styled.div`
-  background: #ededed;
-  padding: 35px;
+  background: rgb(247, 248, 248);
+  border-radius: 20px;
+  margin-bottom: 30px;
+  color: rgb(88, 88, 88);
+  font-size: 14px;
 `;
 
-const Input = styled.input`
-  padding: 10px 10px;
-  box-sizing: border-box;
+const Title = styled.h4`
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
 `;
 
-const TextArea = styled.textarea`
-  padding: 10px 10px;
-  box-sizing: border-box;
+const Buttons = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+  padding-bottom: 30px;
 `;
 
-const Settings = () => {
+const YourAisTab = () => {
   const { config, setConfig } = useConfig();
 
   const onRemove = (index: number) => {
@@ -76,16 +77,6 @@ const Settings = () => {
           name: "",
           appId: "",
           apiKey: "",
-          jsonConfig: {
-            inputs: [
-              {
-                type: "long_text",
-                variable: "message",
-                label: "Message",
-                placeholder: "Message",
-              },
-            ],
-          },
         },
       ],
     });
@@ -102,63 +93,47 @@ const Settings = () => {
 
   return (
     <Container>
-      <div
-        style={{
-          color: "red",
-        }}
-      >
-        Note: Switch between your AIs and plugins: Gmail, YouTube etc...
-      </div>
-
-      <Title>Your Mindstudio AIs</Title>
-
       {config.ais.length === 0 && <Placeholder>No AIs added</Placeholder>}
 
       {config.ais.map((ai, idx) => (
         <AiRow key={idx}>
-          <Input
+          <AiButtons>
+            <Title>{ai.name}</Title>
+
+            <RemoveButton onClick={() => onRemove(idx)}>
+              <CrossIcon />
+            </RemoveButton>
+          </AiButtons>
+
+          <TextInput
             value={ai.name}
             placeholder="Name"
             onChange={(e) => onChange(idx, "name", e.target.value)}
+            fullWidth
           />
 
-          <Input
+          <TextInput
             value={ai.appId}
             placeholder="APP ID"
             onChange={(e) => onChange(idx, "appId", e.target.value)}
+            fullWidth
           />
 
-          <Input
+          <TextInput
             value={ai.apiKey}
             placeholder="API Key"
             onChange={(e) => onChange(idx, "apiKey", e.target.value)}
+            fullWidth
           />
-
-          <TextArea
-            value={JSON.stringify(ai.jsonConfig, undefined, 4)}
-            placeholder="Advanced JSON Config"
-            rows={10}
-            onChange={(e) => {
-              console.log(e.target.value);
-            }}
-          />
-
-          <AiButtons>
-            <RemoveButton onClick={() => onRemove(idx)}>Remove</RemoveButton>
-          </AiButtons>
         </AiRow>
       ))}
 
       <Buttons>
-        <AddButton
-          onClick={() => {
-            onAdd();
-          }}
-        >
+        <Primary rounded onClick={() => onAdd()}>
           Add AI
-        </AddButton>
+        </Primary>
       </Buttons>
     </Container>
   );
 };
-export default Settings;
+export default YourAisTab;

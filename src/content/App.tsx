@@ -56,6 +56,13 @@ const App = () => {
             setTab(TABS.run);
           }
         }}
+        goBackLabel={(() => {
+          if (view === VIEWS.settings) {
+            return "Settings";
+          }
+
+          return "Go Back";
+        })()}
       >
         {view === VIEWS.main && <Main />}
         {view === VIEWS.settings && <Settings />}

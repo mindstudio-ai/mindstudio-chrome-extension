@@ -56,7 +56,7 @@ const GoBackButton = styled.div`
   > svg {
     width: 20px;
     height: 20px;
-    margin-right: 5px;
+    margin-right: 8px;
   }
 `;
 
@@ -77,6 +77,7 @@ type RightDrawerProps = {
   showLogo?: boolean;
   showSettings?: boolean;
   showBack?: boolean;
+  goBackLabel?: string;
 };
 
 const RightDrawer = ({
@@ -86,6 +87,7 @@ const RightDrawer = ({
   showLogo = false,
   showSettings = false,
   showBack = false,
+  goBackLabel = "Go Back",
 }: RightDrawerProps) => {
   const [open, setOpen] = useAtom(drawerOpenAtom);
 
@@ -113,7 +115,7 @@ const RightDrawer = ({
       <DrawerTopbar>
         {showBack ? (
           <GoBackButton onClick={onBackClick}>
-            <BackIcon /> Go Back
+            <BackIcon /> {goBackLabel}
           </GoBackButton>
         ) : (
           <DrawerButton onClick={() => setOpen(false)}>
