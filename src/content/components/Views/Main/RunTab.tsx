@@ -63,6 +63,8 @@ const RunTab = () => {
     });
 
     setIsSubmitting(false);
+
+    setTab(TABS.results);
   };
 
   if (config.ais.length === 0) {
