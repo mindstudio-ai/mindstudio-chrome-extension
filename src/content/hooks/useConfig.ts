@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useAtom } from "jotai";
 
-import {
-  ConfigType,
-  defaultConfig,
-  setLocalConfig,
-  getLocalConfig,
-} from "../../utils/config";
+import { configAtom } from "../atom";
+
+import { ConfigType, setLocalConfig, getLocalConfig } from "../../utils/config";
 
 const useConfig = () => {
-  const [config, setConfig] = useState<ConfigType>(defaultConfig);
+  const [config, setConfig] = useAtom(configAtom);
 
   useEffect(() => {
     const init = async () => {
@@ -20,8 +18,8 @@ const useConfig = () => {
   }, []);
 
   const saveConfig = async (newConfig: ConfigType) => {
-    setConfig(newConfig); // reload local config
-    await setLocalConfig(newConfig); // save config
+    setConfig(newConfig); // reload global state config
+    await setLocalConfig(newConfig); // save config in chrome
   };
 
   return { config, setConfig: saveConfig };

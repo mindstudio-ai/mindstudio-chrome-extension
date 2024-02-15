@@ -58,7 +58,6 @@ const App = () => {
         }}
       >
         {view === VIEWS.main && <Main />}
-
         {view === VIEWS.settings && <Settings />}
       </RightDrawer>
 

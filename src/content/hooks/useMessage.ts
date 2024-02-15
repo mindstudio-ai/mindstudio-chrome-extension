@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const useMessage = (onMessage: (msg: any) => void) => {
+const useMessage = (onMessage: (msg: any) => void, deps = []) => {
   useEffect(() => {
     const handler = (msg: any) => {
       onMessage(msg);
@@ -13,7 +13,7 @@ const useMessage = (onMessage: (msg: any) => void) => {
     return () => {
       chrome.runtime.onMessage.removeListener(handler);
     };
-  }, []);
+  }, deps);
 };
 
 export default useMessage;

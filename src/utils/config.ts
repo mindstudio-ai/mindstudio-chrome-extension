@@ -1,26 +1,7 @@
-type LongTextType = {
-  type: "long_text";
-  variable: string;
-  label: string;
-  placeholder: string;
-};
-
-type ShortTextType = {
-  type: "short_text";
-  variable: string;
-  label: string;
-  placeholder: string;
-};
-
-type InputType = LongTextType | ShortTextType;
-
 type AiType = {
   name: string;
   appId: string;
   apiKey: string;
-  jsonConfig: {
-    inputs: InputType[];
-  };
 };
 
 export type ConfigType = {
