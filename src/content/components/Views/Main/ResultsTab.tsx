@@ -138,16 +138,26 @@ const ResultsTab = () => {
 
   return (
     <Container>
-      {threads.map((t) => (
-        <Link href="#" target="_blank" key={t.threadId}>
-          <Main>
-            <AppName>{t.appName}</AppName>
-            <ThreadName>{t.threadName}</ThreadName>
-          </Main>
+      {threads.map((t) => {
+        let appName = t.appName;
 
-          <LinkIcon />
-        </Link>
-      ))}
+        const localApp = config.ais.find(({ appId }) => appId === t.appId);
+
+        if (localApp) {
+          appName = localApp.name;
+        }
+
+        return (
+          <Link href="#" target="_blank" key={t.threadId}>
+            <Main>
+              <AppName>{appName}</AppName>
+              <ThreadName>{t.threadName}</ThreadName>
+            </Main>
+
+            <LinkIcon />
+          </Link>
+        );
+      })}
     </Container>
   );
 };
