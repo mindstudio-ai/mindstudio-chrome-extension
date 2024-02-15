@@ -105,7 +105,9 @@ const ResultsTab = () => {
             threadId: thread.id,
             threadName: thread.name,
             dateCreated: thread.dateCreated,
-            isInProgress: thread.posts.some((post: any) => post.isInProgress),
+            isInProgress:
+              thread.posts.some((post: any) => post.isInProgress) ||
+              obj.app.name === "",
           };
         });
       });
