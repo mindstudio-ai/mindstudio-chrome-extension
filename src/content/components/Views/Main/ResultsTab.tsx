@@ -157,7 +157,9 @@ const ResultsTab = () => {
     mutate: reloadThreads,
   } = useSWRImmutable("fetchThreads", fetchAndGroupThreads);
 
-  if (config.ais.length === 0) {
+  const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
+
+  if (activeAis.length === 0) {
     return (
       <Container>
         <NotFound>

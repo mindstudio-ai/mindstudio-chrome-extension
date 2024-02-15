@@ -46,6 +46,8 @@ const RunTab = () => {
   const [, setTab] = useAtom(tabAtom);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
+
   const onSubmit = async () => {
     const chosenAi = config.ais[Number(chosenAiIdx || "0")];
 
@@ -69,7 +71,7 @@ const RunTab = () => {
     mutate("fetchThreads", fetchAndGroupThreads);
   };
 
-  if (config.ais.length === 0) {
+  if (activeAis.length === 0) {
     return (
       <Container>
         <NotFound>
@@ -97,17 +99,11 @@ const RunTab = () => {
           setChosenAiIdx(e.target.value)
         }
       >
-        {config.ais
-          .filter(({ apiKey, appId }) => apiKey && appId)
-          .map((ai, idx) => (
-            <option
-              selected={Number(chosenAiIdx) === idx}
-              value={idx}
-              key={idx}
-            >
-              {ai.name}
-            </option>
-          ))}
+        {activeAis.map((ai, idx) => (
+          <option selected={Number(chosenAiIdx) === idx} value={idx} key={idx}>
+            {ai.name}
+          </option>
+        ))}
       </StyledSelect>
 
       <Label>Message</Label>
