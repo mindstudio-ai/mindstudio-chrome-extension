@@ -30,11 +30,12 @@ const Logo = styled.div`
 const Title = styled.div``;
 
 const Status = styled.div`
-  background: #111;
+  background: gray;
   color: white;
   padding: 5px;
   border-radius: 7px;
   font-size: 12px;
+  user-select: none;
 `;
 
 const PluginsTab = () => {
