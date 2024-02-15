@@ -95,19 +95,19 @@ type ThreadResult = {
 export const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
   const config = await getLocalConfig();
 
-  if (config.ais.length === 0) {
+  const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
+
+  if (activeAis.length === 0) {
     return [];
   }
 
   const results = await Promise.all(
-    config.ais
-      .filter(({ apiKey, appId }) => apiKey && appId)
-      .map(({ appId, apiKey }) =>
-        getAppData({
-          appId: appId,
-          apiKey: apiKey,
-        })
-      )
+    activeAis.map(({ appId, apiKey }) =>
+      getAppData({
+        appId: appId,
+        apiKey: apiKey,
+      })
+    )
   );
 
   const threadResults: ThreadResult[] = results.flatMap((obj) => {
