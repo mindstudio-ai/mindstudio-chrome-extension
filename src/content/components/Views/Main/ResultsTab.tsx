@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { useAtom } from "jotai";
 import styled from "styled-components";
+import useSWRImmutable from "swr/immutable";
 
 import { viewAtom, tabAtom } from "../../../atom";
 
@@ -8,6 +8,7 @@ import useConfig from "../../../hooks/useConfig";
 import { TABS, VIEWS } from "../../../../utils/constants";
 
 import { getAppData } from "../../../../utils/request";
+import { getLocalConfig } from "../../../../utils/config";
 
 import NotFound from "../../Placeholders/NotFound";
 import LinkIcon from "../../Icons/Link";
@@ -61,6 +62,24 @@ const Progress = styled.span`
   background: orange;
 `;
 
+const TopButtons = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+`;
+
+const RefreshButton = styled.div`
+  color: #007cff;
+  font-weight: bold;
+  cursor: pointer;
+`;
+
+const LoadingIndicator = styled.div`
+  color: #111;
+  font-weight: bold;
+`;
+
 type ThreadResult = {
   appId: string;
   appName: string;
@@ -70,71 +89,71 @@ type ThreadResult = {
   isInProgress: boolean;
 };
 
+/**
+ * Load threads of all configured AIs, group and sort by dateCreated
+ */
+const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
+  const config = await getLocalConfig();
+
+  if (config.ais.length === 0) {
+    return [];
+  }
+
+  const results = await Promise.all(
+    config.ais.map(({ appId, apiKey }) =>
+      getAppData({
+        appId: appId,
+        apiKey: apiKey,
+      })
+    )
+  );
+
+  const threadResults: ThreadResult[] = results.flatMap((obj) => {
+    return obj.threads.map((thread: any) => {
+      let isInProgress = false;
+
+      try {
+        isInProgress = thread.posts.some(
+          (post: any) => post.chatMessage.isInProgress === true
+        );
+      } catch (e) {}
+
+      if (thread.name === "") {
+        isInProgress = true;
+      }
+
+      return {
+        appId: thread.appId,
+        appName: obj.app.name,
+        threadId: thread.id,
+        threadName: thread.name,
+        dateCreated: thread.dateCreated,
+        isInProgress,
+      };
+    });
+  });
+
+  threadResults.sort((a, b) => {
+    return (
+      new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
+    );
+  });
+
+  return threadResults;
+};
+
 const ResultsTab = () => {
   const { config } = useConfig();
 
   const [, setView] = useAtom(viewAtom);
   const [, setTab] = useAtom(tabAtom);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [threads, setThreads] = useState<ThreadResult[]>([]);
-
-  /**
-   * Load threads of all AIs, group and sort by dateCreated
-   */
-  useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-
-      const results = await Promise.all(
-        config.ais.map(({ appId, apiKey }) =>
-          getAppData({
-            appId: appId,
-            apiKey: apiKey,
-          })
-        )
-      );
-
-      setIsLoading(false);
-
-      const threadResults: ThreadResult[] = results.flatMap((obj) => {
-        return obj.threads.map((thread: any) => {
-          let isInProgress = false;
-
-          try {
-            isInProgress = thread.posts.some(
-              (post: any) => post.chatMessage.isInProgress === true
-            );
-          } catch (e) {}
-
-          if (thread.name === "") {
-            isInProgress = true;
-          }
-
-          return {
-            appId: thread.appId,
-            appName: obj.app.name,
-            threadId: thread.id,
-            threadName: thread.name,
-            dateCreated: thread.dateCreated,
-            isInProgress,
-          };
-        });
-      });
-
-      threadResults.sort((a, b) => {
-        return (
-          new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
-        );
-      });
-
-      setThreads(threadResults);
-    };
-
-    if (config.ais.length > 0) {
-      init();
-    }
-  }, []);
+  const {
+    data: threads,
+    isLoading,
+    isValidating,
+    mutate: reloadThreads,
+  } = useSWRImmutable("fetchThreads", fetchAndGroupThreads);
 
   if (config.ais.length === 0) {
     return (
@@ -155,12 +174,26 @@ const ResultsTab = () => {
     );
   }
 
-  if (isLoading) {
-    return <Container>Loading...</Container>;
+  if (isLoading || !threads) {
+    return (
+      <Container>
+        <TopButtons>
+          <LoadingIndicator>Loading...</LoadingIndicator>
+        </TopButtons>
+      </Container>
+    );
   }
 
   return (
     <Container>
+      <TopButtons>
+        {isValidating ? (
+          <LoadingIndicator>Loading...</LoadingIndicator>
+        ) : (
+          <RefreshButton onClick={() => reloadThreads()}>Refresh</RefreshButton>
+        )}
+      </TopButtons>
+
       {threads.map((t) => {
         let appName = t.appName;
 
