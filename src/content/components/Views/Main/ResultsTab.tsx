@@ -100,12 +100,14 @@ export const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
   }
 
   const results = await Promise.all(
-    config.ais.map(({ appId, apiKey }) =>
-      getAppData({
-        appId: appId,
-        apiKey: apiKey,
-      })
-    )
+    config.ais
+      .filter(({ apiKey, appId }) => apiKey && appId)
+      .map(({ appId, apiKey }) =>
+        getAppData({
+          appId: appId,
+          apiKey: apiKey,
+        })
+      )
   );
 
   const threadResults: ThreadResult[] = results.flatMap((obj) => {

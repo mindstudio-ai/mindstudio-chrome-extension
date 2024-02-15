@@ -97,11 +97,17 @@ const RunTab = () => {
           setChosenAiIdx(e.target.value)
         }
       >
-        {config.ais.map((ai, idx) => (
-          <option selected={Number(chosenAiIdx) === idx} value={idx} key={idx}>
-            {ai.name}
-          </option>
-        ))}
+        {config.ais
+          .filter(({ apiKey, appId }) => apiKey && appId)
+          .map((ai, idx) => (
+            <option
+              selected={Number(chosenAiIdx) === idx}
+              value={idx}
+              key={idx}
+            >
+              {ai.name}
+            </option>
+          ))}
       </StyledSelect>
 
       <Label>Message</Label>
