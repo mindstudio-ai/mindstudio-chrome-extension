@@ -1,8 +1,14 @@
 import { useAtom } from "jotai";
 
-import { drawerOpenAtom, messageAtom, viewAtom, aiIdxAtom } from "./atom";
+import {
+  drawerOpenAtom,
+  messageAtom,
+  viewAtom,
+  aiIdxAtom,
+  tabAtom,
+} from "./atom";
 
-import { ACTIONS, VIEWS } from "../utils/constants";
+import { ACTIONS, TABS, VIEWS } from "../utils/constants";
 
 import useMessage from "./hooks/useMessage";
 
@@ -17,6 +23,7 @@ const App = () => {
   const [, setMessage] = useAtom(messageAtom);
   const [, setAiIndex] = useAtom(aiIdxAtom);
   const [view, setView] = useAtom(viewAtom);
+  const [, setTab] = useAtom(tabAtom);
 
   /**
    * Listen for messages
@@ -39,10 +46,14 @@ const App = () => {
         showLogo={view === VIEWS.main}
         showSettings={view === VIEWS.main}
         showBack={view !== VIEWS.main}
-        onSettingsClick={() => setView(VIEWS.settings)}
+        onSettingsClick={() => {
+          setView(VIEWS.settings);
+          setTab(TABS.yourAis);
+        }}
         onBackClick={() => {
           if (view === VIEWS.settings) {
             setView(VIEWS.main);
+            setTab(TABS.run);
           }
         }}
       >
