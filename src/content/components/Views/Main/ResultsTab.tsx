@@ -53,11 +53,11 @@ const AppName = styled.div`
 `;
 
 const Progress = styled.span`
-  width: 5px;
-  height: 5px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   display: inline-block;
-  margin-left: 4px;
+  margin-left: 7px;
   background: orange;
 `;
 
@@ -99,15 +99,25 @@ const ResultsTab = () => {
 
       const threadResults: ThreadResult[] = results.flatMap((obj) => {
         return obj.threads.map((thread: any) => {
+          let isInProgress = false;
+
+          try {
+            isInProgress = thread.posts.some(
+              (post: any) => post.chatMessage.isInProgress === true
+            );
+          } catch (e) {}
+
+          if (thread.name === "") {
+            isInProgress = true;
+          }
+
           return {
             appId: thread.appId,
             appName: obj.app.name,
             threadId: thread.id,
             threadName: thread.name,
             dateCreated: thread.dateCreated,
-            isInProgress:
-              thread.posts.some((post: any) => post.isInProgress) ||
-              obj.app.name === "",
+            isInProgress,
           };
         });
       });
