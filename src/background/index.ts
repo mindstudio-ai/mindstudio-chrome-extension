@@ -13,13 +13,15 @@ const rebuildContextMenus = async () => {
     contexts: ["all"],
   });
 
-  config.ais.forEach((ai, idx) => {
-    chrome.contextMenus.create({
-      id: String(idx),
-      title: `Run "${ai.name}" : "%s"`,
-      contexts: ["selection"],
+  config.ais
+    .filter(({ apiKey, appId }) => apiKey && appId)
+    .forEach((ai, idx) => {
+      chrome.contextMenus.create({
+        id: String(idx),
+        title: `Run "${ai.name}" : "%s"`,
+        contexts: ["selection"],
+      });
     });
-  });
 };
 
 /**
