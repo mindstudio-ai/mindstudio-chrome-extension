@@ -4,14 +4,16 @@ import { useAtom } from "jotai";
 import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
+import { TABS, VIEWS } from "../../../../utils/constants";
 
-import { messageAtom, aiIdxAtom } from "../../../atom";
+import { messageAtom, aiIdxAtom, viewAtom, tabAtom } from "../../../atom";
 import { runWorkflow } from "../../../../utils/request";
 
 import Select from "../../Inputs/Select";
 import TextArea from "../../Inputs/TextArea";
 import Label from "../../Inputs/Label";
 import Button from "../../Buttons/Primary";
+import NotFound from "../../Placeholders/NotFound";
 
 const Container = styled.div`
   height: 100%;
@@ -35,6 +37,8 @@ const RunTab = () => {
 
   const [chosenAiIdx, setChosenAiIdx] = useAtom(aiIdxAtom);
   const [message, setMessage] = useAtom(messageAtom);
+  const [, setView] = useAtom(viewAtom);
+  const [, setTab] = useAtom(tabAtom);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async () => {
@@ -60,6 +64,25 @@ const RunTab = () => {
 
     setIsSubmitting(false);
   };
+
+  if (config.ais.length === 0) {
+    return (
+      <Container>
+        <NotFound>
+          No AIs added. Go to{" "}
+          <a
+            onClick={() => {
+              setView(VIEWS.settings);
+              setTab(TABS.yourAis);
+            }}
+          >
+            Settings
+          </a>{" "}
+          and add an AI
+        </NotFound>
+      </Container>
+    );
+  }
 
   return (
     <Container>

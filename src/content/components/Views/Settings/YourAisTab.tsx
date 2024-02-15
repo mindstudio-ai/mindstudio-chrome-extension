@@ -5,6 +5,7 @@ import useConfig from "../../../hooks/useConfig";
 import Primary from "../../Buttons/Primary";
 import TextInput from "../../Inputs/TextInput";
 import CrossIcon from "../../Icons/Cross";
+import NotFound from "../../Placeholders/NotFound";
 
 const Container = styled.section``;
 
@@ -35,14 +36,6 @@ const RemoveButton = styled.div`
 
   width: 20px;
   height: 20px;
-`;
-
-const Placeholder = styled.div`
-  background: rgb(247, 248, 248);
-  border-radius: 20px;
-  margin-bottom: 30px;
-  color: rgb(88, 88, 88);
-  font-size: 14px;
 `;
 
 const Title = styled.h4`
@@ -93,7 +86,7 @@ const YourAisTab = () => {
 
   return (
     <Container>
-      {config.ais.length === 0 && <Placeholder>No AIs added</Placeholder>}
+      {config.ais.length === 0 && <NotFound>No AIs added</NotFound>}
 
       {config.ais.map((ai, idx) => (
         <AiRow key={idx}>
