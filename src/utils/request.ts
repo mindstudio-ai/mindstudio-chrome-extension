@@ -65,3 +65,25 @@ export const getThreadData = async ({
 export const delay = (delayInms: number) => {
   return new Promise((resolve) => setTimeout(resolve, delayInms));
 };
+
+type GetAppDataProps = {
+  appId: string;
+  apiKey: string;
+};
+
+export const getAppData = async ({ appId, apiKey }: GetAppDataProps) => {
+  const response = await fetch(
+    "https://api.youai.ai/developer/v1/apps/load?appId=" + appId,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  return data;
+};
