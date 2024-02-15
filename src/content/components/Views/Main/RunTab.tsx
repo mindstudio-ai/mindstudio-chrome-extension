@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
+import { useSWRConfig } from "swr";
 
 import styled from "styled-components";
 
@@ -14,6 +15,8 @@ import TextArea from "../../Inputs/TextArea";
 import Label from "../../Inputs/Label";
 import Button from "../../Buttons/Primary";
 import NotFound from "../../Placeholders/NotFound";
+
+import { fetchAndGroupThreads } from "./ResultsTab";
 
 const Container = styled.div`
   height: 100%;
@@ -35,6 +38,8 @@ const Footer = styled.div``;
 const RunTab = () => {
   const { config } = useConfig();
 
+  const { mutate } = useSWRConfig();
+
   const [chosenAiIdx, setChosenAiIdx] = useAtom(aiIdxAtom);
   const [message, setMessage] = useAtom(messageAtom);
   const [, setView] = useAtom(viewAtom);
@@ -45,7 +50,7 @@ const RunTab = () => {
     const chosenAi = config.ais[Number(chosenAiIdx || "0")];
 
     if (!chosenAi) {
-      alert("Ai not found");
+      alert("Choose an AI");
       return;
     }
 
@@ -60,6 +65,8 @@ const RunTab = () => {
     setIsSubmitting(false);
 
     setTab(TABS.results);
+
+    mutate("fetchThreads", fetchAndGroupThreads);
   };
 
   if (config.ais.length === 0) {
@@ -113,7 +120,7 @@ const RunTab = () => {
           disabled={isSubmitting}
           onClick={() => onSubmit()}
         >
-          Submit
+          {isSubmitting ? "Loading..." : "Submit"}
         </Button>
       </Footer>
     </Container>

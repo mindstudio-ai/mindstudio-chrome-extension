@@ -92,7 +92,7 @@ type ThreadResult = {
 /**
  * Load threads of all configured AIs, group and sort by dateCreated
  */
-const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
+export const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
   const config = await getLocalConfig();
 
   if (config.ais.length === 0) {
