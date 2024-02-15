@@ -48,6 +48,17 @@ const AppName = styled.div`
   font-size: 14px;
   font-weight: bold;
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+`;
+
+const Progress = styled.span`
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 4px;
+  background: orange;
 `;
 
 type ThreadResult = {
@@ -154,8 +165,10 @@ const ResultsTab = () => {
             key={t.threadId}
           >
             <Main>
-              <AppName>{appName}</AppName>
-              <ThreadName>{t.threadName}</ThreadName>
+              <AppName>
+                {appName} {t.isInProgress && <Progress />}
+              </AppName>
+              <ThreadName>{t.threadName || "Generating..."}</ThreadName>
             </Main>
 
             <LinkIcon />

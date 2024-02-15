@@ -42,12 +42,7 @@ const RunTab = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async () => {
-    if (!chosenAiIdx) {
-      alert("Choose AI");
-      return;
-    }
-
-    const chosenAi = config.ais[Number(chosenAiIdx)];
+    const chosenAi = config.ais[Number(chosenAiIdx || "0")];
 
     if (!chosenAi) {
       alert("Ai not found");
