@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle } from "react";
+import { useState } from "react";
 
 import styled from "styled-components";
 
@@ -62,26 +62,13 @@ const StatusLabel = styled.div`
   margin: 5px 0px;
 `;
 
-export type RunTabMethods = {
-  loadSelection: (selection: string, aiIndex: number) => void;
-};
-
-const RunTab = forwardRef((props, ref) => {
+const RunTab = () => {
   const { config } = useConfig();
 
   const [chosenAiIdx, setChosenAiIdx] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const loadSelection = (selection: string, aiIndex: number) => {
-    setMessage(selection);
-    setChosenAiIdx(aiIndex);
-  };
-
-  useImperativeHandle(ref, () => ({
-    loadSelection,
-  }));
 
   const onSubmit = async () => {
     if (chosenAiIdx === null) {
@@ -169,6 +156,6 @@ const RunTab = forwardRef((props, ref) => {
       <StatusLabel>{status}</StatusLabel>
     </Container>
   );
-});
+};
 
 export default RunTab;

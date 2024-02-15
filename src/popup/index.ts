@@ -1,4 +1,4 @@
-import { ACTIONS } from "../utils/action";
+import { ACTIONS } from "../utils/constants";
 
 /**
  * Rather than using a popup, the action button now triggers the opening of the right drawer,

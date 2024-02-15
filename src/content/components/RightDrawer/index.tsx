@@ -1,6 +1,8 @@
-import { useState, forwardRef, useImperativeHandle, useEffect } from "react";
-
+import { useEffect } from "react";
+import { useAtom } from "jotai";
 import styled from "styled-components";
+
+import { drawerOpenAtom } from "../../atom";
 
 import FullLogo from "../Logo/Full";
 import CrossIcon from "../Icons/Cross";
@@ -77,83 +79,62 @@ type RightDrawerProps = {
   showBack?: boolean;
 };
 
-export type RightDrawerMethods = {
-  toggleDrawer: () => void;
-  openDrawer: () => void;
-  closeDrawer: () => void;
+const RightDrawer = ({
+  children,
+  onSettingsClick,
+  onBackClick,
+  showLogo = false,
+  showSettings = false,
+  showBack = false,
+}: RightDrawerProps) => {
+  const [open, setOpen] = useAtom(drawerOpenAtom);
+
+  /**
+   * Will move the page so the contents are visible and easier to copy
+   */
+  useEffect(() => {
+    const currentPaddingRight = window.getComputedStyle(
+      document.body
+    ).paddingRight;
+
+    if (open) {
+      window.document.body.style.paddingRight = `${drawerWidth}px`;
+    } else {
+      window.document.body.style.paddingRight = currentPaddingRight;
+    }
+
+    return () => {
+      window.document.body.style.paddingRight = currentPaddingRight;
+    };
+  }, [open]);
+
+  return (
+    <DrawerContainer open={open}>
+      <DrawerTopbar>
+        {showBack ? (
+          <GoBackButton onClick={onBackClick}>
+            <BackIcon /> Go Back
+          </GoBackButton>
+        ) : (
+          <DrawerButton onClick={() => setOpen(false)}>
+            <CrossIcon />
+          </DrawerButton>
+        )}
+
+        {showLogo ? <FullLogo width={120} /> : <div />}
+
+        {showSettings ? (
+          <DrawerButton onClick={onSettingsClick}>
+            <CogIcon />
+          </DrawerButton>
+        ) : (
+          <div />
+        )}
+      </DrawerTopbar>
+
+      <DrawerContent>{children}</DrawerContent>
+    </DrawerContainer>
+  );
 };
-
-const RightDrawer = forwardRef(
-  (
-    {
-      children,
-      onSettingsClick,
-      onBackClick,
-      showLogo = false,
-      showSettings = false,
-      showBack = false,
-    }: RightDrawerProps,
-    ref
-  ) => {
-    const [open, setOpen] = useState(false);
-
-    const toggleDrawer = () => setOpen(!open);
-    const openDrawer = () => setOpen(true);
-    const closeDrawer = () => setOpen(false);
-
-    useImperativeHandle(ref, () => ({
-      toggleDrawer,
-      openDrawer,
-      closeDrawer,
-    }));
-
-    /**
-     * Will move the page so the contents are visible and easier to copy
-     */
-    useEffect(() => {
-      const currentPaddingRight = window.getComputedStyle(
-        document.body
-      ).paddingRight;
-
-      if (open) {
-        window.document.body.style.paddingRight = `${drawerWidth}px`;
-      } else {
-        window.document.body.style.paddingRight = currentPaddingRight;
-      }
-
-      return () => {
-        window.document.body.style.paddingRight = currentPaddingRight;
-      };
-    }, [open]);
-
-    return (
-      <DrawerContainer open={open}>
-        <DrawerTopbar>
-          {showBack ? (
-            <GoBackButton onClick={onBackClick}>
-              <BackIcon /> Go Back
-            </GoBackButton>
-          ) : (
-            <DrawerButton onClick={() => setOpen(false)}>
-              <CrossIcon />
-            </DrawerButton>
-          )}
-
-          {showLogo ? <FullLogo width={120} /> : <div />}
-
-          {showSettings ? (
-            <DrawerButton onClick={onSettingsClick}>
-              <CogIcon />
-            </DrawerButton>
-          ) : (
-            <div />
-          )}
-        </DrawerTopbar>
-
-        <DrawerContent>{children}</DrawerContent>
-      </DrawerContainer>
-    );
-  }
-);
 
 export default RightDrawer;

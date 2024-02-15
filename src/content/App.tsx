@@ -1,50 +1,41 @@
-import { useRef, useState } from "react";
+import { useAtom } from "jotai";
 
-import { ACTIONS } from "../utils/action";
+import { drawerOpenAtom, messageAtom, viewAtom, aiIdxAtom } from "./atom";
+
+import { ACTIONS, VIEWS } from "../utils/constants";
 
 import useMessage from "./hooks/useMessage";
 
-import RightDrawer, { RightDrawerMethods } from "./components/RightDrawer";
+import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
-import { RunTabMethods } from "./components/Views/Main/RunTab";
-
 import GmailPlugin from "./components/Plugins/Gmail";
 import YouTubePlugin from "./components/Plugins/YouTube";
 
-enum VIEWS {
-  "main" = "main",
-  "settings" = "settings",
-}
-
 const App = () => {
-  const drawerRef = useRef<RightDrawerMethods>(null);
-  const runTabRef = useRef<RunTabMethods>(null);
-
-  const [view, setView] = useState<VIEWS>(VIEWS.main);
+  const [, setOpen] = useAtom(drawerOpenAtom);
+  const [, setMessage] = useAtom(messageAtom);
+  const [, setAiIndex] = useAtom(aiIdxAtom);
+  const [view, setView] = useAtom(viewAtom);
 
   /**
    * Listen for messages
    */
   useMessage((msg) => {
-    if (msg.action === ACTIONS.openDrawer && drawerRef.current) {
-      drawerRef.current.toggleDrawer();
+    if (msg.action === ACTIONS.openDrawer) {
+      setOpen(true);
     }
 
-    if (
-      msg.action === ACTIONS.loadSelection &&
-      runTabRef.current &&
-      drawerRef.current
-    ) {
-      drawerRef.current.openDrawer();
-      runTabRef.current.loadSelection(msg.selection, msg.aiIndex);
+    if (msg.action === ACTIONS.loadSelection) {
+      setOpen(true);
+      setMessage(msg.selection);
+      setAiIndex(msg.aiIndex);
     }
   });
 
   return (
     <>
       <RightDrawer
-        ref={drawerRef}
         showLogo={view === VIEWS.main}
         showSettings={view === VIEWS.main}
         showBack={view !== VIEWS.main}
@@ -55,7 +46,7 @@ const App = () => {
           }
         }}
       >
-        {view === VIEWS.main && <Main runTabRef={runTabRef} />}
+        {view === VIEWS.main && <Main />}
 
         {view === VIEWS.settings && <Settings />}
       </RightDrawer>

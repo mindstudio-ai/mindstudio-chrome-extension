@@ -1,9 +1,13 @@
-import { Ref, useState } from "react";
+import { useAtom } from "jotai";
 import styled from "styled-components";
+
+import { tabAtom } from "../../../atom";
+
+import { TABS } from "../../../../utils/constants";
 
 import { topbarHeight } from "../../RightDrawer";
 import Tabs, { tabsHeight } from "../../Tabs";
-import RunTab, { RunTabMethods } from "./RunTab";
+import RunTab from "./RunTab";
 import ResultsTab from "./ResultsTab";
 
 const Container = styled.div`
@@ -15,32 +19,23 @@ const InnerContainer = styled.div`
   height: calc(100% - ${topbarHeight}px - ${tabsHeight}px);
 `;
 
-type MainProps = {
-  runTabRef: Ref<RunTabMethods>;
-};
-
-enum TabType {
-  "run" = "run",
-  "results" = "results",
-}
-
-const Main = ({ runTabRef }: MainProps) => {
-  const [tab, setTab] = useState<TabType>(TabType.run);
+const Main = () => {
+  const [tab, setTab] = useAtom(tabAtom);
 
   return (
     <Container>
       <Tabs
         activeItem={tab}
-        onClick={(tabId) => setTab(tabId as TabType)}
+        onClick={(tabId) => setTab(tabId as TABS)}
         items={[
-          { id: TabType.run, label: "Run AI" },
-          { id: TabType.results, label: "Results" },
+          { id: TABS.run, label: "Run AI" },
+          { id: TABS.results, label: "Results" },
         ]}
       />
 
       <InnerContainer>
-        {tab === TabType.run && <RunTab ref={runTabRef} />}
-        {tab === TabType.results && <ResultsTab />}
+        {tab === TABS.run && <RunTab />}
+        {tab === TABS.results && <ResultsTab />}
       </InnerContainer>
     </Container>
   );

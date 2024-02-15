@@ -1,6 +1,6 @@
 import { getLocalConfig } from "../utils/config";
 
-import { ACTIONS } from "../utils/action";
+import { ACTIONS } from "../utils/constants";
 
 /**
  * Define context menus
