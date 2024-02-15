@@ -2,10 +2,9 @@ import { getLocalConfig } from "../utils/config";
 
 import { ACTIONS } from "../utils/constants";
 
-/**
- * Define context menus
- */
-chrome.runtime.onInstalled.addListener(async () => {
+const rebuildContextMenus = async () => {
+  chrome.contextMenus.removeAll();
+
   const config = await getLocalConfig();
 
   chrome.contextMenus.create({
@@ -21,6 +20,20 @@ chrome.runtime.onInstalled.addListener(async () => {
       contexts: ["selection"],
     });
   });
+};
+
+/**
+ * Rebuild context menus on extension install
+ */
+chrome.runtime.onInstalled.addListener(async () => {
+  rebuildContextMenus();
+});
+
+/**
+ * Rebuild context menus on config change
+ */
+chrome.storage.local.onChanged.addListener(() => {
+  rebuildContextMenus();
 });
 
 /**
