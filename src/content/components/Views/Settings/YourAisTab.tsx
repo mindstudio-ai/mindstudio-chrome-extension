@@ -123,7 +123,7 @@ const YourAisTab = () => {
 
       <Buttons>
         <Primary rounded onClick={() => onAdd()}>
-          Add AI
+          +
         </Primary>
       </Buttons>
     </Container>
