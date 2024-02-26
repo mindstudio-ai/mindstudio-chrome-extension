@@ -14,6 +14,7 @@ import {
   viewAtom,
   tabAtom,
   iframeSrcAtom,
+  prevViewAtom,
 } from "../../../atom";
 import useSubmit from "../../../hooks/useSubmit";
 
@@ -51,6 +52,7 @@ const RunTab = () => {
   const [, setView] = useAtom(viewAtom);
   const [, setTab] = useAtom(tabAtom);
   const [, setIframeSrc] = useAtom(iframeSrcAtom);
+  const [, setPrevView] = useAtom(prevViewAtom);
 
   const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
 
@@ -65,12 +67,13 @@ const RunTab = () => {
 
     const { threadId, appId } = submitResult;
 
+    setPrevView(VIEWS.main);
     setView(VIEWS.singleResult);
     setIframeSrc(getIframeSrcUrl(appId, threadId));
 
     setTimeout(() => {
       reloadThreads();
-    }, 1500);
+    }, 700);
   };
 
   if (activeAis.length === 0) {
