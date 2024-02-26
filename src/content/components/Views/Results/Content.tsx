@@ -1,24 +1,26 @@
 import { useAtom } from "jotai";
 import styled from "styled-components";
 
-import { viewAtom, tabAtom } from "../../../atom";
+import { viewAtom, tabAtom, iframeSrcAtom, prevViewAtom } from "../../../atom";
 
 import useConfig from "../../../hooks/useConfig";
 import useResults from "../../../hooks/useResults";
 import { TABS, VIEWS } from "../../../../utils/constants";
+import { getIframeSrcUrl } from "../../../../utils/request";
 
 import NotFound from "../../Placeholders/NotFound";
-import LinkIcon from "../../Icons/Link";
+import RightIcon from "../../Icons/Right";
 
 const Container = styled.div`
   padding-bottom: 30px;
 `;
 
-const Link = styled.a`
+const Link = styled.div`
   padding: 20px;
   background: rgb(247, 248, 248);
   border-radius: 20px;
   margin-bottom: 15px;
+  cursor: pointer;
 
   display: flex;
   align-items: center;
@@ -50,15 +52,6 @@ const AppName = styled.div`
   align-items: center;
 `;
 
-const Progress = styled.span`
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-left: 7px;
-  background: orange;
-`;
-
 const TopButtons = styled.div`
   display: flex;
   align-items: center;
@@ -82,6 +75,8 @@ const ResultsTab = () => {
 
   const [, setView] = useAtom(viewAtom);
   const [, setTab] = useAtom(tabAtom);
+  const [, setIframeSrc] = useAtom(iframeSrcAtom);
+  const [, setPrevView] = useAtom(prevViewAtom);
 
   const { threads, isLoading, isValidating, reloadThreads } = useResults();
 
@@ -137,18 +132,19 @@ const ResultsTab = () => {
 
         return (
           <Link
-            href={`https://youai.ai/ais/${t.appId}/use?initialThreadId=${t.threadId}`}
-            target="_blank"
             key={t.threadId}
+            onClick={() => {
+              setPrevView(VIEWS.results);
+              setView(VIEWS.singleResult);
+              setIframeSrc(getIframeSrcUrl(t.appId, t.threadId));
+            }}
           >
             <Main>
-              <AppName>
-                {appName} {t.isInProgress && <Progress />}
-              </AppName>
+              <AppName>{appName}</AppName>
               <ThreadName>{t.threadName || "Generating..."}</ThreadName>
             </Main>
 
-            <LinkIcon />
+            <RightIcon />
           </Link>
         );
       })}

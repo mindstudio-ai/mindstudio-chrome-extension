@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAtom } from "jotai";
 import styled, { css } from "styled-components";
 
-import { drawerOpenAtom, viewAtom, tabAtom } from "../../atom";
+import { drawerOpenAtom, viewAtom, tabAtom, prevViewAtom } from "../../atom";
 
 import { VIEWS, TABS } from "../../../utils/constants";
 
@@ -11,6 +11,7 @@ import CrossIcon from "../Icons/Cross";
 import CogIcon from "../Icons/Cog";
 import HomeIcon from "../Icons/Home";
 import ListIcon from "../Icons/List";
+import BackIcon from "../Icons/Back";
 
 const drawerWidth = 450;
 export const topbarHeight = 48;
@@ -94,18 +95,28 @@ const MenuButton = styled.button<{ isActive?: boolean }>`
     `}
 `;
 
+const GoBackButton = styled.div`
+  display: flex;
+  align-items: center;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+
+  > svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+  }
+`;
+
 type RightDrawerProps = {
   children: any;
-
-  showLogo?: boolean;
-  showMenu?: boolean;
-  showBack?: boolean;
-  goBackLabel?: string;
 };
 
-const RightDrawer = ({ children, showLogo = true }: RightDrawerProps) => {
+const RightDrawer = ({ children }: RightDrawerProps) => {
   const [open, setOpen] = useAtom(drawerOpenAtom);
   const [view, setView] = useAtom(viewAtom);
+  const [prevView, setPrevView] = useAtom(prevViewAtom);
   const [, setTab] = useAtom(tabAtom);
 
   /**
@@ -130,43 +141,56 @@ const RightDrawer = ({ children, showLogo = true }: RightDrawerProps) => {
   return (
     <DrawerContainer open={open}>
       <DrawerTopbar>
-        <DrawerButton onClick={() => setOpen(false)}>
-          <CrossIcon />
-        </DrawerButton>
-
-        {showLogo ? <FullLogo width={120} /> : <div />}
-
-        <MenuButtons>
-          <MenuButton
-            isActive={view === VIEWS.main}
+        {prevView ? (
+          <GoBackButton
             onClick={() => {
-              setView(VIEWS.main);
-              setTab(TABS.yourAis);
+              setPrevView(null);
+              setView(prevView);
             }}
           >
-            <HomeIcon />
-          </MenuButton>
+            <BackIcon /> Go Back
+          </GoBackButton>
+        ) : (
+          <DrawerButton onClick={() => setOpen(false)}>
+            <CrossIcon />
+          </DrawerButton>
+        )}
 
-          <MenuButton
-            isActive={view === VIEWS.results}
-            onClick={() => {
-              setView(VIEWS.results);
-              setTab(TABS.yourAis);
-            }}
-          >
-            <ListIcon />
-          </MenuButton>
+        {prevView === null && <FullLogo width={120} />}
 
-          <MenuButton
-            isActive={view === VIEWS.settings}
-            onClick={() => {
-              setView(VIEWS.settings);
-              setTab(TABS.yourAis);
-            }}
-          >
-            <CogIcon />
-          </MenuButton>
-        </MenuButtons>
+        {prevView === null && (
+          <MenuButtons>
+            <MenuButton
+              isActive={view === VIEWS.main}
+              onClick={() => {
+                setView(VIEWS.main);
+                setTab(TABS.yourAis);
+              }}
+            >
+              <HomeIcon />
+            </MenuButton>
+
+            <MenuButton
+              isActive={view === VIEWS.results}
+              onClick={() => {
+                setView(VIEWS.results);
+                setTab(TABS.yourAis);
+              }}
+            >
+              <ListIcon />
+            </MenuButton>
+
+            <MenuButton
+              isActive={view === VIEWS.settings}
+              onClick={() => {
+                setView(VIEWS.settings);
+                setTab(TABS.yourAis);
+              }}
+            >
+              <CogIcon />
+            </MenuButton>
+          </MenuButtons>
+        )}
       </DrawerTopbar>
 
       <DrawerContent>{children}</DrawerContent>
