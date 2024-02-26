@@ -15,8 +15,6 @@ import useMessage from "./hooks/useMessage";
 import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
-import GmailPlugin from "./components/Plugins/Gmail";
-import YouTubePlugin from "./components/Plugins/YouTube";
 
 const App = () => {
   const [, setOpen] = useAtom(drawerOpenAtom);
@@ -40,39 +38,46 @@ const App = () => {
       setView(VIEWS.main);
       setTab(TABS.run);
     }
+
+    if (msg.action === ACTIONS.loadHtmlSource) {
+      console.log(msg);
+    }
+
+    if (msg.action === ACTIONS.loadYouTubeCaptions) {
+      console.log(msg);
+    }
+
+    if (msg.action === ACTIONS.loadGmailEmail) {
+      console.log(msg);
+    }
   });
 
   return (
-    <>
-      <RightDrawer
-        showLogo={view === VIEWS.main}
-        showSettings={view === VIEWS.main}
-        showBack={view !== VIEWS.main}
-        onSettingsClick={() => {
-          setView(VIEWS.settings);
-          setTab(TABS.yourAis);
-        }}
-        onBackClick={() => {
-          if (view === VIEWS.settings) {
-            setView(VIEWS.main);
-            setTab(TABS.run);
-          }
-        }}
-        goBackLabel={(() => {
-          if (view === VIEWS.settings) {
-            return "Settings";
-          }
+    <RightDrawer
+      showLogo={view === VIEWS.main}
+      showSettings={view === VIEWS.main}
+      showBack={view !== VIEWS.main}
+      onSettingsClick={() => {
+        setView(VIEWS.settings);
+        setTab(TABS.yourAis);
+      }}
+      onBackClick={() => {
+        if (view === VIEWS.settings) {
+          setView(VIEWS.main);
+          setTab(TABS.run);
+        }
+      }}
+      goBackLabel={(() => {
+        if (view === VIEWS.settings) {
+          return "Settings";
+        }
 
-          return "Go Back";
-        })()}
-      >
-        {view === VIEWS.main && <Main />}
-        {view === VIEWS.settings && <Settings />}
-      </RightDrawer>
-
-      <GmailPlugin />
-      <YouTubePlugin />
-    </>
+        return "Go Back";
+      })()}
+    >
+      {view === VIEWS.main && <Main />}
+      {view === VIEWS.settings && <Settings />}
+    </RightDrawer>
   );
 };
 
