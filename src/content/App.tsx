@@ -11,6 +11,7 @@ import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
 import Results from "./components/Views/Results";
+import ResultView from "./components/Views/ResultView";
 
 const App = () => {
   const { submit } = useSubmit();
@@ -60,6 +61,7 @@ const App = () => {
       {view === VIEWS.main && <Main />}
       {view === VIEWS.results && <Results />}
       {view === VIEWS.settings && <Settings />}
+      {view === VIEWS.singleResult && <ResultView />}
     </RightDrawer>
   );
 };

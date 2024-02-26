@@ -11,4 +11,6 @@ export const messageAtom = atom("");
 export const aiIdxAtom = atom("");
 export const isSubmittingAtom = atom(false);
 
+export const iframeSrcAtom = atom("");
+
 export const configAtom = atom<ConfigType>(defaultConfig);

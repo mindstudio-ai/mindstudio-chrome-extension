@@ -6,7 +6,15 @@ import useConfig from "../../../hooks/useConfig";
 import useResults from "../../../hooks/useResults";
 import { TABS, VIEWS } from "../../../../utils/constants";
 
-import { messageAtom, aiIdxAtom, viewAtom, tabAtom } from "../../../atom";
+import { getIframeSrcUrl } from "../../../../utils/request";
+
+import {
+  messageAtom,
+  aiIdxAtom,
+  viewAtom,
+  tabAtom,
+  iframeSrcAtom,
+} from "../../../atom";
 import useSubmit from "../../../hooks/useSubmit";
 
 import Select from "../../Inputs/Select";
@@ -42,19 +50,27 @@ const RunTab = () => {
   const [message, setMessage] = useAtom(messageAtom);
   const [, setView] = useAtom(viewAtom);
   const [, setTab] = useAtom(tabAtom);
+  const [, setIframeSrc] = useAtom(iframeSrcAtom);
 
   const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
 
   const onSubmitClick = async () => {
     const aiIndex = Number(chosenAiIdx || "0");
 
-    const threadId = await submit(aiIndex, message);
+    const submitResult = await submit(aiIndex, message);
 
-    if (threadId) {
-      setView(VIEWS.results);
-
-      reloadThreads();
+    if (!submitResult) {
+      return;
     }
+
+    const { threadId, appId } = submitResult;
+
+    setView(VIEWS.singleResult);
+    setIframeSrc(getIframeSrcUrl(appId, threadId));
+
+    setTimeout(() => {
+      reloadThreads();
+    }, 1500);
   };
 
   if (activeAis.length === 0) {

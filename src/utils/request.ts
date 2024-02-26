@@ -87,3 +87,6 @@ export const getAppData = async ({ appId, apiKey }: GetAppDataProps) => {
 
   return data;
 };
+
+export const getIframeSrcUrl = (appId: string, threadId: string) =>
+  `https://youai.ai/ais/${appId}/use?initialThreadId=${threadId}&__displayContext=embedded`;
