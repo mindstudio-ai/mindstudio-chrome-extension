@@ -1,14 +1,11 @@
 import { useAtom } from "jotai";
 import styled from "styled-components";
-import useSWRImmutable from "swr/immutable";
 
 import { viewAtom, tabAtom } from "../../../atom";
 
 import useConfig from "../../../hooks/useConfig";
+import useResults from "../../../hooks/useResults";
 import { TABS, VIEWS } from "../../../../utils/constants";
-
-import { getAppData } from "../../../../utils/request";
-import { getLocalConfig } from "../../../../utils/config";
 
 import NotFound from "../../Placeholders/NotFound";
 import LinkIcon from "../../Icons/Link";
@@ -80,82 +77,13 @@ const LoadingIndicator = styled.div`
   font-weight: bold;
 `;
 
-type ThreadResult = {
-  appId: string;
-  appName: string;
-  threadId: string;
-  threadName: string;
-  dateCreated: string;
-  isInProgress: boolean;
-};
-
-/**
- * Load threads of all configured AIs, group and sort by dateCreated
- */
-export const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
-  const config = await getLocalConfig();
-
-  const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
-
-  if (activeAis.length === 0) {
-    return [];
-  }
-
-  const results = await Promise.all(
-    activeAis.map(({ appId, apiKey }) =>
-      getAppData({
-        appId: appId,
-        apiKey: apiKey,
-      })
-    )
-  );
-
-  const threadResults: ThreadResult[] = results.flatMap((obj) => {
-    return obj.threads.map((thread: any) => {
-      let isInProgress = false;
-
-      try {
-        isInProgress = thread.posts.some(
-          (post: any) => post.chatMessage.isInProgress === true
-        );
-      } catch (e) {}
-
-      if (thread.name === "") {
-        isInProgress = true;
-      }
-
-      return {
-        appId: thread.appId,
-        appName: obj.app.name,
-        threadId: thread.id,
-        threadName: thread.name,
-        dateCreated: thread.dateCreated,
-        isInProgress,
-      };
-    });
-  });
-
-  threadResults.sort((a, b) => {
-    return (
-      new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
-    );
-  });
-
-  return threadResults;
-};
-
 const ResultsTab = () => {
   const { config } = useConfig();
 
   const [, setView] = useAtom(viewAtom);
   const [, setTab] = useAtom(tabAtom);
 
-  const {
-    data: threads,
-    isLoading,
-    isValidating,
-    mutate: reloadThreads,
-  } = useSWRImmutable("fetchThreads", fetchAndGroupThreads);
+  const { threads, isLoading, isValidating, reloadThreads } = useResults();
 
   const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
 

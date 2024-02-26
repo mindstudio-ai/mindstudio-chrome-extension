@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useAtom } from "jotai";
-import { useSWRConfig } from "swr";
 
 import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
+import useResults from "../../../hooks/useResults";
 import { TABS, VIEWS } from "../../../../utils/constants";
 
 import { messageAtom, aiIdxAtom, viewAtom, tabAtom } from "../../../atom";
@@ -15,8 +15,6 @@ import TextArea from "../../Inputs/TextArea";
 import Label from "../../Inputs/Label";
 import Button from "../../Buttons/Primary";
 import NotFound from "../../Placeholders/NotFound";
-
-import { fetchAndGroupThreads } from "../Results/Content";
 
 const Container = styled.div`
   height: 100%;
@@ -38,7 +36,7 @@ const Footer = styled.div``;
 const RunTab = () => {
   const { config } = useConfig();
 
-  const { mutate } = useSWRConfig();
+  const { reloadThreads } = useResults();
 
   const [chosenAiIdx, setChosenAiIdx] = useAtom(aiIdxAtom);
   const [message, setMessage] = useAtom(messageAtom);
@@ -68,7 +66,7 @@ const RunTab = () => {
 
     setView(VIEWS.results);
 
-    mutate("fetchThreads", fetchAndGroupThreads);
+    reloadThreads();
   };
 
   if (activeAis.length === 0) {
