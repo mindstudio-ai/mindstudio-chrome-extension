@@ -1,13 +1,16 @@
 import { useEffect } from "react";
 import { useAtom } from "jotai";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
-import { drawerOpenAtom } from "../../atom";
+import { drawerOpenAtom, viewAtom, tabAtom } from "../../atom";
+
+import { VIEWS, TABS } from "../../../utils/constants";
 
 import FullLogo from "../Logo/Full";
 import CrossIcon from "../Icons/Cross";
 import CogIcon from "../Icons/Cog";
-import BackIcon from "../Icons/Back";
+import HomeIcon from "../Icons/Home";
+import ListIcon from "../Icons/List";
 
 const drawerWidth = 450;
 export const topbarHeight = 48;
@@ -46,50 +49,64 @@ const DrawerButton = styled.button`
   cursor: pointer;
 `;
 
-const GoBackButton = styled.div`
-  display: flex;
-  align-items: center;
-  color: #111;
-  font-weight: bold;
-  cursor: pointer;
-
-  > svg {
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-  }
-`;
-
 const DrawerTopbar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 0 0 10px;
   border-bottom: 1px solid rgb(205, 206, 206);
   background: rgb(247, 248, 248);
   height: ${topbarHeight}px;
 `;
 
+const MenuButtons = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const MenuButton = styled.button<{ isActive?: boolean }>`
+  border: unset;
+  border-left: 1px solid rgb(205, 206, 206);
+  background: transparent;
+  color: rgb(76, 77, 77);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  height: ${topbarHeight}px;
+  width: ${topbarHeight}px;
+
+  > svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:last-item {
+    border-left: unset;
+  }
+
+  ${({ isActive }) =>
+    isActive &&
+    css`
+      background: white;
+    `}
+`;
+
 type RightDrawerProps = {
   children: any;
-  onSettingsClick?: () => void;
-  onBackClick?: () => void;
+
   showLogo?: boolean;
-  showSettings?: boolean;
+  showMenu?: boolean;
   showBack?: boolean;
   goBackLabel?: string;
 };
 
-const RightDrawer = ({
-  children,
-  onSettingsClick,
-  onBackClick,
-  showLogo = false,
-  showSettings = false,
-  showBack = false,
-  goBackLabel = "Go Back",
-}: RightDrawerProps) => {
+const RightDrawer = ({ children, showLogo = true }: RightDrawerProps) => {
   const [open, setOpen] = useAtom(drawerOpenAtom);
+  const [view, setView] = useAtom(viewAtom);
+  const [, setTab] = useAtom(tabAtom);
 
   /**
    * Will move the page so the contents are visible and easier to copy
@@ -113,25 +130,43 @@ const RightDrawer = ({
   return (
     <DrawerContainer open={open}>
       <DrawerTopbar>
-        {showBack ? (
-          <GoBackButton onClick={onBackClick}>
-            <BackIcon /> {goBackLabel}
-          </GoBackButton>
-        ) : (
-          <DrawerButton onClick={() => setOpen(false)}>
-            <CrossIcon />
-          </DrawerButton>
-        )}
+        <DrawerButton onClick={() => setOpen(false)}>
+          <CrossIcon />
+        </DrawerButton>
 
-        {showLogo ? <FullLogo width={120} /> : <div />}
+        {showLogo ? <FullLogo width={110} /> : <div />}
 
-        {showSettings ? (
-          <DrawerButton onClick={onSettingsClick}>
+        <MenuButtons>
+          <MenuButton
+            isActive={view === VIEWS.main}
+            onClick={() => {
+              setView(VIEWS.main);
+              setTab(TABS.yourAis);
+            }}
+          >
+            <HomeIcon />
+          </MenuButton>
+
+          <MenuButton
+            isActive={view === VIEWS.results}
+            onClick={() => {
+              setView(VIEWS.results);
+              setTab(TABS.yourAis);
+            }}
+          >
+            <ListIcon />
+          </MenuButton>
+
+          <MenuButton
+            isActive={view === VIEWS.settings}
+            onClick={() => {
+              setView(VIEWS.settings);
+              setTab(TABS.yourAis);
+            }}
+          >
             <CogIcon />
-          </DrawerButton>
-        ) : (
-          <div />
-        )}
+          </MenuButton>
+        </MenuButtons>
       </DrawerTopbar>
 
       <DrawerContent>{children}</DrawerContent>

@@ -9,6 +9,7 @@ export enum ACTIONS {
 export enum VIEWS {
   "main" = "main",
   "settings" = "settings",
+  "results" = "results",
 }
 
 export enum TABS {

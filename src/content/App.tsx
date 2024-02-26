@@ -53,28 +53,7 @@ const App = () => {
   });
 
   return (
-    <RightDrawer
-      showLogo={view === VIEWS.main}
-      showSettings={view === VIEWS.main}
-      showBack={view !== VIEWS.main}
-      onSettingsClick={() => {
-        setView(VIEWS.settings);
-        setTab(TABS.yourAis);
-      }}
-      onBackClick={() => {
-        if (view === VIEWS.settings) {
-          setView(VIEWS.main);
-          setTab(TABS.run);
-        }
-      }}
-      goBackLabel={(() => {
-        if (view === VIEWS.settings) {
-          return "Settings";
-        }
-
-        return "Go Back";
-      })()}
-    >
+    <RightDrawer>
       {view === VIEWS.main && <Main />}
       {view === VIEWS.settings && <Settings />}
     </RightDrawer>
