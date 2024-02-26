@@ -1,30 +1,42 @@
 import { useAtom } from "jotai";
 
-import { drawerOpenAtom, messageAtom, viewAtom, aiIdxAtom } from "./atom";
+import {
+  drawerOpenAtom,
+  messageAtom,
+  viewAtom,
+  aiIdxAtom,
+  prevViewAtom,
+  iframeSrcAtom,
+} from "./atom";
 
 import { ACTIONS, VIEWS } from "../utils/constants";
 
 import useMessage from "./hooks/useMessage";
-import useSubmit from "./hooks/useSubmit";
+import useSubmit, { SubmitResult } from "./hooks/useSubmit";
+import useResults from "./hooks/useResults";
 
 import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
 import Results from "./components/Views/Results";
 import ResultView from "./components/Views/ResultView";
+import { getIframeSrcUrl } from "../utils/request";
 
 const App = () => {
   const { submit } = useSubmit();
+  const { reloadThreads } = useResults();
 
   const [, setOpen] = useAtom(drawerOpenAtom);
   const [, setMessage] = useAtom(messageAtom);
   const [, setAiIndex] = useAtom(aiIdxAtom);
   const [view, setView] = useAtom(viewAtom);
+  const [, setPrevView] = useAtom(prevViewAtom);
+  const [, setIframeSrc] = useAtom(iframeSrcAtom);
 
   /**
    * Listen for messages
    */
-  useMessage((msg) => {
+  useMessage(async (msg) => {
     if (msg.action === ACTIONS.openDrawer) {
       setOpen(true);
     }
@@ -43,16 +55,32 @@ const App = () => {
       setView(VIEWS.main);
     }
 
+    /**
+     * Submit from context menu
+     */
+    let submitResult: SubmitResult | null = null;
+
     if (msg.action === ACTIONS.submitSelection) {
       setOpen(true);
-      submit(Number(msg.aiIndex), msg.selection);
-      setView(VIEWS.results);
+      setPrevView(VIEWS.main);
+      setView(VIEWS.singleResult);
+      submitResult = await submit(Number(msg.aiIndex), msg.selection);
     }
 
     if (msg.action === ACTIONS.submitUrl) {
       setOpen(true);
-      submit(Number(msg.aiIndex), msg.url);
-      setView(VIEWS.results);
+      setPrevView(VIEWS.main);
+      setView(VIEWS.singleResult);
+      submitResult = await submit(Number(msg.aiIndex), msg.url);
+    }
+
+    if (submitResult) {
+      const { threadId, appId } = submitResult;
+      setIframeSrc(getIframeSrcUrl(appId, threadId));
+
+      setTimeout(() => {
+        reloadThreads();
+      }, 700);
     }
   });
 

@@ -5,7 +5,7 @@ import { isSubmittingAtom } from "../atom";
 import { runWorkflow } from "../../utils/request";
 import { getLocalConfig } from "../../utils/config";
 
-type SubmitResult = {
+export type SubmitResult = {
   threadId: string;
   appId: string;
 };

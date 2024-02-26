@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 
-const useMessage = (onMessage: (msg: any) => void, deps = []) => {
+const useMessage = (onMessage: (msg: any) => Promise<void>, deps = []) => {
   useEffect(() => {
-    const handler = (msg: any) => {
-      onMessage(msg);
+    const handler = async (msg: any) => {
+      await onMessage(msg);
 
       return false;
     };
