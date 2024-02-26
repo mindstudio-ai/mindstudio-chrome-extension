@@ -5,7 +5,7 @@ import { ConfigType, defaultConfig } from "../utils/config";
 
 export const drawerOpenAtom = atom(false);
 export const viewAtom = atom<VIEWS>(VIEWS.main);
-export const tabAtom = atom<TABS>(TABS.run);
+export const tabAtom = atom<TABS>(TABS.yourAis);
 
 export const messageAtom = atom("");
 export const aiIdxAtom = atom("");

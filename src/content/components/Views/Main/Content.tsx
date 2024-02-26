@@ -16,7 +16,7 @@ import Label from "../../Inputs/Label";
 import Button from "../../Buttons/Primary";
 import NotFound from "../../Placeholders/NotFound";
 
-import { fetchAndGroupThreads } from "./ResultsTab";
+import { fetchAndGroupThreads } from "../Results/Content";
 
 const Container = styled.div`
   height: 100%;
@@ -66,7 +66,7 @@ const RunTab = () => {
 
     setIsSubmitting(false);
 
-    setTab(TABS.results);
+    setView(VIEWS.results);
 
     mutate("fetchThreads", fetchAndGroupThreads);
   };

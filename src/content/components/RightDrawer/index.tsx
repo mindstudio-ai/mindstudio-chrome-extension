@@ -134,7 +134,7 @@ const RightDrawer = ({ children, showLogo = true }: RightDrawerProps) => {
           <CrossIcon />
         </DrawerButton>
 
-        {showLogo ? <FullLogo width={110} /> : <div />}
+        {showLogo ? <FullLogo width={120} /> : <div />}
 
         <MenuButtons>
           <MenuButton

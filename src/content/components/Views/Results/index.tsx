@@ -13,7 +13,7 @@ const InnerContainer = styled.div`
   height: calc(100% - ${topbarHeight}px);
 `;
 
-const Main = () => {
+const Results = () => {
   return (
     <Container>
       <InnerContainer>
@@ -23,4 +23,4 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default Results;

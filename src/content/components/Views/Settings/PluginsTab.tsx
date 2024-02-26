@@ -15,6 +15,7 @@ const Row = styled.div`
 const Main = styled.div`
   display: flex;
   align-items: center;
+  user-select: none;
 `;
 
 const Logo = styled.div`

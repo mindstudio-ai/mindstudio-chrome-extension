@@ -15,6 +15,7 @@ import useMessage from "./hooks/useMessage";
 import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
 import Settings from "./components/Views/Settings";
+import Results from "./components/Views/Results";
 
 const App = () => {
   const [, setOpen] = useAtom(drawerOpenAtom);
@@ -36,7 +37,6 @@ const App = () => {
       setMessage(msg.selection);
       setAiIndex(msg.aiIndex);
       setView(VIEWS.main);
-      setTab(TABS.run);
     }
 
     if (msg.action === ACTIONS.loadHtmlSource) {
@@ -55,6 +55,7 @@ const App = () => {
   return (
     <RightDrawer>
       {view === VIEWS.main && <Main />}
+      {view === VIEWS.results && <Results />}
       {view === VIEWS.settings && <Settings />}
     </RightDrawer>
   );

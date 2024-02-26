@@ -13,8 +13,6 @@ export enum VIEWS {
 }
 
 export enum TABS {
-  "run" = "run",
-  "results" = "results",
   "yourAis" = "yourAis",
   "plugins" = "plugins",
 }
