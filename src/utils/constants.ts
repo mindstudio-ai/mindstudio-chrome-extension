@@ -1,9 +1,9 @@
 export enum ACTIONS {
   openDrawer = "openDrawer",
-  loadSelection = "loadSelection",
-  loadHtmlSource = "loadHtmlSource",
-  loadYouTubeCaptions = "loadYouTubeCaptions",
-  loadGmailEmail = "loadGmailEmail",
+  useUrl = "useUrl",
+  submitUrl = "submitUrl",
+  useSelection = "useSelection",
+  submitSelection = "submitSelection",
 }
 
 export enum VIEWS {

@@ -1,14 +1,8 @@
 import { useAtom } from "jotai";
 
-import {
-  drawerOpenAtom,
-  messageAtom,
-  viewAtom,
-  aiIdxAtom,
-  tabAtom,
-} from "./atom";
+import { drawerOpenAtom, messageAtom, viewAtom, aiIdxAtom } from "./atom";
 
-import { ACTIONS, TABS, VIEWS } from "../utils/constants";
+import { ACTIONS, VIEWS } from "../utils/constants";
 
 import useMessage from "./hooks/useMessage";
 
@@ -22,7 +16,6 @@ const App = () => {
   const [, setMessage] = useAtom(messageAtom);
   const [, setAiIndex] = useAtom(aiIdxAtom);
   const [view, setView] = useAtom(viewAtom);
-  const [, setTab] = useAtom(tabAtom);
 
   /**
    * Listen for messages
@@ -32,22 +25,25 @@ const App = () => {
       setOpen(true);
     }
 
-    if (msg.action === ACTIONS.loadSelection) {
+    if (msg.action === ACTIONS.useSelection) {
       setOpen(true);
       setMessage(msg.selection);
       setAiIndex(msg.aiIndex);
       setView(VIEWS.main);
     }
 
-    if (msg.action === ACTIONS.loadHtmlSource) {
-      console.log(msg);
+    if (msg.action === ACTIONS.useUrl) {
+      setOpen(true);
+      setMessage(msg.url);
+      setAiIndex(msg.aiIndex);
+      setView(VIEWS.main);
     }
 
-    if (msg.action === ACTIONS.loadYouTubeCaptions) {
-      console.log(msg);
+    if (msg.action === ACTIONS.submitSelection) {
+      console.log(msg.selection);
     }
 
-    if (msg.action === ACTIONS.loadGmailEmail) {
+    if (msg.action === ACTIONS.submitUrl) {
       console.log(msg);
     }
   });

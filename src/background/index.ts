@@ -10,7 +10,7 @@ const rebuildContextMenus = async () => {
   const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
 
   chrome.contextMenus.create({
-    id: "openDrawer",
+    id: ACTIONS.openDrawer,
     title: "Open Mindstudio",
     contexts: ["all"],
   });
@@ -22,12 +22,18 @@ const rebuildContextMenus = async () => {
   });
 
   /**
-   * Load HTML Source
+   * Use current page's URL as a message
    */
   activeAis.forEach((ai, idx) => {
     chrome.contextMenus.create({
-      id: `loadHtml-${idx}`,
-      title: `Run "${ai.name}" : Scrape URL`,
+      id: `${ACTIONS.useUrl}-${idx}`,
+      title: `${ai.name} - Preload Current URL`,
+      contexts: ["all"],
+    });
+
+    chrome.contextMenus.create({
+      id: `${ACTIONS.submitUrl}-${idx}`,
+      title: `${ai.name} - Submit Current URL`,
       contexts: ["all"],
     });
   });
@@ -39,9 +45,9 @@ const rebuildContextMenus = async () => {
   });
 
   /**
-   * Load YouTube captions
+   * YouTube & Gmail tests
    */
-  activeAis.forEach((ai, idx) => {
+  /*activeAis.forEach((ai, idx) => {
     chrome.contextMenus.create({
       id: `loadYoutubeCaptions-${idx}`,
       title: `Run "${ai.name}" : YouTube Captions`,
@@ -52,16 +58,6 @@ const rebuildContextMenus = async () => {
       ],
     });
   });
-
-  chrome.contextMenus.create({
-    id: "s3",
-    type: "separator",
-    contexts: ["all"],
-  });
-
-  /**
-   * Load Gmail emails
-   */
   activeAis.forEach((ai, idx) => {
     chrome.contextMenus.create({
       id: `loadGmailEmail-${idx}`,
@@ -70,20 +66,26 @@ const rebuildContextMenus = async () => {
       documentUrlPatterns: ["*://mail.google.com/mail*"],
     });
   });
-
   chrome.contextMenus.create({
-    id: "s4",
+    id: "s3",
     type: "separator",
     contexts: ["all"],
   });
+  */
 
   /**
-   * Load Selection
+   * Load Selection as a message
    */
   activeAis.forEach((ai, idx) => {
     chrome.contextMenus.create({
-      id: `selection-${idx}`,
-      title: `Run "${ai.name}" : "%s"`,
+      id: `${ACTIONS.useSelection}-${idx}`,
+      title: `${ai.name} - Preload "%s"`,
+      contexts: ["selection"],
+    });
+
+    chrome.contextMenus.create({
+      id: `${ACTIONS.submitSelection}-${idx}`,
+      title: `${ai.name} - Submit "%s"`,
       contexts: ["selection"],
     });
   });
@@ -111,7 +113,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
 
-  if (info.menuItemId === "openDrawer") {
+  if (info.menuItemId === ACTIONS.openDrawer) {
     chrome.tabs.sendMessage(tab.id, {
       action: ACTIONS.openDrawer,
     });
@@ -126,39 +128,39 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   const action = String(info.menuItemId).split("-")[0];
   const aiIndex = Number(String(info.menuItemId).split("-")[1]);
 
-  if (action === "loadHtml") {
+  if (action === ACTIONS.useUrl) {
     chrome.tabs.sendMessage(tab.id, {
-      action: ACTIONS.loadHtmlSource,
+      action: ACTIONS.useUrl,
+      url: info.pageUrl,
       aiIndex,
-      info,
     });
 
     return;
   }
 
-  if (action === "loadYoutubeCaptions") {
+  if (action === ACTIONS.submitUrl) {
     chrome.tabs.sendMessage(tab.id, {
-      action: ACTIONS.loadYouTubeCaptions,
+      action: ACTIONS.useUrl,
+      url: info.pageUrl,
       aiIndex,
-      info,
     });
 
     return;
   }
 
-  if (action === "loadGmailEmail") {
+  if (action === ACTIONS.useSelection) {
     chrome.tabs.sendMessage(tab.id, {
-      action: ACTIONS.loadGmailEmail,
+      action: ACTIONS.useSelection,
+      selection: info.selectionText,
       aiIndex,
-      info,
     });
 
     return;
   }
 
-  if (action === "selection") {
+  if (action === ACTIONS.submitSelection) {
     chrome.tabs.sendMessage(tab.id, {
-      action: ACTIONS.loadSelection,
+      action: ACTIONS.submitSelection,
       selection: info.selectionText,
       aiIndex,
     });
