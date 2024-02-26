@@ -9,5 +9,6 @@ export const tabAtom = atom<TABS>(TABS.yourAis);
 
 export const messageAtom = atom("");
 export const aiIdxAtom = atom("");
+export const isSubmittingAtom = atom(false);
 
 export const configAtom = atom<ConfigType>(defaultConfig);

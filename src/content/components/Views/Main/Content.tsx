@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAtom } from "jotai";
 
 import styled from "styled-components";
@@ -8,7 +7,7 @@ import useResults from "../../../hooks/useResults";
 import { TABS, VIEWS } from "../../../../utils/constants";
 
 import { messageAtom, aiIdxAtom, viewAtom, tabAtom } from "../../../atom";
-import { runWorkflow } from "../../../../utils/request";
+import useSubmit from "../../../hooks/useSubmit";
 
 import Select from "../../Inputs/Select";
 import TextArea from "../../Inputs/TextArea";
@@ -37,36 +36,25 @@ const RunTab = () => {
   const { config } = useConfig();
 
   const { reloadThreads } = useResults();
+  const { submit, isSubmitting } = useSubmit();
 
   const [chosenAiIdx, setChosenAiIdx] = useAtom(aiIdxAtom);
   const [message, setMessage] = useAtom(messageAtom);
   const [, setView] = useAtom(viewAtom);
   const [, setTab] = useAtom(tabAtom);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeAis = config.ais.filter(({ apiKey, appId }) => apiKey && appId);
 
-  const onSubmit = async () => {
-    const chosenAi = config.ais[Number(chosenAiIdx || "0")];
+  const onSubmitClick = async () => {
+    const aiIndex = Number(chosenAiIdx || "0");
 
-    if (!chosenAi) {
-      alert("Choose an AI");
-      return;
+    const threadId = await submit(aiIndex, message);
+
+    if (threadId) {
+      setView(VIEWS.results);
+
+      reloadThreads();
     }
-
-    setIsSubmitting(true);
-
-    await runWorkflow({
-      appId: chosenAi.appId,
-      apiKey: chosenAi.apiKey,
-      message,
-    });
-
-    setIsSubmitting(false);
-
-    setView(VIEWS.results);
-
-    reloadThreads();
   };
 
   if (activeAis.length === 0) {
@@ -118,7 +106,7 @@ const RunTab = () => {
           fullWidth
           rounded
           disabled={isSubmitting}
-          onClick={() => onSubmit()}
+          onClick={onSubmitClick}
         >
           {isSubmitting ? "Loading..." : "Submit"}
         </Button>
