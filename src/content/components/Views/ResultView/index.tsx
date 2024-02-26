@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useAtom } from "jotai";
 
-import { iframeSrcAtom } from "../../../atom";
+import { iframeSrcAtom, isSubmittingAtom } from "../../../atom";
 
 const Container = styled.div`
   height: 100%;
@@ -14,12 +14,28 @@ const Iframe = styled.iframe`
   border: 0;
 `;
 
+const SubmittingPage = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: rgb(247, 248, 248);
+  font-style: italic;
+  font-size: 12px;
+`;
+
 const ResultView = () => {
+  const [isSubmitting] = useAtom(isSubmittingAtom);
+
   const [iframeSrc] = useAtom(iframeSrcAtom);
 
   return (
     <Container>
-      <Iframe src={iframeSrc} />
+      {isSubmitting ? (
+        <SubmittingPage>Submitting...</SubmittingPage>
+      ) : (
+        <Iframe src={iframeSrc} />
+      )}
     </Container>
   );
 };
