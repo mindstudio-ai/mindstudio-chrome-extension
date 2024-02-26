@@ -1,19 +1,19 @@
 import { useAtom } from "jotai";
 
 import { isSubmittingAtom } from "../atom";
-import useConfig from "./useConfig";
 
 import { runWorkflow } from "../../utils/request";
+import { getLocalConfig } from "../../utils/config";
 
 const useSubmit = () => {
-  const { config } = useConfig();
-
   const [isSubmitting, setIsSubmitting] = useAtom(isSubmittingAtom);
 
   const submit = async (
     aiIndex: number = 0,
     message: string
   ): Promise<string> => {
+    const config = await getLocalConfig();
+
     const chosenAi = config.ais[aiIndex];
 
     if (!chosenAi) {

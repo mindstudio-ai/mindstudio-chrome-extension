@@ -5,6 +5,7 @@ import { drawerOpenAtom, messageAtom, viewAtom, aiIdxAtom } from "./atom";
 import { ACTIONS, VIEWS } from "../utils/constants";
 
 import useMessage from "./hooks/useMessage";
+import useSubmit from "./hooks/useSubmit";
 
 import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
@@ -12,6 +13,8 @@ import Settings from "./components/Views/Settings";
 import Results from "./components/Views/Results";
 
 const App = () => {
+  const { submit } = useSubmit();
+
   const [, setOpen] = useAtom(drawerOpenAtom);
   const [, setMessage] = useAtom(messageAtom);
   const [, setAiIndex] = useAtom(aiIdxAtom);
@@ -40,11 +43,15 @@ const App = () => {
     }
 
     if (msg.action === ACTIONS.submitSelection) {
-      console.log(msg.selection);
+      setOpen(true);
+      submit(Number(msg.aiIndex), msg.selection);
+      setView(VIEWS.results);
     }
 
     if (msg.action === ACTIONS.submitUrl) {
-      console.log(msg);
+      setOpen(true);
+      submit(Number(msg.aiIndex), msg.url);
+      setView(VIEWS.results);
     }
   });
 
