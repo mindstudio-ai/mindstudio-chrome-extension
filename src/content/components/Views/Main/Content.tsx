@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import styled from "styled-components";
 
 import useConfig from "../../../hooks/useConfig";
-import useResults from "../../../hooks/useResults";
+import { reloadResults } from "../../../hooks/useResults";
 import { TABS, VIEWS } from "../../../../utils/constants";
 
 import { getIframeSrcUrl } from "../../../../utils/request";
@@ -44,7 +44,6 @@ const Footer = styled.div``;
 const RunTab = () => {
   const { config } = useConfig();
 
-  const { reloadThreads } = useResults();
   const { submit, isSubmitting } = useSubmit();
 
   const [chosenAiIdx, setChosenAiIdx] = useAtom(aiIdxAtom);
@@ -71,8 +70,11 @@ const RunTab = () => {
     setView(VIEWS.singleResult);
     setIframeSrc(getIframeSrcUrl(appId, threadId));
 
+    /**
+     * Wait for the threed's name generation
+     */
     setTimeout(() => {
-      reloadThreads();
+      reloadResults();
     }, 700);
   };
 

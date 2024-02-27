@@ -13,7 +13,7 @@ import { ACTIONS, VIEWS } from "../utils/constants";
 
 import useMessage from "./hooks/useMessage";
 import useSubmit, { SubmitResult } from "./hooks/useSubmit";
-import useResults from "./hooks/useResults";
+import { reloadResults } from "./hooks/useResults";
 
 import RightDrawer from "./components/RightDrawer";
 import Main from "./components/Views/Main";
@@ -24,7 +24,6 @@ import { getIframeSrcUrl } from "../utils/request";
 
 const App = () => {
   const { submit } = useSubmit();
-  const { reloadThreads } = useResults();
 
   const [, setOpen] = useAtom(drawerOpenAtom);
   const [, setMessage] = useAtom(messageAtom);
@@ -78,8 +77,11 @@ const App = () => {
       const { threadId, appId } = submitResult;
       setIframeSrc(getIframeSrcUrl(appId, threadId));
 
+      /**
+       * Wait for the threed's name generation
+       */
       setTimeout(() => {
-        reloadThreads();
+        reloadResults();
       }, 700);
     }
   });

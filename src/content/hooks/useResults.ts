@@ -1,3 +1,5 @@
+import { mutate } from "swr";
+
 import useSWRImmutable from "swr/immutable";
 
 import { getLocalConfig } from "../../utils/config";
@@ -64,6 +66,8 @@ const fetchAndGroupThreads = async (): Promise<ThreadResult[]> => {
 
   return threadResults;
 };
+
+export const reloadResults = () => mutate("fetchThreads", fetchAndGroupThreads);
 
 /**
  * Hook to get thread results
