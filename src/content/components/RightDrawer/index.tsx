@@ -36,25 +36,10 @@ const DrawerContent = styled.div`
   background-color: white;
 `;
 
-const DrawerButton = styled.button`
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid rgb(205, 206, 206);
-  background: white;
-  color: rgb(76, 77, 77);
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-`;
-
 const DrawerTopbar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 0 0 10px;
   border-bottom: 1px solid rgb(205, 206, 206);
   background: rgb(247, 248, 248);
   height: ${topbarHeight}px;
@@ -80,8 +65,8 @@ const MenuButton = styled.button<{ isActive?: boolean }>`
   width: ${topbarHeight}px;
 
   > svg {
-    width: 20px;
-    height: 20px;
+    width: 23px;
+    height: 23px;
   }
 
   &:last-item {
@@ -95,18 +80,29 @@ const MenuButton = styled.button<{ isActive?: boolean }>`
     `}
 `;
 
+const CloseButton = styled(MenuButton)`
+  border: unset;
+  margin-right: 3px;
+`;
+
 const GoBackButton = styled.div`
   display: flex;
   align-items: center;
   color: #111;
   font-weight: bold;
   cursor: pointer;
+  margin-left: 10px;
 
   > svg {
     width: 20px;
     height: 20px;
     margin-right: 8px;
   }
+`;
+
+const LogoContainer = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 type RightDrawerProps = {
@@ -151,46 +147,49 @@ const RightDrawer = ({ children }: RightDrawerProps) => {
             <BackIcon /> Go Back
           </GoBackButton>
         ) : (
-          <DrawerButton onClick={() => setOpen(false)}>
-            <CrossIcon />
-          </DrawerButton>
+          <LogoContainer>
+            <CloseButton onClick={() => setOpen(false)}>
+              <CrossIcon />
+            </CloseButton>
+
+            <FullLogo width={120} />
+          </LogoContainer>
         )}
 
-        {prevView === null && <FullLogo width={120} />}
+        <MenuButtons>
+          <MenuButton
+            isActive={view === VIEWS.main}
+            onClick={() => {
+              setPrevView(null);
+              setView(VIEWS.main);
+              setTab(TABS.yourAis);
+            }}
+          >
+            <HomeIcon />
+          </MenuButton>
 
-        {prevView === null && (
-          <MenuButtons>
-            <MenuButton
-              isActive={view === VIEWS.main}
-              onClick={() => {
-                setView(VIEWS.main);
-                setTab(TABS.yourAis);
-              }}
-            >
-              <HomeIcon />
-            </MenuButton>
+          <MenuButton
+            isActive={view === VIEWS.results}
+            onClick={() => {
+              setPrevView(null);
+              setView(VIEWS.results);
+              setTab(TABS.yourAis);
+            }}
+          >
+            <ListIcon />
+          </MenuButton>
 
-            <MenuButton
-              isActive={view === VIEWS.results}
-              onClick={() => {
-                setView(VIEWS.results);
-                setTab(TABS.yourAis);
-              }}
-            >
-              <ListIcon />
-            </MenuButton>
-
-            <MenuButton
-              isActive={view === VIEWS.settings}
-              onClick={() => {
-                setView(VIEWS.settings);
-                setTab(TABS.yourAis);
-              }}
-            >
-              <CogIcon />
-            </MenuButton>
-          </MenuButtons>
-        )}
+          <MenuButton
+            isActive={view === VIEWS.settings}
+            onClick={() => {
+              setPrevView(null);
+              setView(VIEWS.settings);
+              setTab(TABS.yourAis);
+            }}
+          >
+            <CogIcon />
+          </MenuButton>
+        </MenuButtons>
       </DrawerTopbar>
 
       <DrawerContent>{children}</DrawerContent>
