@@ -140,7 +140,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
   if (action === ACTIONS.submitUrl) {
     chrome.tabs.sendMessage(tab.id, {
-      action: ACTIONS.useUrl,
+      action: ACTIONS.submitUrl,
       url: info.pageUrl,
       aiIndex,
     });
