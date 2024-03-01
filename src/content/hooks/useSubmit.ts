@@ -3,7 +3,7 @@ import { useAtom } from "jotai";
 import { isSubmittingAtom } from "../atom";
 
 import { runWorkflow } from "../../utils/request";
-import { getLocalConfig } from "../../utils/config";
+import { DEFAULT_VARIABLE, getLocalConfig } from "../../utils/config";
 
 export type SubmitResult = {
   threadId: string;
@@ -32,6 +32,8 @@ const useSubmit = () => {
       appId: chosenAi.appId,
       apiKey: chosenAi.apiKey,
       message,
+      variableName: chosenAi.variableName || DEFAULT_VARIABLE,
+      workflow: chosenAi.workflow || undefined,
     });
 
     setIsSubmitting(false);

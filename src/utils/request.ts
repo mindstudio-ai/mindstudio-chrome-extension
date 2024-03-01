@@ -2,12 +2,14 @@ type RunWorkFlowProps = {
   appId: string;
   apiKey: string;
   message: string;
+  variableName: string;
   workflow?: string;
 };
 
 export const runWorkflow = async ({
   appId,
   message,
+  variableName,
   workflow,
   apiKey,
 }: RunWorkFlowProps): Promise<string> => {
@@ -16,7 +18,7 @@ export const runWorkflow = async ({
     body: JSON.stringify({
       appId,
       variables: {
-        message,
+        [variableName]: message,
       },
       workflow,
     }),
