@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
-import Gmail from "../../Logo/Gmail";
-import Youtube from "../../Logo/Youtube";
+import Gmail from "../../../Logo/Gmail";
+import Youtube from "../../../Logo/Youtube";
 
 const Container = styled.div``;
 

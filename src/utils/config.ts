@@ -1,4 +1,4 @@
-type AiType = {
+export type AiType = {
   name: string;
   appId: string;
   apiKey: string;
