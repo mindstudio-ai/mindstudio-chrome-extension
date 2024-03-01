@@ -1,7 +1,11 @@
+export const DEFAULT_VARIABLE = "message";
+
 export type AiType = {
   name: string;
   appId: string;
   apiKey: string;
+  variableName: string;
+  workflow: string;
 };
 
 export type ConfigType = {

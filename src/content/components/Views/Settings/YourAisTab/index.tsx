@@ -52,6 +52,8 @@ const YourAisTab = () => {
           name: "",
           appId: "",
           apiKey: "",
+          variableName: "",
+          workflow: "",
         },
       ],
     });

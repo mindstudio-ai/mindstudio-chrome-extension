@@ -1,7 +1,7 @@
 import { useState } from "react";
 import styled from "styled-components";
 
-import { AiType } from "../../../../../utils/config";
+import { AiType, DEFAULT_VARIABLE } from "../../../../../utils/config";
 
 import CrossIcon from "../../../Icons/Cross";
 import TextInput from "../../../Inputs/TextInput";
@@ -14,17 +14,22 @@ const AiRow = styled.div`
   background: rgb(247, 248, 248);
   border-radius: 20px;
   margin-bottom: 30px;
+`;
 
-  > input {
-    margin-bottom: 15px;
-  }
+const Margin = styled.div<{ mb?: string }>`
+  margin-bottom: ${({ mb }) => mb || "unset"};
+`;
+
+const Hint = styled.div`
+  font-size: 12px;
+  color: #666;
+  padding-left: 4px;
 `;
 
 const AiTop = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-between;
-  margin-bottom: 15px;
 `;
 
 const RemoveButton = styled.div`
@@ -49,6 +54,12 @@ const Buttons = styled.div`
   align-items: center;
   justify-content: flex-end;
   gap: 5px;
+
+  margin-top: 25px;
+`;
+
+const Variable = styled.code`
+  font-weight: 500;
 `;
 
 type RowProps = {
@@ -83,12 +94,16 @@ const Row = ({ initData, onRemove, onSave }: RowProps) => {
         </RemoveButton>
       </AiTop>
 
+      <Margin mb="15px" />
+
       <TextInput
         value={localData.name}
         placeholder="Name"
         onChange={(e) => onChange("name", e.target.value)}
         fullWidth
       />
+
+      <Margin mb="15px" />
 
       <TextInput
         value={localData.appId}
@@ -97,12 +112,46 @@ const Row = ({ initData, onRemove, onSave }: RowProps) => {
         fullWidth
       />
 
+      <Margin mb="15px" />
+
       <TextInput
         value={localData.apiKey}
         placeholder="API Key"
         onChange={(e) => onChange("apiKey", e.target.value)}
         fullWidth
       />
+
+      <Margin mb="15px" />
+
+      <TextInput
+        value={localData.variableName}
+        placeholder="Variable Name (Optional)"
+        onChange={(e) => onChange("variableName", e.target.value)}
+        fullWidth
+      />
+
+      <Margin mb="7px" />
+
+      <Hint>
+        Use{" "}
+        <Variable>{`{{$launchVariables->${
+          localData.variableName || DEFAULT_VARIABLE
+        }}}`}</Variable>{" "}
+        in your AI app
+      </Hint>
+
+      <Margin mb="15px" />
+
+      <TextInput
+        value={localData.workflow}
+        placeholder="Workflow (Optional)"
+        onChange={(e) => onChange("workflow", e.target.value)}
+        fullWidth
+      />
+
+      <Margin mb="7px" />
+
+      <Hint>If not included, default entry workflow will be invoked.</Hint>
 
       {hasChanged && (
         <Buttons>
