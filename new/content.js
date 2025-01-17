@@ -109,6 +109,18 @@ const sendMessageToPlayer = (event, payload = {}) => {
   }
 };
 
+const showPlayer = () => {
+  const playerFrame = document.getElementById('__MindStudioPlayer');
+  playerFrame.style.display = 'block';
+  playerFrame.style.opacity = '1';
+};
+
+const hidePlayer = () => {
+  const playerFrame = document.getElementById('__MindStudioPlayer');
+  playerFrame.style.display = 'none';
+  playerFrame.style.opacity = '0';
+};
+
 // Send the current URL to the launcher iframe
 const sendCurrentUrl = () => {
   sendMessageToLauncher(Actions.URL_CHANGED, { url: window.location.href });
@@ -196,11 +208,12 @@ const getAuthToken = async () =>
     });
   });
 
-const setAuthToken = async (token) => new Promise((resolve) => {
-  chrome.storage.local.set({ [AuthTokenStorageKey]: token }, () => {
-    resolve();
+const setAuthToken = async (token) =>
+  new Promise((resolve) => {
+    chrome.storage.local.set({ [AuthTokenStorageKey]: token }, () => {
+      resolve();
+    });
   });
-})
 
 window.__MindStudioMessageHandler = async ({ data }) => {
   try {
@@ -234,10 +247,9 @@ window.__MindStudioMessageHandler = async ({ data }) => {
 
       if (eventName === Events.SIZE_UPDATED) {
         const { width, height } = payload;
-        document.getElementById('__MindStudioLauncher').style.width =
-          `${width}px`;
-        document.getElementById('__MindStudioLauncher').style.height =
-          `${height}px`;
+        const launcherFrame = document.getElementById('__MindStudioLauncher');
+        launcherFrame.style.width = `${width}px`;
+        launcherFrame.style.height = `${height}px`;
       }
 
       if (eventName === Events.LAUNCH_WORKER) {
@@ -253,8 +265,7 @@ window.__MindStudioMessageHandler = async ({ data }) => {
             userSelection: getSelectedContent(),
           },
         });
-        playerFrame.style.display = 'block';
-        playerFrame.style.opacity = '1';
+        showPlayer();
       }
 
       if (eventName === Events.PLAYER_LOADED) {
@@ -274,8 +285,7 @@ window.__MindStudioMessageHandler = async ({ data }) => {
       }
 
       if (eventName === Events.CLOSE_WORKER) {
-        playerFrame.style.display = 'none';
-        playerFrame.style.opacity = '0';
+        hidePlayer();
       }
     }
   } catch (err) {
