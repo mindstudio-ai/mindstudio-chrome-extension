@@ -16,7 +16,7 @@ const Actions = {
 
 // Create the launcher iframe
 const launcherFrame = document.createElement('iframe');
-launcherFrame.src = 'http://localhost:3000/_extension/launcher';
+launcherFrame.src = 'https://app.mindstudio.ai/_extension/launcher';
 launcherFrame.id = '__MindStudioLauncher';
 launcherFrame.style = `
   position: fixed;
@@ -40,7 +40,7 @@ document.body.appendChild(launcherFrame);
 
 // Create the player frame
 const playerFrame = document.createElement('iframe');
-playerFrame.src = 'http://localhost:3000/_extension/player';
+playerFrame.src = 'https://app.mindstudio.ai/_extension/player';
 playerFrame.id = '__MindStudioPlayer';
 playerFrame.style = `
   position: fixed;
