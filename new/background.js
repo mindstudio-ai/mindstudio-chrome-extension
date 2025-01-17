@@ -7,17 +7,20 @@ chrome.declarativeNetRequest.updateDynamicRules({
         type: "modifyHeaders",
         responseHeaders: [
           {
-            header: "content-security-policy",
-            operation: "append",
-            value: "frame-src https://app.mindstudio.ai;"
+            "header": "X-Frame-Options",
+            "operation": "remove"
+          },
+          {
+            "header": "Content-Security-Policy",
+            "operation": "remove"
           }
         ]
       },
       condition: {
         urlFilter: "*",
-        resourceTypes: ["main_frame", "sub_frame"]
+        resourceTypes: ["main_frame"]
       }
     }
   ],
-  removeRuleIds: [1] // Optional: removes any existing rule with the same ID before adding.
+  removeRuleIds: [1]
 });

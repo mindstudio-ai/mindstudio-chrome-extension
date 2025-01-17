@@ -1,10 +1,15 @@
+const Environment = 'dev';
+const RootUrl =
+  Environment === 'dev' ? 'http://localhost:3000' : 'https://app.mindstudio.ai';
+const AuthTokenStorageKey = `AuthToken_${Environment}`;
+
 const Events = {
   LOADED: 'loaded',
   AUTHENTICATED: 'authenticated',
   SIZE_UPDATED: 'size_updated',
   LAUNCH_WORKER: 'launch_worker',
   PLAYER_LOADED: 'player/loaded',
-  CLOSE_WORKER: 'player/close_worker'
+  CLOSE_WORKER: 'player/close_worker',
 };
 
 const Actions = {
@@ -14,55 +19,76 @@ const Actions = {
   LOAD_WORKER: 'load_worker',
 };
 
-// Create the launcher iframe
-const launcherFrame = document.createElement('iframe');
-launcherFrame.src = 'https://app.mindstudio.ai/_extension/launcher';
-launcherFrame.id = '__MindStudioLauncher';
-launcherFrame.style = `
-  position: fixed;
-  bottom: 64px;
-  right: 0px;
-  width: 0;
-  height: 0;
-  border: none;
-  z-index: 10000;
-  background: transparent;
-`;
+const injectFrames = () => {
+  // Clean up any existing elements
+  try {
+    const existingLauncher = document.getElementById('__MindStudioLauncher');
+    if (existingLauncher) {
+      existingLauncher.remove();
+    }
 
-const currentPageIsMindStudio = (
-  window.top.location.host === 'app.mindstudio.ai' ||
-  window.top.location.host === 'localhost:3000'
-);
-if (currentPageIsMindStudio) {
-  launcherFrame.style += `display: none; width: 0; height: 0;`;
-}
-document.body.appendChild(launcherFrame);
+    const existingPlayer = document.getElementById('__MindStudioPlayer');
+    if (existingPlayer) {
+      existingPlayer.remove();
+    }
+  } catch (err) {
+    console.log(`Cleanup Error`, err);
+  }
 
-// Create the player frame
-const playerFrame = document.createElement('iframe');
-playerFrame.src = 'https://app.mindstudio.ai/_extension/player';
-playerFrame.id = '__MindStudioPlayer';
-playerFrame.style = `
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  border: none;
-  z-index: 10000;
-  background: transparent;
-  display: none;
-  opacity: 0;
-`;
-document.body.appendChild(playerFrame);
+  // Create the launcher iframe
+  const launcherFrame = document.createElement('iframe');
+  launcherFrame.src = `${RootUrl}/_extension/launcher?__displayContext=extension`;
+  launcherFrame.id = '__MindStudioLauncher';
+  launcherFrame.style = `
+    position: fixed;
+    bottom: 64px;
+    right: 0px;
+    width: 0;
+    height: 0;
+    border: none;
+    z-index: 10000;
+    background: transparent;
+  `;
+
+  // We still want the iframe so it can receive authentication events, but we do
+  // not want to display it on MindStudio
+  const currentPageIsMindStudio =
+    window.top.location.host === 'app.mindstudio.ai' ||
+    window.top.location.host === 'localhost:3000';
+  if (currentPageIsMindStudio) {
+    launcherFrame.style += `display: none; width: 0; height: 0;`;
+  }
+  document.body.appendChild(launcherFrame);
+
+  // Create the player frame
+  const playerFrame = document.createElement('iframe');
+  playerFrame.src = `${RootUrl}/_extension/player?__displayContext=extension`;
+  playerFrame.id = '__MindStudioPlayer';
+  playerFrame.style = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    z-index: 10000;
+    background: transparent;
+    display: none;
+    opacity: 0;
+  `;
+  document.body.appendChild(playerFrame);
+};
 
 // Send a message to the launcher iframe
 const sendMessageToLauncher = (event, payload = {}) => {
   try {
-    document.getElementById('__MindStudioLauncher').contentWindow.postMessage({
-      _MindStudioEvent: `@@mindstudio/${event}`,
-      payload,
-    }, '*');
+    document.getElementById('__MindStudioLauncher').contentWindow.postMessage(
+      {
+        _MindStudioEvent: `@@mindstudio/${event}`,
+        payload,
+      },
+      '*',
+    );
   } catch (err) {
     console.log(err);
   }
@@ -71,10 +97,13 @@ const sendMessageToLauncher = (event, payload = {}) => {
 // Send a message to the player iframe
 const sendMessageToPlayer = (event, payload = {}) => {
   try {
-    document.getElementById('__MindStudioPlayer').contentWindow.postMessage({
-      _MindStudioEvent: `@@mindstudio/player/${event}`,
-      payload,
-    }, '*');
+    document.getElementById('__MindStudioPlayer').contentWindow.postMessage(
+      {
+        _MindStudioEvent: `@@mindstudio/player/${event}`,
+        payload,
+      },
+      '*',
+    );
   } catch (err) {
     console.log(err);
   }
@@ -83,7 +112,7 @@ const sendMessageToPlayer = (event, payload = {}) => {
 // Send the current URL to the launcher iframe
 const sendCurrentUrl = () => {
   sendMessageToLauncher(Actions.URL_CHANGED, { url: window.location.href });
-}
+};
 
 // Attempt to clean the raw HTML of the page
 const cleanDOM = () => {
@@ -136,8 +165,11 @@ const getSelectedContent = () => {
 
     // Check if the selection is within a form field
     const activeElement = document.activeElement;
-    if (activeElement &&
-        (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+    if (
+      activeElement &&
+      (activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'INPUT')
+    ) {
       // Return the selected text from the form field
       const start = activeElement.selectionStart;
       const end = activeElement.selectionEnd;
@@ -153,14 +185,27 @@ const getSelectedContent = () => {
   }
 };
 
-// Listen for messages from the iframe
-window.addEventListener('message', ({ data }) => {
+const getAuthToken = async () =>
+  new Promise((resolve) => {
+    chrome.storage.local.get(AuthTokenStorageKey, (result) => {
+      if (result[AuthTokenStorageKey]) {
+        resolve(result[AuthTokenStorageKey]);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+
+const setAuthToken = async (token) => new Promise((resolve) => {
+  chrome.storage.local.set({ [AuthTokenStorageKey]: token }, () => {
+    resolve();
+  });
+})
+
+window.__MindStudioMessageHandler = async ({ data }) => {
   try {
     if (data._MindStudioEvent) {
-      const eventName = data._MindStudioEvent.replace(
-        '@@mindstudio/',
-        ''
-      );
+      const eventName = data._MindStudioEvent.replace('@@mindstudio/', '');
       const { payload } = data;
 
       if (eventName === Events.LOADED) {
@@ -168,13 +213,14 @@ window.addEventListener('message', ({ data }) => {
         if (!isLoggedIn) {
           // See if we have an auth token. If we do, send it. Otherwise, send a
           // "no token" state
-          chrome.storage.local.get('authToken', (result) => {
-            if (result.authToken) {
-              sendMessageToLauncher(Actions.AUTH_TOKEN_CHANGED, { authToken: result.authToken });
-            } else {
-              sendMessageToLauncher(Actions.LOGIN_REQUIRED);
-            }
-          });
+          const authToken = await getAuthToken();
+          if (authToken) {
+            sendMessageToLauncher(Actions.AUTH_TOKEN_CHANGED, {
+              authToken,
+            });
+          } else {
+            sendMessageToLauncher(Actions.LOGIN_REQUIRED);
+          }
         }
 
         sendCurrentUrl();
@@ -182,17 +228,16 @@ window.addEventListener('message', ({ data }) => {
 
       if (eventName === Events.AUTHENTICATED) {
         if (payload.authToken) {
-          chrome.storage.local.set({ authToken: payload.authToken }, () => {
-            launcherFrame.src += ''; // Trigger iframe reload
-            playerFrame.src += ''; // Trigger iframe reload
-          });
+          await setAuthToken(payload.authToken);
         }
       }
 
       if (eventName === Events.SIZE_UPDATED) {
         const { width, height } = payload;
-        document.getElementById('__MindStudioLauncher').style.width = `${width}px`;
-        document.getElementById('__MindStudioLauncher').style.height = `${height}px`;
+        document.getElementById('__MindStudioLauncher').style.width =
+          `${width}px`;
+        document.getElementById('__MindStudioLauncher').style.height =
+          `${height}px`;
       }
 
       if (eventName === Events.LAUNCH_WORKER) {
@@ -217,13 +262,14 @@ window.addEventListener('message', ({ data }) => {
         if (!isLoggedIn) {
           // See if we have an auth token. If we do, send it. Otherwise, send a
           // "no token" state
-          chrome.storage.local.get('authToken', (result) => {
-            if (result.authToken) {
-              sendMessageToPlayer(Actions.AUTH_TOKEN_CHANGED, { authToken: result.authToken });
-            } else {
-              sendMessageToPlayer(Actions.LOGIN_REQUIRED);
-            }
-          });
+          const authToken = await getAuthToken();
+          if (authToken) {
+            sendMessageToPlayer(Actions.AUTH_TOKEN_CHANGED, {
+              authToken,
+            });
+          } else {
+            sendMessageToPlayer(Actions.LOGIN_REQUIRED);
+          }
         }
       }
 
@@ -235,14 +281,36 @@ window.addEventListener('message', ({ data }) => {
   } catch (err) {
     console.log('[MindStudio Extension]', err);
   }
-});
+};
 
-// Listen for changes in the page URL and keep track of the current URL. Is
-// there really no better way of doing this in 2025? Crazy!
-window.__MindStudio_CurrentURL = window.location.href;
-setInterval(() => {
-  if (location.href !== window.__MindStudio_CurrentURL) {
-    window.__MindStudio_CurrentURL = location.href;
-    sendCurrentUrl();
+const initializeExtension = () => {
+  injectFrames();
+
+  // Add listener
+  try {
+    window.removeEventListener('message', window.__MindStudioMessageHandler);
+  } catch (err) {
+    //
   }
-}, 500);
+  window.addEventListener('message', window.__MindStudioMessageHandler);
+
+  // Listen for changes in the page URL and keep track of the current URL. Is
+  // there really no better way of doing this in 2025? Crazy!
+  if (window.__MindStudioUrlInterval) {
+    clearInterval(window.__MindStudioUrlInterval);
+    window.__MindStudioUrlInterval = null;
+  }
+
+  window.__MindStudio_CurrentURL = window.location.href;
+  window.__MindStudioUrlInterval = setInterval(() => {
+    if (location.href !== window.__MindStudio_CurrentURL) {
+      window.__MindStudio_CurrentURL = location.href;
+      sendCurrentUrl();
+    }
+  }, 500);
+};
+
+// Initialize only in top frame
+if (window.self === window.top) {
+  initializeExtension();
+}
