@@ -1,4 +1,4 @@
-const Environment = 'dev';
+const Environment = 'prod';
 const RootUrl =
   Environment === 'dev' ? 'http://localhost:3000' : 'https://app.mindstudio.ai';
 const AuthTokenStorageKey = `AuthToken_${Environment}`;
