@@ -20,49 +20,39 @@ const Actions = {
 };
 
 const injectFrames = () => {
-  // Clean up any existing elements
-  try {
-    const existingLauncher = document.getElementById('__MindStudioLauncher');
-    if (existingLauncher) {
-      existingLauncher.remove();
-    }
-
-    const existingPlayer = document.getElementById('__MindStudioPlayer');
-    if (existingPlayer) {
-      existingPlayer.remove();
-    }
-  } catch (err) {
-    console.log(`Cleanup Error`, err);
-  }
-
   // Create the launcher iframe
-  const launcherFrame = document.createElement('iframe');
-  launcherFrame.src = `${RootUrl}/_extension/launcher?__displayContext=extension`;
-  launcherFrame.id = '__MindStudioLauncher';
-  launcherFrame.style = `
-    position: fixed;
-    bottom: 64px;
-    right: 0px;
-    width: 0;
-    height: 0;
-    border: none;
-    z-index: 10000;
-    background: transparent;
-  `;
+  const existingLauncher = document.getElementById('__MindStudioLauncher');
+  if (!existingLauncher) {
+    const launcherFrame = document.createElement('iframe');
+    launcherFrame.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1`;
+    launcherFrame.id = '__MindStudioLauncher';
+    launcherFrame.style = `
+      position: fixed;
+      bottom: 64px;
+      right: 0px;
+      width: 0;
+      height: 0;
+      border: none;
+      z-index: 999999;
+      background: transparent;
+    `;
 
-  // We still want the iframe so it can receive authentication events, but we do
-  // not want to display it on MindStudio
-  const currentPageIsMindStudio =
-    window.top.location.host === 'app.mindstudio.ai' ||
-    window.top.location.host === 'localhost:3000';
-  if (currentPageIsMindStudio) {
-    launcherFrame.style += `display: none; width: 0; height: 0;`;
+    // We still want the iframe so it can receive authentication events, but we do
+    // not want to display it on MindStudio
+    const currentPageIsMindStudio =
+      window.top.location.host === 'app.mindstudio.ai' ||
+      window.top.location.host === 'localhost:3000';
+    if (currentPageIsMindStudio) {
+      launcherFrame.style += `display: none; width: 0; height: 0;`;
+    }
+    document.body.appendChild(launcherFrame);
   }
-  document.body.appendChild(launcherFrame);
 
   // Create the player frame
+  const existingPlayer = document.getElementById('__MindStudioPlayer');
+  if (!existingPlayer) {
   const playerFrame = document.createElement('iframe');
-  playerFrame.src = `${RootUrl}/_extension/player?__displayContext=extension`;
+  playerFrame.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
   playerFrame.id = '__MindStudioPlayer';
   playerFrame.style = `
     position: fixed;
@@ -71,12 +61,13 @@ const injectFrames = () => {
     width: 100vw;
     height: 100vh;
     border: none;
-    z-index: 10000;
+    z-index: 999999;
     background: transparent;
     display: none;
     opacity: 0;
   `;
   document.body.appendChild(playerFrame);
+  }
 };
 
 // Send a message to the launcher iframe
@@ -294,6 +285,15 @@ window.__MindStudioMessageHandler = async ({ data }) => {
 };
 
 const initializeExtension = () => {
+  window.__MindStudioHasInjected = true;
+
+  // Initialize only in top frame
+  if (window.self !== window.top) {
+    return;
+  }
+
+  console.log('Init')
+
   injectFrames();
 
   // Add listener
@@ -316,11 +316,13 @@ const initializeExtension = () => {
     if (location.href !== window.__MindStudio_CurrentURL) {
       window.__MindStudio_CurrentURL = location.href;
       sendCurrentUrl();
+      initializeExtension();
     }
   }, 500);
 };
 
-// Initialize only in top frame
-if (window.self === window.top) {
-  initializeExtension();
-}
+setInterval(() => {
+  if (!window.__MindStudioHasInjected) {
+    initializeExtension();
+  }
+}, 500);
