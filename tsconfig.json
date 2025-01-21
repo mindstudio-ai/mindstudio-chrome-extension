@@ -7,7 +7,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": [
+      "chrome"
+    ]
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/**/*"
+  ]
 }
