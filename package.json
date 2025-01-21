@@ -38,6 +38,8 @@
   },
   "dependencies": {
     "jotai": "^2.6.4",
+    "prettier": "^3.4.2",
+    "prettier-plugin-curly": "^0.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^6.1.8",
