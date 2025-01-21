@@ -4,23 +4,23 @@ chrome.declarativeNetRequest.updateDynamicRules({
       id: 1,
       priority: 1,
       action: {
-        type: "modifyHeaders",
+        type: 'modifyHeaders',
         responseHeaders: [
           {
-            "header": "X-Frame-Options",
-            "operation": "remove"
+            header: 'X-Frame-Options',
+            operation: 'remove',
           },
           {
-            "header": "Content-Security-Policy",
-            "operation": "remove"
-          }
-        ]
+            header: 'Content-Security-Policy',
+            operation: 'remove',
+          },
+        ],
       },
       condition: {
-        urlFilter: "*",
-        resourceTypes: ["main_frame"]
-      }
-    }
+        urlFilter: '*',
+        resourceTypes: ['main_frame'],
+      },
+    },
   ],
-  removeRuleIds: [1]
+  removeRuleIds: [1],
 });

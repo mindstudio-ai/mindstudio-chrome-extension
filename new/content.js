@@ -51,10 +51,10 @@ const injectFrames = () => {
   // Create the player frame
   const existingPlayer = document.getElementById('__MindStudioPlayer');
   if (!existingPlayer) {
-  const playerFrame = document.createElement('iframe');
-  playerFrame.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
-  playerFrame.id = '__MindStudioPlayer';
-  playerFrame.style = `
+    const playerFrame = document.createElement('iframe');
+    playerFrame.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
+    playerFrame.id = '__MindStudioPlayer';
+    playerFrame.style = `
     position: fixed;
     top: 0;
     left: 0;
@@ -66,7 +66,7 @@ const injectFrames = () => {
     display: none;
     opacity: 0;
   `;
-  document.body.appendChild(playerFrame);
+    document.body.appendChild(playerFrame);
   }
 };
 
@@ -292,7 +292,7 @@ const initializeExtension = () => {
     return;
   }
 
-  console.log('Init')
+  console.log('Init');
 
   injectFrames();
 

@@ -8,11 +8,25 @@
   "scripts": {
     "dev": "webpack --watch --config webpack.dev.cjs",
     "build": "webpack --config webpack.prod.cjs",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint \"**/*.{ts,js,cjs}\"",
+    "lint:fix": "eslint \"**/*.{ts,js,cjs}\" --fix",
+    "format": "prettier --write \"**/*.{ts,js,json,cjs}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,cjs}\"",
+    "prebuild": "npm run type-check && npm run lint && npm run format:check"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@types/chrome": "^0.0.299",
+    "@typescript-eslint/eslint-plugin": "^8.21.0",
+    "@typescript-eslint/parser": "^8.21.0",
     "copy-webpack-plugin": "^12.0.2",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-curly": "^0.3.1",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
     "webpack": "^5.97.1",
