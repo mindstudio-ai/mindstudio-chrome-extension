@@ -1,99 +1,90 @@
 # MindStudio Chrome Extension
 
-Chrome extension for MindStudio that allows users to interact with MindStudio workers directly from any webpage.
+This repository contains the MindStudio Chrome Extension, allowing users to interact with MindStudio workers from any webpage. It injects a launcher dock for quick access to workers, provides page context (such as DOM content and user selections) to these workers, and maintains authentication state.
 
 ## Overview
 
-The extension injects a launcher dock into webpages that allows users to:
+• Injects iframes (launcher and player) onto webpages  
+• Gathers page context (DOM, selected text, current URL)  
+• Manages user authentication tokens  
+• Communicates with the MindStudio platform via message passing
 
-- Access their MindStudio workers from any webpage
-- Execute workers with context from the current page
-- Maintain authentication state across sessions
+## Quick Start
 
-## New Architecture
+1. Install dependencies:  
 
-We have introduced several core services to improve maintainability and feature parity with the original content script:
+   ```bash
+   npm install
+   ```
 
-- **DOMService**: Handles DOM sanitization (cleanDOM) and extracting user selections (getSelectedContent).  
-- **URLService**: Periodically checks for URL changes and notifies the launcher via 'url_changed'.  
-- **PlayerService**: Manages showing/hiding the player, launching workers, and passing context from the current page.  
-- **MessagingService**: Sends strongly-typed messages to the launcher or player.  
-- **AuthService**: Manages storing/retrieving the user's auth token.
+2. For development, run:  
 
-## Development
+   ```bash
+   npm run dev
+   ```
 
-### Project Structure
+   This watches for file changes and automatically rebuilds.
+
+3. For a production build, run:  
+
+   ```bash
+   npm run build
+   ```
+
+4. Load the extension in Chrome:  
+   1. Open chrome://extensions/  
+   2. Enable "Developer mode"  
+   3. Click "Load unpacked" and select the dist folder  
+
+## Project Structure
 
 ```
 src/
 ├── background/        # Chrome extension background script
 ├── content/          # Content script injected into pages
-│   ├── services/     # Core services (frames, messaging, auth)
+│   ├── services/     # Core services (frames, messaging, auth, DOM, URL)
 │   └── types/        # TypeScript types and interfaces
 └── assets/          # Static assets like icons
 ```
 
-### Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Start development with watch mode
-npm run dev
-
-# Create production build
-npm run build
-```
-
-### Loading the extension
-
-1. Build the extension (`npm run build`)
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the `dist` folder
-
-### Commands
-
-- `npm run dev` - Watch mode for development
-- `npm run build` - Production build
-- `npm run lint` - Check for linting issues
-- `npm run lint:fix` - Fix linting issues
-- `npm run format` - Format code with Prettier
-- `npm run type-check` - Check TypeScript types
-
-### Development Features
-
-- TypeScript support with strict type checking
-- Hot reloading during development
-- Source maps for debugging
-- ESLint + Prettier code formatting
-- Separate dev/prod webpack configurations
-
-### VS Code Setup
-
-Required extensions:
-
-- ESLint
-- Prettier
-
-Files will be automatically formatted on save using the project's `.prettierrc` and `.editorconfig` configurations.
+• background/: Handles extension events (e.g., updates, service_worker)  
+• content/: Core logic that runs in webpages, injecting iframes and handling messages  
 
 ## Architecture
 
-The extension uses a message-passing architecture between three main components:
+The extension uses a message-passing architecture among:  
 
-1. **Background Script**: Handles header modifications for iframe support
-2. **Content Script**: Manages iframe injection and messaging
-3. **Iframes**:
-   - Launcher iframe: Displays available workers
-   - Player iframe: Handles worker execution and output
+1. Background Script (background/)  
+2. Content Script (content/)  
+3. Iframes (launcher and player)  
 
-Communication between components is handled through strictly typed messages using PostMessage API.
+We have several primary services to keep the code maintainable and modular:
+
+- DOMService: Cleans the DOM and extracts selected text  
+- URLService: Detects changes in the page URL  
+- PlayerService: Manages the player iframe (launching workers, showing/hiding the UI)  
+- MessagingService: Sends and receives strongly-typed messages  
+- AuthService: Manages storing/retrieving user authentication tokens  
+
+## Development
+
+• npm run dev – Watch mode for development  
+• npm run build – Production build  
+• npm run lint – Check for linting issues  
+• npm run lint:fix – Fix linting issues  
+• npm run format – Format code with Prettier  
+• npm run type-check – Ensure valid TypeScript types  
+
+### Recommended Setup
+
+• Use Visual Studio Code  
+• Install ESLint and Prettier extensions  
+• The project automatically formats on save using `.editorconfig` and `.prettierrc`
 
 ## Contributing
 
-1. Create a new branch from main
-2. Make your changes
-3. Run type checking and linting
-4. Create a pull request
+1. Create a new branch from main  
+2. Make and test your changes (lint, format, type-check)  
+3. Open a pull request for review  
+
+We welcome feedback and contributions that help improve the MindStudio Chrome Extension!
