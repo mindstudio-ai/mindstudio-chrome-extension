@@ -1,8 +1,7 @@
-// webpack.dev.cjs
 const { merge } = require('webpack-merge');
-const common = require('./webpack.common.cjs');
+const getCommon = require('./webpack.common.cjs');
 
-module.exports = merge(common, {
+module.exports = merge(getCommon({ NODE_ENV: 'development' }), {
   mode: 'development',
   devtool: 'inline-source-map',
 });

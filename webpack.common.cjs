@@ -1,8 +1,9 @@
 // webpack.common.cjs
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
-module.exports = {
+module.exports = (env) => ({
   entry: {
     background: './src/background/index.ts',
     content: './src/content/index.ts',
@@ -25,6 +26,9 @@ module.exports = {
     clean: true,
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(env.NODE_ENV),
+    }),
     new CopyPlugin({
       patterns: [
         {
@@ -50,4 +54,4 @@ module.exports = {
       ],
     }),
   ],
-};
+});
