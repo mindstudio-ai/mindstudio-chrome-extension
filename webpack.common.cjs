@@ -48,6 +48,10 @@ module.exports = (env) => ({
           },
         },
         {
+          from: './src/assets/icons',
+          to: 'icons',
+        },
+        {
           from: './src/assets/images',
           to: 'images',
         },

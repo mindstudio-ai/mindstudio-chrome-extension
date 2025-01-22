@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Mindstudio",
-  "description": "Mindstudio Chrome Extension",
+  "name": "MindStudio",
+  "description": "MindStudio Chrome Extension",
   "version": "1.0.0",
   "permissions": [
     "storage",
@@ -22,9 +22,15 @@
     "service_worker": "background.js"
   },
   "icons": {
-    "16": "images/icon16x16.png",
-    "32": "images/icon32x32.png",
-    "48": "images/icon48x48.png",
-    "128": "images/icon128x128.png"
-  }
+    "16": "icons/icon16x16.png",
+    "32": "icons/icon32x32.png",
+    "48": "icons/icon48x48.png",
+    "128": "icons/icon128x128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

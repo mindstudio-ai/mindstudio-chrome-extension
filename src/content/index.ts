@@ -5,6 +5,7 @@ import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
 import { URLService } from './services/url.service';
 import { isEventOfType, isMindStudioEvent } from './types';
+import { FloatingButtonService } from './services/floating-button.service';
 
 class ContentScript {
   private frameService = FrameService.getInstance();
@@ -12,6 +13,7 @@ class ContentScript {
   private authService = AuthService.getInstance();
   private playerService = PlayerService.getInstance();
   private urlService = URLService.getInstance();
+  private floatingButtonService = FloatingButtonService.getInstance();
 
   private async handleMessage({ data }: MessageEvent) {
     if (!isMindStudioEvent(data)) {
@@ -69,6 +71,7 @@ class ContentScript {
     window.addEventListener('message', this.handleMessage.bind(this));
 
     this.urlService.startTracking();
+    this.floatingButtonService.injectButton();
   }
 }
 
