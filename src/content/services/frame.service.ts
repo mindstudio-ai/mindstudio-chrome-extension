@@ -76,4 +76,14 @@ export class FrameService {
       window.top?.location.host === 'localhost:3000'
     );
   }
+
+  updateLauncherSize(width: number, height: number): void {
+    const launcher = document.getElementById(
+      this.launcherId,
+    ) as HTMLIFrameElement;
+    if (launcher) {
+      launcher.style.width = `${width}px`;
+      launcher.style.height = `${height}px`;
+    }
+  }
 }
