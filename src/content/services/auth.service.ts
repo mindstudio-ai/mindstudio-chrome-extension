@@ -1,10 +1,7 @@
-import { Environment } from '../constants';
+import { Environment, StorageKeys } from '../constants';
 
 export class AuthService {
   private static instance: AuthService;
-  private readonly storageKey = `AuthToken_${Environment}`;
-
-  private constructor() {}
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -20,15 +17,15 @@ export class AuthService {
 
   async getToken(): Promise<string | null> {
     return new Promise((resolve) => {
-      chrome.storage.local.get(this.storageKey, (result) => {
-        resolve(result[this.storageKey] || null);
+      chrome.storage.local.get(StorageKeys.AUTH_TOKEN, (result) => {
+        resolve(result[StorageKeys.AUTH_TOKEN] || null);
       });
     });
   }
 
   async setToken(token: string): Promise<void> {
     return new Promise((resolve) => {
-      chrome.storage.local.set({ [this.storageKey]: token }, () => {
+      chrome.storage.local.set({ [StorageKeys.AUTH_TOKEN]: token }, () => {
         resolve();
       });
     });
