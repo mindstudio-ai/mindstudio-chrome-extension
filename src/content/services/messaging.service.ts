@@ -89,13 +89,6 @@ export class MessagingService {
     }
   }
 
-  sendToLauncher<T extends keyof Events>(
-    eventType: T,
-    payload?: Events[T] extends undefined ? never : Events[T],
-  ): void {
-    this.sendToFrame(ElementIds.LAUNCHER, eventType, payload);
-  }
-
   sendToPlayer<T extends keyof Events>(
     eventType: T,
     payload?: Events[T] extends undefined ? never : Events[T],
@@ -108,5 +101,12 @@ export class MessagingService {
     payload?: Events[T] extends undefined ? never : Events[T],
   ): void {
     this.sendToFrame(ElementIds.AUTH, eventType, payload);
+  }
+
+  sendToLauncherSync<T extends keyof Events>(
+    eventType: T,
+    payload?: Events[T] extends undefined ? never : Events[T],
+  ): void {
+    this.sendToFrame(ElementIds.LAUNCHER_SYNC, eventType, payload);
   }
 }

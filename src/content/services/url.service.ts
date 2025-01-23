@@ -26,7 +26,7 @@ export class URLService {
     this.checkingIntervalId = window.setInterval(() => {
       if (window.location.href !== this.currentUrl) {
         this.currentUrl = window.location.href;
-        this.messagingService.sendToLauncher('url/changed', {
+        this.messagingService.sendToLauncherSync('url/changed', {
           url: this.currentUrl,
         });
       }

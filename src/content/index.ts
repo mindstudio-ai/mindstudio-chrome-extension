@@ -4,6 +4,9 @@ import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
 import { FloatingButtonService } from './services/floating-button.service';
 import { URLService } from './services/url.service';
+import { LauncherDockService } from './services/launcher-dock.service';
+import { LauncherStateService } from './services/launcher-state.service';
+import { LauncherSyncService } from './services/frames/launcher-sync.service';
 
 class ContentScript {
   private frameService = FrameService.getInstance();
@@ -18,32 +21,15 @@ class ContentScript {
       'auth/login_completed',
       async ({ authToken }) => {
         await this.authService.setToken(authToken);
-        this.messagingService.sendToLauncher('auth/token_changed', {
-          authToken,
-        });
+
+        // Reinject launcher sync frame with new token
+        const launcherSync = LauncherSyncService.getInstance();
+        await launcherSync.reinjectFrame(authToken);
+
         this.messagingService.sendToPlayer('auth/token_changed', { authToken });
-        this.frameService.showLauncher();
         this.floatingButtonService.hideButton();
       },
     );
-
-    this.messagingService.subscribe('launcher/loaded', async () => {
-      const token = await this.authService.getToken();
-      if (token) {
-        this.messagingService.sendToLauncher('auth/token_changed', {
-          authToken: token,
-        });
-      } else {
-        this.frameService.showAuth();
-      }
-      this.messagingService.sendToLauncher('url/changed', {
-        url: window.location.href,
-      });
-    });
-
-    this.messagingService.subscribe('launcher/collapse', () => {
-      this.frameService.collapseLauncher();
-    });
 
     this.messagingService.subscribe('player/loaded', async () => {
       const token = await this.authService.getToken();
@@ -54,13 +40,6 @@ class ContentScript {
       }
     });
 
-    this.messagingService.subscribe(
-      'launcher/size_updated',
-      ({ width, height }) => {
-        this.frameService.updateLauncherSize(width);
-      },
-    );
-
     this.messagingService.subscribe('player/launch_worker', (payload) => {
       this.playerService.launchWorker(payload);
     });
@@ -70,11 +49,29 @@ class ContentScript {
     });
   }
 
-  initialize(): void {
+  async initialize(): Promise<void> {
     if (window.self !== window.top) {
       return;
     }
-    this.frameService.injectFrames();
+
+    const launcherDock = LauncherDockService.getInstance();
+    const launcherState = LauncherStateService.getInstance();
+    const authService = AuthService.getInstance();
+
+    // Check auth first
+    const token = await authService.getToken();
+
+    launcherDock.injectDock();
+    await this.frameService.injectFrames();
+
+    // Check initial state
+    const isAuthenticated = await authService.isAuthenticated();
+    const isCollapsed = await launcherState.isCollapsed();
+
+    if (isAuthenticated && !isCollapsed) {
+      launcherDock.showDock();
+    }
+
     this.setupEventHandlers();
     this.floatingButtonService.injectButton();
     this.urlService.startTracking();

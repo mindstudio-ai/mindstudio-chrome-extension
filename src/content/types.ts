@@ -9,16 +9,6 @@ export interface Events {
   };
   'auth/login_required': undefined;
 
-  // Launcher events
-  'launcher/loaded': {
-    isLoggedIn: boolean;
-  };
-  'launcher/size_updated': {
-    width: number;
-    height: number;
-  };
-  'launcher/collapse': undefined;
-
   // Player events
   'player/loaded': {
     isLoggedIn: boolean;
@@ -39,6 +29,17 @@ export interface Events {
       fullText: string;
       userSelection: string | null;
     };
+  };
+
+  // Launcher events
+  'launcher/loaded': undefined;
+  'launcher/apps_updated': {
+    apps: Array<{
+      id: string;
+      name: string;
+      iconUrl: string;
+      extensionSupportedSites: string[];
+    }>;
   };
 
   // URL events

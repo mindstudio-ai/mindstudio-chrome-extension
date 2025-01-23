@@ -1,17 +1,18 @@
 import { AuthService } from './auth.service';
-import { FrameService } from './frame.service';
+import { LauncherDockService } from './launcher-dock.service';
 import { LauncherStateService } from './launcher-state.service';
+import { FrameService } from './frame.service';
 import { ElementIds, ZIndexes } from '../constants';
 
 export class FloatingButtonService {
   private static instance: FloatingButtonService;
-  private frameService: FrameService;
   private authService: AuthService;
+  private frameService: FrameService;
   private launcherState: LauncherStateService;
 
   private constructor() {
-    this.frameService = FrameService.getInstance();
     this.authService = AuthService.getInstance();
+    this.frameService = FrameService.getInstance();
     this.launcherState = LauncherStateService.getInstance();
   }
 
@@ -41,24 +42,16 @@ export class FloatingButtonService {
       height: 40px;
       cursor: pointer;
       z-index: ${ZIndexes.FLOATING_BUTTON};
-      transition: transform 0.2s ease;
-      border-radius: 50%;
       background: transparent;
       display: none;
       align-items: center;
       justify-content: center;
+      transform: translateX(100%);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     `;
 
-    button.addEventListener('mouseover', () => {
-      button.style.transform = 'scale(1.1)';
-    });
-
-    button.addEventListener('mouseout', () => {
-      button.style.transform = 'scale(1)';
-    });
-
     button.addEventListener('click', this.handleButtonClick.bind(this));
-
     document.body.appendChild(button);
 
     // Check if we should show the button
@@ -72,8 +65,8 @@ export class FloatingButtonService {
     const isAuthenticated = await this.authService.isAuthenticated();
 
     if (isAuthenticated) {
-      await this.launcherState.setCollapsed(false);
-      this.frameService.showLauncher();
+      const launcherDock = LauncherDockService.getInstance();
+      await launcherDock.expand();
       this.hideButton();
     } else {
       this.frameService.showAuth();
@@ -84,7 +77,11 @@ export class FloatingButtonService {
   hideButton(): void {
     const button = document.getElementById(ElementIds.FLOATING_BUTTON);
     if (button) {
-      button.style.display = 'none';
+      button.style.transform = 'translateX(100%)';
+      button.style.opacity = '0';
+      setTimeout(() => {
+        button.style.display = 'none';
+      }, 300);
     }
   }
 
@@ -92,6 +89,10 @@ export class FloatingButtonService {
     const button = document.getElementById(ElementIds.FLOATING_BUTTON);
     if (button) {
       button.style.display = 'flex';
+      requestAnimationFrame(() => {
+        button.style.transform = 'translateX(0)';
+        button.style.opacity = '1';
+      });
     }
   }
 }
