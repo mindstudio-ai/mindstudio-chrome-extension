@@ -14,6 +14,7 @@ class ContentScript {
   private playerService = PlayerService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
   private urlService = URLService.getInstance();
+
   private async handleMessage({ data }: MessageEvent) {
     if (!isMindStudioEvent(data)) {
       return;
@@ -23,28 +24,28 @@ class ContentScript {
       if (isEventOfType(data, 'auth/login_completed')) {
         const { authToken } = data.payload;
         await this.authService.setToken(authToken);
-        this.messagingService.sendToLauncher('auth_token_changed', {
+        this.messagingService.sendToLauncher('auth/token_changed', {
           authToken,
         });
-        this.messagingService.sendToPlayer('auth_token_changed', { authToken });
+        this.messagingService.sendToPlayer('auth/token_changed', { authToken });
         this.frameService.showLauncher();
         this.floatingButtonService.hideButton();
       } else if (isEventOfType(data, 'launcher/loaded')) {
         const token = await this.authService.getToken();
         if (token) {
-          this.messagingService.sendToLauncher('auth_token_changed', {
+          this.messagingService.sendToLauncher('auth/token_changed', {
             authToken: token,
           });
         } else {
           this.frameService.showAuth();
         }
-        this.messagingService.sendToLauncher('url_changed', {
+        this.messagingService.sendToLauncher('url/changed', {
           url: window.location.href,
         });
       } else if (isEventOfType(data, 'player/loaded')) {
         const token = await this.authService.getToken();
         if (token) {
-          this.messagingService.sendToPlayer('auth_token_changed', {
+          this.messagingService.sendToPlayer('auth/token_changed', {
             authToken: token,
           });
         }

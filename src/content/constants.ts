@@ -7,3 +7,17 @@ export const RootUrl =
 export const StorageKeys = {
   AUTH_TOKEN: `AuthToken_${Environment}`,
 } as const;
+
+export const ZIndexes = {
+  FLOATING_BUTTON: 999997,
+  LAUNCHER: 999998,
+  PLAYER: 999998,
+  AUTH: 999998,
+} as const;
+
+export const ElementIds = {
+  FLOATING_BUTTON: '__MindStudioFloatingButton',
+  LAUNCHER: '__MindStudioLauncher',
+  PLAYER: '__MindStudioPlayer',
+  AUTH: '__MindStudioAuth',
+} as const;

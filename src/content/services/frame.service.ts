@@ -1,11 +1,8 @@
-import { RootUrl } from '../constants';
+import { ElementIds, RootUrl, ZIndexes } from '../constants';
 import { AuthService } from './auth.service';
 
 export class FrameService {
   private static instance: FrameService;
-  private readonly launcherId = '__MindStudioLauncher';
-  private readonly playerId = '__MindStudioPlayer';
-  private readonly authId = '__MindStudioAuth';
   private authService: AuthService;
 
   private constructor() {
@@ -26,12 +23,12 @@ export class FrameService {
   }
 
   private injectAuth(): void {
-    if (document.getElementById(this.authId)) {
+    if (document.getElementById(ElementIds.AUTH)) {
       return;
     }
 
     const frame = document.createElement('iframe');
-    frame.id = this.authId;
+    frame.id = ElementIds.AUTH;
     frame.src = `${RootUrl}/_extension/login?__displayContext=extension`;
     frame.style.cssText = `
       position: fixed;
@@ -40,7 +37,7 @@ export class FrameService {
       width: 0;
       height: 100vh;
       border: none;
-      z-index: 999999;
+      z-index: ${ZIndexes.AUTH};
       background: #FEFEFF;
       transition: width 0.3s ease;
     `;
@@ -49,14 +46,14 @@ export class FrameService {
   }
 
   private async injectLauncher(): Promise<void> {
-    if (document.getElementById(this.launcherId)) {
+    if (document.getElementById(ElementIds.LAUNCHER)) {
       return;
     }
 
     const token = await this.authService.getToken();
     const frame = document.createElement('iframe');
-    frame.id = this.launcherId;
-    frame.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1&token=${token}`;
+    frame.id = ElementIds.LAUNCHER;
+    frame.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1`;
     frame.style.cssText = `
       position: fixed;
       top: 0;
@@ -64,7 +61,7 @@ export class FrameService {
       width: 0;
       height: 100vh;
       border: none;
-      z-index: 999999;
+      z-index: ${ZIndexes.LAUNCHER};
       background: #F6F6F7;
       transition: width 0.3s ease;
     `;
@@ -77,12 +74,12 @@ export class FrameService {
   }
 
   private injectPlayer(): void {
-    if (document.getElementById(this.playerId)) {
+    if (document.getElementById(ElementIds.PLAYER)) {
       return;
     }
 
     const frame = document.createElement('iframe');
-    frame.id = this.playerId;
+    frame.id = ElementIds.PLAYER;
     frame.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
     frame.style.cssText = `
       position: fixed;
@@ -91,7 +88,7 @@ export class FrameService {
       width: 400px;
       height: 100vh;
       border: none;
-      z-index: 999999;
+      z-index: ${ZIndexes.PLAYER};
       background: #FFFFFF;
       display: none;
       opacity: 0;
@@ -109,9 +106,9 @@ export class FrameService {
   }
 
   showAuth(): void {
-    const auth = document.getElementById(this.authId) as HTMLIFrameElement;
+    const auth = document.getElementById(ElementIds.AUTH) as HTMLIFrameElement;
     const launcher = document.getElementById(
-      this.launcherId,
+      ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
 
     if (auth && launcher) {
@@ -128,9 +125,9 @@ export class FrameService {
   }
 
   async showLauncher(width: number = 40): Promise<void> {
-    const auth = document.getElementById(this.authId) as HTMLIFrameElement;
+    const auth = document.getElementById(ElementIds.AUTH) as HTMLIFrameElement;
     const launcher = document.getElementById(
-      this.launcherId,
+      ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
 
     if (auth && launcher) {
@@ -151,7 +148,7 @@ export class FrameService {
 
   hideLauncher(): void {
     const launcher = document.getElementById(
-      this.launcherId,
+      ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
     if (launcher) {
       launcher.style.width = '0';
@@ -160,7 +157,7 @@ export class FrameService {
   }
 
   hideAuth(): void {
-    const auth = document.getElementById(this.authId) as HTMLIFrameElement;
+    const auth = document.getElementById(ElementIds.AUTH) as HTMLIFrameElement;
     if (auth) {
       auth.style.width = '0';
       document.body.style.marginRight = '0';
@@ -169,7 +166,7 @@ export class FrameService {
 
   updateLauncherSize(width: number, height: number): void {
     const launcher = document.getElementById(
-      this.launcherId,
+      ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
     if (launcher) {
       launcher.style.width = `${width}px`;
@@ -179,9 +176,11 @@ export class FrameService {
 
   public showPlayer(width = 400, offset = 40): void {
     const launcher = document.getElementById(
-      this.launcherId,
+      ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
-    const player = document.getElementById(this.playerId) as HTMLIFrameElement;
+    const player = document.getElementById(
+      ElementIds.PLAYER,
+    ) as HTMLIFrameElement;
 
     if (!launcher || !player) {
       return;
@@ -203,7 +202,9 @@ export class FrameService {
   }
 
   public hidePlayer(): void {
-    const player = document.getElementById(this.playerId) as HTMLIFrameElement;
+    const player = document.getElementById(
+      ElementIds.PLAYER,
+    ) as HTMLIFrameElement;
     if (!player) {
       return;
     }

@@ -9,8 +9,6 @@ export class PlayerService {
   private frameService = FrameService.getInstance();
   private domService = DOMService.getInstance();
 
-  private readonly playerId = '__MindStudioPlayer';
-
   private constructor() {}
 
   static getInstance(): PlayerService {
@@ -32,7 +30,7 @@ export class PlayerService {
     const userSelection = this.domService.getSelectedContent();
 
     // Send to player
-    this.messaging.sendToPlayer('load_worker', {
+    this.messaging.sendToPlayer('player/load_worker', {
       id: workerPayload.id,
       name: workerPayload.name,
       iconUrl: workerPayload.iconUrl,

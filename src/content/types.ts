@@ -1,5 +1,5 @@
 // Consolidate all event types in one place
-interface Events {
+export interface Events {
   // Auth events
   'auth/login_completed': {
     authToken: string;

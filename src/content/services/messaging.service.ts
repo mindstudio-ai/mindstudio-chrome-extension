@@ -1,3 +1,6 @@
+import { ElementIds } from '../constants';
+import { Events } from '../types';
+
 // Action types for outgoing messages
 interface Actions {
   auth_token_changed: {
@@ -22,8 +25,6 @@ interface Actions {
 
 export class MessagingService {
   private static instance: MessagingService;
-  private readonly launcherId = '__MindStudioLauncher';
-  private readonly playerId = '__MindStudioPlayer';
 
   private constructor() {}
 
@@ -34,47 +35,47 @@ export class MessagingService {
     return MessagingService.instance;
   }
 
-  sendToLauncher<T extends keyof Actions>(
-    action: T,
-    payload?: Actions[T] extends undefined ? never : Actions[T],
+  sendToFrame<T extends keyof Events>(
+    frameId: string,
+    eventType: T,
+    payload?: Events[T] extends undefined ? never : Events[T],
   ): void {
     try {
-      const launcher = document.getElementById(this.launcherId);
-      if (!launcher) {
+      const frame = document.getElementById(frameId);
+      if (!frame) {
         return;
       }
 
-      (launcher as HTMLIFrameElement).contentWindow?.postMessage(
+      (frame as HTMLIFrameElement).contentWindow?.postMessage(
         {
-          _MindStudioEvent: `@@mindstudio/${action}`,
+          _MindStudioEvent: `@@mindstudio/${eventType}`,
           payload: payload || {},
         },
         '*',
       );
     } catch (err) {
-      console.error('[MindStudio Extension] Error sending to launcher:', err);
+      console.error('[MindStudio Extension] Error sending to frame:', err);
     }
   }
 
-  sendToPlayer<T extends keyof Actions>(
-    action: T,
-    payload?: Actions[T] extends undefined ? never : Actions[T],
+  sendToLauncher<T extends keyof Events>(
+    eventType: T,
+    payload?: Events[T] extends undefined ? never : Events[T],
   ): void {
-    try {
-      const player = document.getElementById(this.playerId);
-      if (!player) {
-        return;
-      }
+    this.sendToFrame(ElementIds.LAUNCHER, eventType, payload);
+  }
 
-      (player as HTMLIFrameElement).contentWindow?.postMessage(
-        {
-          _MindStudioEvent: `@@mindstudio/player/${action}`,
-          payload: payload || {},
-        },
-        '*',
-      );
-    } catch (err) {
-      console.error('[MindStudio Extension] Error sending to player:', err);
-    }
+  sendToPlayer<T extends keyof Events>(
+    eventType: T,
+    payload?: Events[T] extends undefined ? never : Events[T],
+  ): void {
+    this.sendToFrame(ElementIds.PLAYER, eventType, payload);
+  }
+
+  sendToAuth<T extends keyof Events>(
+    eventType: T,
+    payload?: Events[T] extends undefined ? never : Events[T],
+  ): void {
+    this.sendToFrame(ElementIds.AUTH, eventType, payload);
   }
 }

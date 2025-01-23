@@ -1,9 +1,9 @@
 import { AuthService } from './auth.service';
 import { FrameService } from './frame.service';
+import { ElementIds, ZIndexes } from '../constants';
 
 export class FloatingButtonService {
   private static instance: FloatingButtonService;
-  private readonly buttonId = '__MindStudioFloatingButton';
   private frameService: FrameService;
   private authService: AuthService;
 
@@ -20,12 +20,12 @@ export class FloatingButtonService {
   }
 
   injectButton(): void {
-    if (document.getElementById(this.buttonId)) {
+    if (document.getElementById(ElementIds.FLOATING_BUTTON)) {
       return;
     }
 
     const button = document.createElement('div');
-    button.id = this.buttonId;
+    button.id = ElementIds.FLOATING_BUTTON;
     button.innerHTML = `<img src="${chrome.runtime.getURL(
       'images/floating-button.png',
     )}" alt="MindStudio" style="width: 100%; height: 100%; object-fit: contain;" />`;
@@ -37,7 +37,7 @@ export class FloatingButtonService {
       width: 48px;
       height: 40px;
       cursor: pointer;
-      z-index: 999999;
+      z-index: ${ZIndexes.FLOATING_BUTTON};
       transition: transform 0.2s ease;
       border-radius: 50%;
       background: transparent;
@@ -72,14 +72,14 @@ export class FloatingButtonService {
   }
 
   hideButton(): void {
-    const button = document.getElementById(this.buttonId);
+    const button = document.getElementById(ElementIds.FLOATING_BUTTON);
     if (button) {
       button.style.display = 'none';
     }
   }
 
   showButton(): void {
-    const button = document.getElementById(this.buttonId);
+    const button = document.getElementById(ElementIds.FLOATING_BUTTON);
     if (button) {
       button.style.display = 'flex';
     }
