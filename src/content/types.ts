@@ -1,17 +1,26 @@
-// Define all possible events
+// Consolidate all event types in one place
 interface Events {
+  // Auth events
   'auth/login_completed': {
     authToken: string;
   };
-  'launcher/loaded': {
-    isLoggedIn: boolean;
+  'auth/token_changed': {
+    authToken: string;
   };
-  'player/loaded': {
+  'auth/login_required': undefined;
+
+  // Launcher events
+  'launcher/loaded': {
     isLoggedIn: boolean;
   };
   'launcher/size_updated': {
     width: number;
     height: number;
+  };
+
+  // Player events
+  'player/loaded': {
+    isLoggedIn: boolean;
   };
   'player/launch_worker': {
     id: string;
@@ -19,6 +28,22 @@ interface Events {
     iconUrl: string;
   };
   'player/close_worker': undefined;
+  'player/load_worker': {
+    id: string;
+    name: string;
+    iconUrl: string;
+    launchVariables: {
+      url: string;
+      rawHtml: string;
+      fullText: string;
+      userSelection: string | null;
+    };
+  };
+
+  // URL events
+  'url/changed': {
+    url: string;
+  };
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field
