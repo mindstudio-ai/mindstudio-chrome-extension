@@ -13,6 +13,11 @@ export class AuthService {
     return AuthService.instance;
   }
 
+  async isAuthenticated(): Promise<boolean> {
+    const token = await this.getToken();
+    return token !== null;
+  }
+
   async getToken(): Promise<string | null> {
     return new Promise((resolve) => {
       chrome.storage.local.get(this.storageKey, (result) => {

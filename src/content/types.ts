@@ -1,22 +1,16 @@
 // Define all possible events
 interface Events {
-  loaded: {
-    isLoggedIn: boolean;
-  };
-  authenticated: {
+  'auth/login_completed': {
     authToken: string;
   };
-  size_updated: {
+  'launcher/size_updated': {
     width: number;
     height: number;
   };
-  launch_worker: {
+  'player/launch_worker': {
     id: string;
     name: string;
     iconUrl: string;
-  };
-  'player/loaded': {
-    isLoggedIn: boolean;
   };
   'player/close_worker': undefined;
 }

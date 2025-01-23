@@ -3,16 +3,14 @@ import { AuthService } from './services/auth.service';
 import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
-import { URLService } from './services/url.service';
-import { isEventOfType, isMindStudioEvent } from './types';
 import { FloatingButtonService } from './services/floating-button.service';
+import { isEventOfType, isMindStudioEvent } from './types';
 
 class ContentScript {
   private frameService = FrameService.getInstance();
   private messagingService = MessagingService.getInstance();
   private authService = AuthService.getInstance();
   private playerService = PlayerService.getInstance();
-  private urlService = URLService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
 
   private async handleMessage({ data }: MessageEvent) {
@@ -21,40 +19,16 @@ class ContentScript {
     }
 
     try {
-      if (isEventOfType(data, 'loaded')) {
-        const { isLoggedIn } = data.payload;
-        if (!isLoggedIn) {
-          const token = await this.authService.getToken();
-          if (token) {
-            this.messagingService.sendToLauncher('auth_token_changed', {
-              authToken: token,
-            });
-          } else {
-            this.messagingService.sendToLauncher('login_required');
-          }
-        }
-      } else if (isEventOfType(data, 'authenticated')) {
+      if (isEventOfType(data, 'auth/login_completed')) {
         const { authToken } = data.payload;
-        if (authToken) {
-          await this.authService.setToken(authToken);
-        }
-      } else if (isEventOfType(data, 'size_updated')) {
+        await this.authService.setToken(authToken);
+        this.frameService.showLauncher();
+        this.floatingButtonService.hideButton();
+      } else if (isEventOfType(data, 'launcher/size_updated')) {
         const { width, height } = data.payload;
         this.frameService.updateLauncherSize(width, height);
-      } else if (isEventOfType(data, 'launch_worker')) {
+      } else if (isEventOfType(data, 'player/launch_worker')) {
         this.playerService.launchWorker(data.payload);
-      } else if (isEventOfType(data, 'player/loaded')) {
-        const { isLoggedIn } = data.payload;
-        if (!isLoggedIn) {
-          const token = await this.authService.getToken();
-          if (token) {
-            this.messagingService.sendToPlayer('auth_token_changed', {
-              authToken: token,
-            });
-          } else {
-            this.messagingService.sendToPlayer('login_required');
-          }
-        }
       } else if (isEventOfType(data, 'player/close_worker')) {
         this.playerService.hidePlayer();
       }
@@ -69,8 +43,6 @@ class ContentScript {
     }
     this.frameService.injectFrames();
     window.addEventListener('message', this.handleMessage.bind(this));
-
-    this.urlService.startTracking();
     this.floatingButtonService.injectButton();
   }
 }

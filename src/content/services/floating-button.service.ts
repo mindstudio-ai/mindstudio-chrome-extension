@@ -1,8 +1,16 @@
+import { AuthService } from './auth.service';
+import { FrameService } from './frame.service';
+
 export class FloatingButtonService {
   private static instance: FloatingButtonService;
   private readonly buttonId = '__MindStudioFloatingButton';
+  private frameService: FrameService;
+  private authService: AuthService;
 
-  private constructor() {}
+  private constructor() {
+    this.frameService = FrameService.getInstance();
+    this.authService = AuthService.getInstance();
+  }
 
   static getInstance(): FloatingButtonService {
     if (!FloatingButtonService.instance) {
@@ -46,7 +54,21 @@ export class FloatingButtonService {
       button.style.transform = 'scale(1)';
     });
 
+    button.addEventListener('click', this.handleButtonClick.bind(this));
+
     document.body.appendChild(button);
+  }
+
+  private async handleButtonClick(): Promise<void> {
+    const isAuthenticated = await this.authService.isAuthenticated();
+
+    if (isAuthenticated) {
+      this.frameService.showLauncher();
+      this.hideButton();
+    } else {
+      this.frameService.showAuth();
+      this.hideButton();
+    }
   }
 
   hideButton(): void {

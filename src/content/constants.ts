@@ -9,12 +9,10 @@ export const StorageKeys = {
 } as const;
 
 export const Events = {
-  LOADED: 'loaded',
-  AUTHENTICATED: 'authenticated',
-  SIZE_UPDATED: 'size_updated',
-  LAUNCH_WORKER: 'launch_worker',
-  PLAYER_LOADED: 'player/loaded',
-  CLOSE_WORKER: 'player/close_worker',
+  AUTH_LOGIN_COMPLETED: 'auth/login_completed',
+  LAUNCHER_SIZE_UPDATED: 'launcher/size_updated',
+  PLAYER_LAUNCH_WORKER: 'player/launch_worker',
+  PLAYER_CLOSE_WORKER: 'player/close_worker',
 } as const;
 
 export const Actions = {
