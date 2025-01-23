@@ -4,6 +4,7 @@ import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
 import { FloatingButtonService } from './services/floating-button.service';
+import { URLService } from './services/url.service';
 import { isEventOfType, isMindStudioEvent } from './types';
 
 class ContentScript {
@@ -12,7 +13,7 @@ class ContentScript {
   private authService = AuthService.getInstance();
   private playerService = PlayerService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
-
+  private urlService = URLService.getInstance();
   private async handleMessage({ data }: MessageEvent) {
     if (!isMindStudioEvent(data)) {
       return;
@@ -22,8 +23,23 @@ class ContentScript {
       if (isEventOfType(data, 'auth/login_completed')) {
         const { authToken } = data.payload;
         await this.authService.setToken(authToken);
+        this.messagingService.sendToLauncher('auth_token_changed', {
+          authToken,
+        });
         this.frameService.showLauncher();
         this.floatingButtonService.hideButton();
+      } else if (isEventOfType(data, 'launcher/loaded')) {
+        const token = await this.authService.getToken();
+        if (token) {
+          this.messagingService.sendToLauncher('auth_token_changed', {
+            authToken: token,
+          });
+        } else {
+          this.messagingService.sendToLauncher('login_required');
+        }
+        this.messagingService.sendToLauncher('url_changed', {
+          url: window.location.href,
+        });
       } else if (isEventOfType(data, 'launcher/size_updated')) {
         const { width, height } = data.payload;
         this.frameService.updateLauncherSize(width, height);
@@ -44,6 +60,7 @@ class ContentScript {
     this.frameService.injectFrames();
     window.addEventListener('message', this.handleMessage.bind(this));
     this.floatingButtonService.injectButton();
+    this.urlService.startTracking();
   }
 }
 

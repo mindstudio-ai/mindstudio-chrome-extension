@@ -3,6 +3,9 @@ interface Events {
   'auth/login_completed': {
     authToken: string;
   };
+  'launcher/loaded': {
+    isLoggedIn: boolean;
+  };
   'launcher/size_updated': {
     width: number;
     height: number;
