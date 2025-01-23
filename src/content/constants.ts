@@ -21,3 +21,13 @@ export const ElementIds = {
   PLAYER: '__MindStudioPlayer',
   AUTH: '__MindStudioAuth',
 } as const;
+
+// Add frame dimensions
+export const FrameDimensions = {
+  LAUNCHER: {
+    WIDTH: 40,
+  },
+  PLAYER: {
+    WIDTH: 440,
+  },
+} as const;

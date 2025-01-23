@@ -1,4 +1,4 @@
-import { ElementIds, RootUrl, ZIndexes } from '../constants';
+import { ElementIds, FrameDimensions, RootUrl, ZIndexes } from '../constants';
 import { AuthService } from './auth.service';
 
 export class FrameService {
@@ -84,8 +84,8 @@ export class FrameService {
     frame.style.cssText = `
       position: fixed;
       top: 0;
-      right: 40px;
-      width: 400px;
+      right: ${FrameDimensions.LAUNCHER.WIDTH}px;
+      width: ${FrameDimensions.PLAYER.WIDTH}px;
       height: 100vh;
       border: none;
       z-index: ${ZIndexes.PLAYER};
@@ -124,7 +124,7 @@ export class FrameService {
     }
   }
 
-  async showLauncher(width: number = 40): Promise<void> {
+  async showLauncher(): Promise<void> {
     const auth = document.getElementById(ElementIds.AUTH) as HTMLIFrameElement;
     const launcher = document.getElementById(
       ElementIds.LAUNCHER,
@@ -140,9 +140,9 @@ export class FrameService {
       auth.style.display = 'none';
       // Show launcher iframe
       launcher.style.display = 'block';
-      launcher.style.width = `${width}px`;
+      launcher.style.width = `${FrameDimensions.LAUNCHER.WIDTH}px`;
       // Shift the page content
-      document.body.style.marginRight = `${width}px`;
+      document.body.style.marginRight = `${FrameDimensions.LAUNCHER.WIDTH}px`;
     }
   }
 
@@ -174,7 +174,7 @@ export class FrameService {
     }
   }
 
-  public showPlayer(width = 400, offset = 40): void {
+  public showPlayer(): void {
     const launcher = document.getElementById(
       ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
@@ -188,17 +188,17 @@ export class FrameService {
 
     // Keep launcher pinned at the far right
     launcher.style.display = 'block';
-    launcher.style.width = `${offset}px`;
+    launcher.style.width = `${FrameDimensions.LAUNCHER.WIDTH}px`;
 
     // Place the player immediately to the left of launcher
     player.style.display = 'block';
     player.style.opacity = '1';
-    player.style.width = `${width}px`;
-    player.style.right = `${offset}px`;
+    player.style.width = `${FrameDimensions.PLAYER.WIDTH}px`;
+    player.style.right = `${FrameDimensions.LAUNCHER.WIDTH}px`;
     player.style.borderLeft = '1px solid #E6E7E8';
 
     // Shift the entire page content
-    document.body.style.marginRight = `${width + offset}px`;
+    document.body.style.marginRight = `${FrameDimensions.PLAYER.WIDTH + FrameDimensions.LAUNCHER.WIDTH}px`;
   }
 
   public hidePlayer(): void {
@@ -211,6 +211,6 @@ export class FrameService {
     player.style.display = 'none';
     player.style.opacity = '0';
     // Reset margin to account for launcher only
-    document.body.style.marginRight = '40px';
+    document.body.style.marginRight = `${FrameDimensions.LAUNCHER.WIDTH}px`;
   }
 }

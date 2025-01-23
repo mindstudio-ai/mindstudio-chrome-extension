@@ -42,7 +42,7 @@ export class PlayerService {
       },
     });
 
-    // Show player to the left of launcher
-    this.frameService.showPlayer(400, 40);
+    // Show player
+    this.frameService.showPlayer();
   }
 }

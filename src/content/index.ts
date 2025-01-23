@@ -1,11 +1,9 @@
-// src/content/index.ts
 import { AuthService } from './services/auth.service';
 import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
 import { FloatingButtonService } from './services/floating-button.service';
 import { URLService } from './services/url.service';
-import { isEventOfType, isMindStudioEvent } from './types';
 
 class ContentScript {
   private frameService = FrameService.getInstance();
@@ -15,14 +13,10 @@ class ContentScript {
   private floatingButtonService = FloatingButtonService.getInstance();
   private urlService = URLService.getInstance();
 
-  private async handleMessage({ data }: MessageEvent) {
-    if (!isMindStudioEvent(data)) {
-      return;
-    }
-
-    try {
-      if (isEventOfType(data, 'auth/login_completed')) {
-        const { authToken } = data.payload;
+  private setupEventHandlers(): void {
+    this.messagingService.subscribe(
+      'auth/login_completed',
+      async ({ authToken }) => {
         await this.authService.setToken(authToken);
         this.messagingService.sendToLauncher('auth/token_changed', {
           authToken,
@@ -30,36 +24,46 @@ class ContentScript {
         this.messagingService.sendToPlayer('auth/token_changed', { authToken });
         this.frameService.showLauncher();
         this.floatingButtonService.hideButton();
-      } else if (isEventOfType(data, 'launcher/loaded')) {
-        const token = await this.authService.getToken();
-        if (token) {
-          this.messagingService.sendToLauncher('auth/token_changed', {
-            authToken: token,
-          });
-        } else {
-          this.frameService.showAuth();
-        }
-        this.messagingService.sendToLauncher('url/changed', {
-          url: window.location.href,
+      },
+    );
+
+    this.messagingService.subscribe('launcher/loaded', async () => {
+      const token = await this.authService.getToken();
+      if (token) {
+        this.messagingService.sendToLauncher('auth/token_changed', {
+          authToken: token,
         });
-      } else if (isEventOfType(data, 'player/loaded')) {
-        const token = await this.authService.getToken();
-        if (token) {
-          this.messagingService.sendToPlayer('auth/token_changed', {
-            authToken: token,
-          });
-        }
-      } else if (isEventOfType(data, 'launcher/size_updated')) {
-        const { width, height } = data.payload;
-        this.frameService.updateLauncherSize(width, height);
-      } else if (isEventOfType(data, 'player/launch_worker')) {
-        this.playerService.launchWorker(data.payload);
-      } else if (isEventOfType(data, 'player/close_worker')) {
-        this.frameService.hidePlayer();
+      } else {
+        this.frameService.showAuth();
       }
-    } catch (err) {
-      console.error('[MindStudio Extension] Error handling message:', err);
-    }
+      this.messagingService.sendToLauncher('url/changed', {
+        url: window.location.href,
+      });
+    });
+
+    this.messagingService.subscribe('player/loaded', async () => {
+      const token = await this.authService.getToken();
+      if (token) {
+        this.messagingService.sendToPlayer('auth/token_changed', {
+          authToken: token,
+        });
+      }
+    });
+
+    this.messagingService.subscribe(
+      'launcher/size_updated',
+      ({ width, height }) => {
+        this.frameService.updateLauncherSize(width, height);
+      },
+    );
+
+    this.messagingService.subscribe('player/launch_worker', (payload) => {
+      this.playerService.launchWorker(payload);
+    });
+
+    this.messagingService.subscribe('player/close_worker', () => {
+      this.frameService.hidePlayer();
+    });
   }
 
   initialize(): void {
@@ -67,7 +71,7 @@ class ContentScript {
       return;
     }
     this.frameService.injectFrames();
-    window.addEventListener('message', this.handleMessage.bind(this));
+    this.setupEventHandlers();
     this.floatingButtonService.injectButton();
     this.urlService.startTracking();
   }
