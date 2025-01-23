@@ -21,6 +21,9 @@ export class FrameService {
   }
 
   async injectFrames(): Promise<void> {
+    // Add width transition to body
+    document.body.style.transition = 'width 0.3s ease';
+
     this.injectAuth();
     this.injectLauncher();
     this.injectPlayer();
@@ -130,15 +133,12 @@ export class FrameService {
     ) as HTMLIFrameElement;
 
     if (auth && launcher) {
-      // Hide launcher if it's showing
       launcher.style.width = '0';
       launcher.style.display = 'none';
-      // Show auth iframe
       auth.style.width = '400px';
       auth.style.borderLeft = '1px solid #E6E7E8';
       auth.style.display = 'block';
-      // Shift the page content
-      document.body.style.marginRight = '400px';
+      document.body.style.width = `calc(100% - ${FrameDimensions.AUTH.WIDTH}px)`;
     }
   }
 
@@ -164,7 +164,8 @@ export class FrameService {
       launcher.style.display = 'block';
       launcher.style.width = `${FrameDimensions.LAUNCHER.WIDTH}px`;
       launcher.style.borderLeft = '1px solid #12121340';
-      document.body.style.marginRight = `${FrameDimensions.LAUNCHER.WIDTH}px`;
+
+      document.body.style.width = `calc(100% - ${FrameDimensions.LAUNCHER.WIDTH}px)`;
     }
   }
 
@@ -173,10 +174,11 @@ export class FrameService {
     const launcher = document.getElementById(
       ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
+
     if (launcher) {
       launcher.style.width = '0';
       launcher.style.display = 'none';
-      document.body.style.marginRight = '0';
+      document.body.style.width = '100%';
     }
     const floatingButton = FloatingButtonService.getInstance();
     floatingButton.showButton();
@@ -186,27 +188,30 @@ export class FrameService {
     const launcher = document.getElementById(
       ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
+
     if (launcher) {
       launcher.style.width = '0';
-      document.body.style.marginRight = '0';
+      document.body.style.width = '100%';
     }
   }
 
   hideAuth(): void {
     const auth = document.getElementById(ElementIds.AUTH) as HTMLIFrameElement;
+
     if (auth) {
       auth.style.width = '0';
-      document.body.style.marginRight = '0';
+      document.body.style.width = '100%';
     }
   }
 
-  updateLauncherSize(width: number, height: number): void {
+  updateLauncherSize(width: number): void {
     const launcher = document.getElementById(
       ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
+
     if (launcher) {
       launcher.style.width = `${width}px`;
-      document.body.style.marginRight = `${width}px`;
+      document.body.style.width = `calc(100% - ${width}px)`;
     }
   }
 
@@ -234,7 +239,9 @@ export class FrameService {
     player.style.borderLeft = '1px solid #E6E7E8';
 
     // Shift the entire page content
-    document.body.style.marginRight = `${FrameDimensions.PLAYER.WIDTH + FrameDimensions.LAUNCHER.WIDTH}px`;
+    const totalWidth =
+      FrameDimensions.PLAYER.WIDTH + FrameDimensions.LAUNCHER.WIDTH;
+    document.body.style.width = `calc(100% - ${totalWidth}px)`;
   }
 
   public hidePlayer(): void {
@@ -246,7 +253,7 @@ export class FrameService {
     }
     player.style.display = 'none';
     player.style.opacity = '0';
-    // Reset margin to account for launcher only
-    document.body.style.marginRight = `${FrameDimensions.LAUNCHER.WIDTH}px`;
+
+    document.body.style.width = `calc(100% - ${FrameDimensions.LAUNCHER.WIDTH}px)`;
   }
 }

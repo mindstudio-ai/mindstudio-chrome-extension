@@ -31,4 +31,7 @@ export const FrameDimensions = {
   PLAYER: {
     WIDTH: 440,
   },
+  AUTH: {
+    WIDTH: 440,
+  },
 } as const;

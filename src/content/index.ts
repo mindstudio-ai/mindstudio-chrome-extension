@@ -57,7 +57,7 @@ class ContentScript {
     this.messagingService.subscribe(
       'launcher/size_updated',
       ({ width, height }) => {
-        this.frameService.updateLauncherSize(width, height);
+        this.frameService.updateLauncherSize(width);
       },
     );
 
