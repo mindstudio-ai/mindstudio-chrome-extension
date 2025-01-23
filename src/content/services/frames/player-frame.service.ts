@@ -4,9 +4,11 @@ import {
   RootUrl,
   ZIndexes,
 } from '../../constants';
+import { LayoutService } from '../layout.service';
 
 export class PlayerFrameService {
   private static instance: PlayerFrameService;
+  private layoutService = LayoutService.getInstance();
 
   private constructor() {}
 
@@ -21,6 +23,8 @@ export class PlayerFrameService {
     if (document.getElementById(ElementIds.PLAYER)) {
       return;
     }
+
+    this.layoutService.ensureContentWrapper();
 
     const frame = document.createElement('iframe');
     frame.id = ElementIds.PLAYER;
@@ -56,9 +60,9 @@ export class PlayerFrameService {
     player.style.right = `${FrameDimensions.LAUNCHER.VISUAL_WIDTH}px`;
     player.style.borderLeft = '1px solid #E6E7E8';
 
-    const totalWidth =
-      FrameDimensions.PLAYER.WIDTH + FrameDimensions.LAUNCHER.VISUAL_WIDTH;
-    document.body.style.width = `calc(100% - ${totalWidth}px)`;
+    this.layoutService.shiftContent(
+      FrameDimensions.PLAYER.WIDTH + FrameDimensions.LAUNCHER.VISUAL_WIDTH,
+    );
   }
 
   hide(): void {
@@ -71,6 +75,6 @@ export class PlayerFrameService {
 
     player.style.display = 'none';
     player.style.opacity = '0';
-    document.body.style.width = `calc(100% - ${FrameDimensions.LAUNCHER.VISUAL_WIDTH}px)`;
+    this.layoutService.shiftContent(FrameDimensions.LAUNCHER.VISUAL_WIDTH);
   }
 }

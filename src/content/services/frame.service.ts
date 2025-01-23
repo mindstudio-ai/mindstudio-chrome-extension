@@ -1,6 +1,7 @@
 import { AuthFrameService } from './frames/auth-frame.service';
 import { PlayerFrameService } from './frames/player-frame.service';
 import { LauncherSyncService } from './frames/launcher-sync.service';
+import { LayoutService } from './layout.service';
 
 export class FrameService {
   private static instance: FrameService;
@@ -22,8 +23,6 @@ export class FrameService {
   }
 
   async injectFrames(): Promise<void> {
-    document.body.style.transition = 'width 0.3s ease';
-
     this.authFrame.injectFrame();
     this.playerFrame.injectFrame();
     await this.launcherSync.injectFrame();

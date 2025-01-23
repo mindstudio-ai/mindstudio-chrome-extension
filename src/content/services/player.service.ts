@@ -1,6 +1,7 @@
 import { MessagingService } from './messaging.service';
 import { FrameService } from './frame.service';
 import { DOMService } from './dom.service';
+import { AuthService } from './auth.service';
 
 export class PlayerService {
   private static instance: PlayerService;
@@ -8,8 +9,21 @@ export class PlayerService {
   private messaging = MessagingService.getInstance();
   private frameService = FrameService.getInstance();
   private domService = DOMService.getInstance();
+  private authService = AuthService.getInstance();
 
-  private constructor() {}
+  private constructor() {
+    // Set up player/loaded handler
+    this.messaging.subscribe('player/loaded', async ({ isLoggedIn }) => {
+      if (!isLoggedIn) {
+        const token = await this.authService.getToken();
+        if (token) {
+          this.messaging.sendToPlayer('auth/token_changed', {
+            authToken: token,
+          });
+        }
+      }
+    });
+  }
 
   static getInstance(): PlayerService {
     if (!PlayerService.instance) {
@@ -18,11 +32,14 @@ export class PlayerService {
     return PlayerService.instance;
   }
 
-  launchWorker(workerPayload: {
+  async launchWorker(workerPayload: {
     id: string;
     name: string;
     iconUrl: string;
-  }): void {
+  }): Promise<void> {
+    // First show the frame
+    this.frameService.showPlayer();
+
     // Gather context
     const url = window.location.href;
     const rawHtml = this.domService.cleanDOM();
@@ -41,8 +58,5 @@ export class PlayerService {
         userSelection,
       },
     });
-
-    // Show player
-    this.frameService.showPlayer();
   }
 }

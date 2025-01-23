@@ -5,10 +5,12 @@ import {
   ZIndexes,
 } from '../../constants';
 import { AuthService } from '../auth.service';
+import { LayoutService } from '../layout.service';
 
 export class AuthFrameService {
   private static instance: AuthFrameService;
   private authService: AuthService;
+  private layoutService = LayoutService.getInstance();
 
   private constructor() {
     this.authService = AuthService.getInstance();
@@ -26,6 +28,10 @@ export class AuthFrameService {
       return;
     }
 
+    // Ensure wrapper is created
+    this.layoutService.ensureContentWrapper();
+
+    // Create auth iframe
     const frame = document.createElement('iframe');
     frame.id = ElementIds.AUTH;
     frame.style.cssText = `
@@ -54,10 +60,11 @@ export class AuthFrameService {
       auth.src = `${RootUrl}/_extension/login?__displayContext=extension`;
     }
 
-    auth.style.width = '400px';
+    auth.style.width = `${FrameDimensions.AUTH.WIDTH}px`;
     auth.style.borderLeft = '1px solid #E6E7E8';
     auth.style.display = 'block';
-    document.body.style.width = `calc(100% - ${FrameDimensions.AUTH.WIDTH}px)`;
+
+    this.layoutService.shiftContent(FrameDimensions.AUTH.WIDTH);
   }
 
   hide(): void {
@@ -67,6 +74,8 @@ export class AuthFrameService {
     }
 
     auth.style.width = '0';
-    document.body.style.width = '100%';
+    auth.style.display = 'none';
+
+    this.layoutService.shiftContent(0);
   }
 }

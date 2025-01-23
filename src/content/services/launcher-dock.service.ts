@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { LauncherStateService } from './launcher-state.service';
 import { FloatingButtonService } from './floating-button.service';
 import { StorageKeys } from '../constants';
+import { PlayerService } from './player.service';
+import { LayoutService } from './layout.service';
 
 interface AppData {
   id: string;
@@ -17,6 +19,8 @@ export class LauncherDockService {
   private authService = AuthService.getInstance();
   private launcherState = LauncherStateService.getInstance();
   private floatingButton = FloatingButtonService.getInstance();
+  private playerService = PlayerService.getInstance();
+  private layoutService = LayoutService.getInstance();
   private apps: AppData[] = [];
 
   private constructor() {}
@@ -44,6 +48,7 @@ export class LauncherDockService {
       transform: translateX(100%);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: visible;
+      pointer-events: none;
     `;
 
     const inner = document.createElement('div');
@@ -59,6 +64,7 @@ export class LauncherDockService {
       padding: 4px 0;
       border-left: 1px solid #12121340;
       overflow: visible;
+      pointer-events: all;
     `;
 
     // Create apps container immediately
@@ -67,7 +73,6 @@ export class LauncherDockService {
     appsContainer.style.cssText = `
       display: flex;
       flex-direction: column;
-      gap: 12px;
       align-items: center;
       justify-content: center;
       padding: 8px 0;
@@ -113,32 +118,28 @@ export class LauncherDockService {
   }
 
   injectDock(): void {
+    // Prevent duplicate docks
     if (document.getElementById(ElementIds.LAUNCHER)) {
       return;
     }
 
-    // Add a wrapper for page content if it doesn't exist
-    const contentWrapper = document.createElement('div');
-    contentWrapper.id = ElementIds.CONTENT_WRAPPER;
+    // 1. Ensure the content wrapper is created by LayoutService
+    this.layoutService.ensureContentWrapper();
 
-    // Move all body children into wrapper
-    while (document.body.firstChild) {
-      contentWrapper.appendChild(document.body.firstChild);
-    }
-    document.body.appendChild(contentWrapper);
-
-    // Add the dock after the wrapper
+    // 2. Now create and append our dock to the DOM
     const dock = this.createDockElement();
     document.body.appendChild(dock);
 
-    // Set initial styles
-    contentWrapper.style.cssText = `
-      position: relative;
-      width: 100%;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    `;
-
+    // 3. Initialize apps, storage listeners, etc.
     this.initialize();
+  }
+
+  private handleAppClick(app: AppData): void {
+    this.playerService.launchWorker({
+      id: app.id,
+      name: app.name,
+      iconUrl: app.iconUrl,
+    });
   }
 
   private createAppButton(app: AppData): HTMLElement {
@@ -149,7 +150,6 @@ export class LauncherDockService {
       align-items: center;
       justify-content: center;
       position: relative;
-      padding: 8px;
       width: 40px;
       height: 40px;
     `;
@@ -220,13 +220,7 @@ export class LauncherDockService {
     });
 
     // Add click handler
-    container.addEventListener('click', () => {
-      this.messagingService.sendToPlayer('player/launch_worker', {
-        id: app.id,
-        name: app.name,
-        iconUrl: app.iconUrl,
-      });
-    });
+    container.addEventListener('click', () => this.handleAppClick(app));
 
     iconContainer.appendChild(icon);
     container.appendChild(tooltip);
@@ -257,7 +251,6 @@ export class LauncherDockService {
     newAppsContainer.style.cssText = `
       display: flex;
       flex-direction: column;
-      gap: 12px;
       align-items: center;
       justify-content: center;
       padding: 8px 0;
@@ -341,31 +334,32 @@ export class LauncherDockService {
     }
 
     const dock = document.getElementById(ElementIds.LAUNCHER);
-    const contentWrapper = document.getElementById(ElementIds.CONTENT_WRAPPER);
-
-    if (dock && contentWrapper) {
-      dock.style.display = 'block';
-
-      requestAnimationFrame(() => {
-        dock.style.opacity = '1';
-        dock.style.transform = 'translateX(0)';
-        contentWrapper.style.transform = `translateX(-${FrameDimensions.LAUNCHER.VISUAL_WIDTH}px)`;
-      });
+    if (!dock) {
+      return;
     }
+
+    dock.style.display = 'block';
+
+    requestAnimationFrame(() => {
+      dock.style.opacity = '1';
+      dock.style.transform = 'translateX(0)';
+      this.layoutService.shiftContent(FrameDimensions.LAUNCHER.VISUAL_WIDTH);
+    });
   }
 
   hideDock(): void {
     const dock = document.getElementById(ElementIds.LAUNCHER);
-    const contentWrapper = document.getElementById(ElementIds.CONTENT_WRAPPER);
-
-    if (dock && contentWrapper) {
-      dock.style.transform = 'translateX(100%)';
-      dock.style.opacity = '0';
-      contentWrapper.style.transform = 'translateX(0)';
-
-      setTimeout(() => {
-        dock.style.display = 'none';
-      }, 300);
+    if (!dock) {
+      return;
     }
+
+    dock.style.transform = 'translateX(100%)';
+    dock.style.opacity = '0';
+
+    this.layoutService.shiftContent(0);
+
+    setTimeout(() => {
+      dock.style.display = 'none';
+    }, 300);
   }
 }
