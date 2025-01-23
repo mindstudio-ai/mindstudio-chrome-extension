@@ -26,6 +26,7 @@ class ContentScript {
         this.messagingService.sendToLauncher('auth_token_changed', {
           authToken,
         });
+        this.messagingService.sendToPlayer('auth_token_changed', { authToken });
         this.frameService.showLauncher();
         this.floatingButtonService.hideButton();
       } else if (isEventOfType(data, 'launcher/loaded')) {
@@ -35,18 +36,25 @@ class ContentScript {
             authToken: token,
           });
         } else {
-          this.messagingService.sendToLauncher('login_required');
+          this.frameService.showAuth();
         }
         this.messagingService.sendToLauncher('url_changed', {
           url: window.location.href,
         });
+      } else if (isEventOfType(data, 'player/loaded')) {
+        const token = await this.authService.getToken();
+        if (token) {
+          this.messagingService.sendToPlayer('auth_token_changed', {
+            authToken: token,
+          });
+        }
       } else if (isEventOfType(data, 'launcher/size_updated')) {
         const { width, height } = data.payload;
         this.frameService.updateLauncherSize(width, height);
       } else if (isEventOfType(data, 'player/launch_worker')) {
         this.playerService.launchWorker(data.payload);
       } else if (isEventOfType(data, 'player/close_worker')) {
-        this.playerService.hidePlayer();
+        this.frameService.hidePlayer();
       }
     } catch (err) {
       console.error('[MindStudio Extension] Error handling message:', err);

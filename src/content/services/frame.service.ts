@@ -87,14 +87,15 @@ export class FrameService {
     frame.style.cssText = `
       position: fixed;
       top: 0;
-      left: 0;
-      width: 100vw;
+      right: 40px;
+      width: 400px;
       height: 100vh;
       border: none;
       z-index: 999999;
-      background: transparent;
+      background: #FFFFFF;
       display: none;
       opacity: 0;
+      transition: all 0.3s ease;
     `;
 
     document.body.appendChild(frame);
@@ -174,5 +175,41 @@ export class FrameService {
       launcher.style.width = `${width}px`;
       document.body.style.marginRight = `${width}px`;
     }
+  }
+
+  public showPlayer(width = 400, offset = 40): void {
+    const launcher = document.getElementById(
+      this.launcherId,
+    ) as HTMLIFrameElement;
+    const player = document.getElementById(this.playerId) as HTMLIFrameElement;
+
+    if (!launcher || !player) {
+      return;
+    }
+
+    // Keep launcher pinned at the far right
+    launcher.style.display = 'block';
+    launcher.style.width = `${offset}px`;
+
+    // Place the player immediately to the left of launcher
+    player.style.display = 'block';
+    player.style.opacity = '1';
+    player.style.width = `${width}px`;
+    player.style.right = `${offset}px`;
+    player.style.borderLeft = '1px solid #E6E7E8';
+
+    // Shift the entire page content
+    document.body.style.marginRight = `${width + offset}px`;
+  }
+
+  public hidePlayer(): void {
+    const player = document.getElementById(this.playerId) as HTMLIFrameElement;
+    if (!player) {
+      return;
+    }
+    player.style.display = 'none';
+    player.style.opacity = '0';
+    // Reset margin to account for launcher only
+    document.body.style.marginRight = '40px';
   }
 }

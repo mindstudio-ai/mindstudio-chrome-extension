@@ -20,24 +20,6 @@ export class PlayerService {
     return PlayerService.instance;
   }
 
-  showPlayer(): void {
-    const frame = document.getElementById(this.playerId) as HTMLIFrameElement;
-    if (!frame) {
-      return;
-    }
-    frame.style.display = 'block';
-    frame.style.opacity = '1';
-  }
-
-  hidePlayer(): void {
-    const frame = document.getElementById(this.playerId) as HTMLIFrameElement;
-    if (!frame) {
-      return;
-    }
-    frame.style.display = 'none';
-    frame.style.opacity = '0';
-  }
-
   launchWorker(workerPayload: {
     id: string;
     name: string;
@@ -58,10 +40,11 @@ export class PlayerService {
         url,
         rawHtml,
         fullText,
-        userSelection: userSelection ?? '',
+        userSelection,
       },
     });
 
-    this.showPlayer();
+    // Show player to the left of launcher
+    this.frameService.showPlayer(400, 40);
   }
 }

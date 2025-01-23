@@ -6,6 +6,9 @@ interface Events {
   'launcher/loaded': {
     isLoggedIn: boolean;
   };
+  'player/loaded': {
+    isLoggedIn: boolean;
+  };
   'launcher/size_updated': {
     width: number;
     height: number;
