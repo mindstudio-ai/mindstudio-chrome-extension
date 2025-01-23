@@ -1,15 +1,18 @@
 import { AuthService } from './auth.service';
 import { FrameService } from './frame.service';
+import { LauncherStateService } from './launcher-state.service';
 import { ElementIds, ZIndexes } from '../constants';
 
 export class FloatingButtonService {
   private static instance: FloatingButtonService;
   private frameService: FrameService;
   private authService: AuthService;
+  private launcherState: LauncherStateService;
 
   private constructor() {
     this.frameService = FrameService.getInstance();
     this.authService = AuthService.getInstance();
+    this.launcherState = LauncherStateService.getInstance();
   }
 
   static getInstance(): FloatingButtonService {
@@ -19,7 +22,7 @@ export class FloatingButtonService {
     return FloatingButtonService.instance;
   }
 
-  injectButton(): void {
+  async injectButton(): Promise<void> {
     if (document.getElementById(ElementIds.FLOATING_BUTTON)) {
       return;
     }
@@ -41,7 +44,7 @@ export class FloatingButtonService {
       transition: transform 0.2s ease;
       border-radius: 50%;
       background: transparent;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
     `;
@@ -57,12 +60,19 @@ export class FloatingButtonService {
     button.addEventListener('click', this.handleButtonClick.bind(this));
 
     document.body.appendChild(button);
+
+    // Check if we should show the button
+    const isCollapsed = await this.launcherState.isCollapsed();
+    if (isCollapsed) {
+      this.showButton();
+    }
   }
 
   private async handleButtonClick(): Promise<void> {
     const isAuthenticated = await this.authService.isAuthenticated();
 
     if (isAuthenticated) {
+      await this.launcherState.setCollapsed(false);
       this.frameService.showLauncher();
       this.hideButton();
     } else {

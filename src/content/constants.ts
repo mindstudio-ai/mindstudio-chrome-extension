@@ -6,6 +6,7 @@ export const RootUrl =
 
 export const StorageKeys = {
   AUTH_TOKEN: `AuthToken_${Environment}`,
+  LAUNCHER_COLLAPSED: `LauncherCollapsed_${Environment}`,
 } as const;
 
 export const ZIndexes = {

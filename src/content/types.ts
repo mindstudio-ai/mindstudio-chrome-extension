@@ -17,6 +17,7 @@ export interface Events {
     width: number;
     height: number;
   };
+  'launcher/collapse': undefined;
 
   // Player events
   'player/loaded': {

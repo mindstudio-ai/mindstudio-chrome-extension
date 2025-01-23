@@ -1,12 +1,16 @@
 import { ElementIds, FrameDimensions, RootUrl, ZIndexes } from '../constants';
 import { AuthService } from './auth.service';
+import { LauncherStateService } from './launcher-state.service';
+import { FloatingButtonService } from './floating-button.service';
 
 export class FrameService {
   private static instance: FrameService;
   private authService: AuthService;
+  private launcherState: LauncherStateService;
 
   private constructor() {
     this.authService = AuthService.getInstance();
+    this.launcherState = LauncherStateService.getInstance();
   }
 
   static getInstance(): FrameService {
@@ -16,10 +20,24 @@ export class FrameService {
     return FrameService.instance;
   }
 
-  injectFrames(): void {
+  async injectFrames(): Promise<void> {
     this.injectAuth();
     this.injectLauncher();
     this.injectPlayer();
+
+    // Check initial state
+    const isAuthenticated = await this.authService.isAuthenticated();
+    const isCollapsed = await this.launcherState.isCollapsed();
+
+    console.log('isAuthenticated', isAuthenticated);
+    console.log('isCollapsed', isCollapsed);
+
+    if (isAuthenticated && !isCollapsed) {
+      this.showLauncher();
+    } else if (isAuthenticated && isCollapsed) {
+      const floatingButton = FloatingButtonService.getInstance();
+      floatingButton.showButton();
+    }
   }
 
   private injectAuth(): void {
@@ -125,25 +143,43 @@ export class FrameService {
   }
 
   async showLauncher(): Promise<void> {
+    const isCollapsed = await this.launcherState.isCollapsed();
+    if (isCollapsed) {
+      const floatingButton = FloatingButtonService.getInstance();
+      floatingButton.showButton();
+      return;
+    }
+
     const auth = document.getElementById(ElementIds.AUTH) as HTMLIFrameElement;
     const launcher = document.getElementById(
       ElementIds.LAUNCHER,
     ) as HTMLIFrameElement;
 
     if (auth && launcher) {
-      // Update launcher src with current token
       const token = await this.authService.getToken();
       launcher.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1&token=${token}`;
 
-      // Hide auth if it's showing
       auth.style.width = '0';
       auth.style.display = 'none';
-      // Show launcher iframe
       launcher.style.display = 'block';
       launcher.style.width = `${FrameDimensions.LAUNCHER.WIDTH}px`;
-      // Shift the page content
+      launcher.style.borderLeft = '1px solid #12121340';
       document.body.style.marginRight = `${FrameDimensions.LAUNCHER.WIDTH}px`;
     }
+  }
+
+  async collapseLauncher(): Promise<void> {
+    await this.launcherState.setCollapsed(true);
+    const launcher = document.getElementById(
+      ElementIds.LAUNCHER,
+    ) as HTMLIFrameElement;
+    if (launcher) {
+      launcher.style.width = '0';
+      launcher.style.display = 'none';
+      document.body.style.marginRight = '0';
+    }
+    const floatingButton = FloatingButtonService.getInstance();
+    floatingButton.showButton();
   }
 
   hideLauncher(): void {

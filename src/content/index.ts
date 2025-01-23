@@ -41,6 +41,10 @@ class ContentScript {
       });
     });
 
+    this.messagingService.subscribe('launcher/collapse', () => {
+      this.frameService.collapseLauncher();
+    });
+
     this.messagingService.subscribe('player/loaded', async () => {
       const token = await this.authService.getToken();
       if (token) {
