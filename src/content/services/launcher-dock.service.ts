@@ -65,6 +65,7 @@ export class LauncherDockService {
       border-left: 1px solid #12121340;
       overflow: visible;
       pointer-events: all;
+      box-sizing: border-box;
     `;
 
     // Create apps container immediately
