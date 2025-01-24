@@ -5,7 +5,7 @@ import {
   ZIndexes,
 } from '../../constants';
 import { AuthService } from '../auth.service';
-import { LayoutService } from '../layout.service';
+import { LayoutService } from '../ui/layout.service';
 
 export class AuthFrameService {
   private static instance: AuthFrameService;

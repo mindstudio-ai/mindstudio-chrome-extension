@@ -5,7 +5,7 @@ import { LauncherStateService } from '../launcher-state.service';
 import { FloatingButtonService } from './floating-button.service';
 import { StorageKeys } from '../../constants';
 import { PlayerService } from '../player.service';
-import { LayoutService } from '../layout.service';
+import { LayoutService } from './layout.service';
 
 interface AppData {
   id: string;

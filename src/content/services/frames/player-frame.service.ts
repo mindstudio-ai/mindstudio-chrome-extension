@@ -4,7 +4,7 @@ import {
   RootUrl,
   ZIndexes,
 } from '../../constants';
-import { LayoutService } from '../layout.service';
+import { LayoutService } from '../ui/layout.service';
 
 export class PlayerFrameService {
   private static instance: PlayerFrameService;
