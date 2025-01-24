@@ -1,4 +1,9 @@
-import { ElementIds, FrameDimensions, ZIndexes } from '../../constants';
+import {
+  ElementIds,
+  FrameDimensions,
+  RootUrl,
+  ZIndexes,
+} from '../../constants';
 import { MessagingService } from '../messaging.service';
 import { AuthService } from '../auth.service';
 import { LauncherStateService } from '../launcher-state.service';
@@ -82,7 +87,21 @@ export class LauncherDockService {
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.2s ease-in-out;
     `;
+
+    logo.addEventListener('click', () => {
+      window.open(RootUrl, '_blank');
+    });
+
+    logo.addEventListener('mouseenter', () => {
+      logo.style.opacity = '0.7';
+    });
+
+    logo.addEventListener('mouseleave', () => {
+      logo.style.opacity = '1';
+    });
 
     // Create apps container
     const appsContainer = document.createElement('div');
