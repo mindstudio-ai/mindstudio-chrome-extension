@@ -21,7 +21,9 @@ export class LauncherDockService {
   private layoutService = LayoutService.getInstance();
   private apps: AppData[] = [];
 
-  private constructor() {}
+  private constructor() {
+    this.launcherState.setLauncherDock(this);
+  }
 
   static getInstance(): LauncherDockService {
     if (!LauncherDockService.instance) {

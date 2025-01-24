@@ -6,6 +6,7 @@ import { FloatingButtonService } from './services/ui/floating-button.service';
 import { LauncherDockService } from './services/ui/launcher-dock.service';
 import { LauncherStateService } from './services/launcher-state.service';
 import { LauncherSyncService } from './services/frames/launcher-sync.service';
+import { RootUrl } from './constants';
 
 class ContentScript {
   private frameService = FrameService.getInstance();
@@ -57,6 +58,11 @@ class ContentScript {
 
   async initialize(): Promise<void> {
     if (window.self !== window.top) {
+      return;
+    }
+
+    // Don't initialize on MindStudio app pages
+    if (window.location.origin === RootUrl) {
       return;
     }
 
