@@ -59,4 +59,8 @@ export class PlayerService {
       },
     });
   }
+
+  closePlayer(): void {
+    this.frameService.hidePlayer();
+  }
 }

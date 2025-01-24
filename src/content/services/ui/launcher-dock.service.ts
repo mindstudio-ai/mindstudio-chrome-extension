@@ -15,8 +15,6 @@ interface AppData {
 
 export class LauncherDockService {
   private static instance: LauncherDockService;
-  private messagingService = MessagingService.getInstance();
-  private authService = AuthService.getInstance();
   private launcherState = LauncherStateService.getInstance();
   private floatingButton = FloatingButtonService.getInstance();
   private playerService = PlayerService.getInstance();
@@ -356,6 +354,7 @@ export class LauncherDockService {
 
   async collapse(): Promise<void> {
     await this.launcherState.setCollapsed(true);
+    this.playerService.closePlayer();
     this.hideDock();
     this.floatingButton.showButton();
   }
