@@ -16,6 +16,7 @@ interface AppData {
   id: string;
   name: string;
   iconUrl: string;
+  extensionSupportedSites: string[];
 }
 
 export class LauncherDockService {
@@ -25,6 +26,7 @@ export class LauncherDockService {
   private playerService = PlayerService.getInstance();
   private layoutService = LayoutService.getInstance();
   private apps: AppData[] = [];
+  private currentHostUrl: string = window.location.href;
 
   private constructor() {
     this.launcherState.setLauncherDock(this);
@@ -347,8 +349,33 @@ export class LauncherDockService {
     });
   }
 
+  private filterAppsByUrl(apps: AppData[]): AppData[] {
+    return apps.filter(({ extensionSupportedSites }) => {
+      if (extensionSupportedSites.length === 0 || !this.currentHostUrl) {
+        return true;
+      }
+
+      for (let i = 0; i < extensionSupportedSites.length; i += 1) {
+        const escapedPattern = extensionSupportedSites[i].replace(
+          /[-/\\^$+?.()|[\]{}]/g,
+          '\\$&',
+        );
+
+        const regexPattern = new RegExp(
+          `^${escapedPattern.replace(/\*/g, '.*')}$`,
+        );
+
+        const isValid = regexPattern.test(this.currentHostUrl);
+        if (!isValid) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
   updateApps(apps: AppData[]): void {
-    this.apps = apps;
+    this.apps = this.filterAppsByUrl(apps);
     this.updateDockContent();
   }
 
