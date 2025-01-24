@@ -71,7 +71,7 @@ export class LauncherDockService {
     // Create apps container immediately
     const appsContainer = document.createElement('div');
     appsContainer.className = 'apps-container';
-    appsContainer.style.cssText = `
+    (appsContainer as HTMLElement).style.cssText = `
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -250,36 +250,65 @@ export class LauncherDockService {
       return;
     }
 
-    // Clear existing apps
-    const appsContainer = inner.querySelector('.apps-container');
-    if (appsContainer) {
-      appsContainer.remove();
+    // Get or create apps container
+    let appsContainer = inner.querySelector('.apps-container');
+    if (!appsContainer) {
+      appsContainer = document.createElement('div');
+      appsContainer.className = 'apps-container';
+      (appsContainer as HTMLElement).style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 0;
+        flex: 1;
+        overflow: visible;
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+          display: none;
+        }
+      `;
+      inner.insertBefore(appsContainer, inner.firstChild);
     }
 
-    // Create new apps container
-    const newAppsContainer = document.createElement('div');
-    newAppsContainer.className = 'apps-container';
-    newAppsContainer.style.cssText = `
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 0;
-      flex: 1;
-      overflow: visible;
-      scrollbar-width: none;
-      &::-webkit-scrollbar {
-        display: none;
+    // Create a map of existing app elements by app ID
+    const existingApps = new Map<string, HTMLElement>();
+    appsContainer.childNodes.forEach((node) => {
+      const appElement = node as HTMLElement;
+      const appId = appElement.getAttribute('data-app-id');
+      if (appId) {
+        existingApps.set(appId, appElement);
       }
-    `;
-
-    // Add app buttons
-    this.apps.forEach((app) => {
-      newAppsContainer.appendChild(this.createAppButton(app));
     });
 
-    // Insert before any existing elements (like collapse button)
-    inner.insertBefore(newAppsContainer, inner.firstChild);
+    // Update or create app elements
+    this.apps.forEach((app) => {
+      const existingElement = existingApps.get(app.id);
+      if (existingElement) {
+        // Remove from map to track which ones need to be removed later
+        existingApps.delete(app.id);
+
+        // Update existing element if needed (e.g., icon URL or name changed)
+        const icon = existingElement.querySelector('img');
+        if (icon && icon.src !== app.iconUrl) {
+          icon.src = app.iconUrl;
+        }
+        const tooltip = existingElement.querySelector('div');
+        if (tooltip && tooltip.textContent !== app.name) {
+          tooltip.textContent = app.name;
+        }
+      } else {
+        // Create new element if it doesn't exist
+        const newElement = this.createAppButton(app);
+        newElement.setAttribute('data-app-id', app.id);
+        appsContainer.appendChild(newElement);
+      }
+    });
+
+    // Remove any remaining elements that are no longer needed
+    existingApps.forEach((element) => {
+      element.remove();
+    });
   }
 
   updateApps(apps: AppData[]): void {
