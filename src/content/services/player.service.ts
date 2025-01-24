@@ -5,6 +5,12 @@ import { AuthService } from './auth.service';
 
 export class PlayerService {
   private static instance: PlayerService;
+  private isPlayerLoaded = false;
+  private pendingWorkerLaunch: {
+    id: string;
+    name: string;
+    iconUrl: string;
+  } | null = null;
 
   private messaging = MessagingService.getInstance();
   private frameService = FrameService.getInstance();
@@ -14,6 +20,8 @@ export class PlayerService {
   private constructor() {
     // Set up player/loaded handler
     this.messaging.subscribe('player/loaded', async ({ isLoggedIn }) => {
+      this.isPlayerLoaded = true;
+
       if (!isLoggedIn) {
         const token = await this.authService.getToken();
         if (token) {
@@ -21,6 +29,12 @@ export class PlayerService {
             authToken: token,
           });
         }
+      }
+
+      // Process any pending worker launch
+      if (this.pendingWorkerLaunch) {
+        await this.launchWorkerInternal(this.pendingWorkerLaunch);
+        this.pendingWorkerLaunch = null;
       }
     });
   }
@@ -32,14 +46,11 @@ export class PlayerService {
     return PlayerService.instance;
   }
 
-  async launchWorker(workerPayload: {
+  private async launchWorkerInternal(workerPayload: {
     id: string;
     name: string;
     iconUrl: string;
   }): Promise<void> {
-    // First show the frame
-    this.frameService.showPlayer();
-
     // Gather context
     const url = window.location.href;
     const rawHtml = this.domService.cleanDOM();
@@ -60,7 +71,26 @@ export class PlayerService {
     });
   }
 
+  async launchWorker(workerPayload: {
+    id: string;
+    name: string;
+    iconUrl: string;
+  }): Promise<void> {
+    // First show the frame
+    this.frameService.showPlayer();
+
+    if (!this.isPlayerLoaded) {
+      // Queue the launch for when the player loads
+      this.pendingWorkerLaunch = workerPayload;
+      return;
+    }
+
+    await this.launchWorkerInternal(workerPayload);
+  }
+
   closePlayer(): void {
+    this.isPlayerLoaded = false;
+    this.pendingWorkerLaunch = null;
     this.frameService.hidePlayer();
   }
 }
