@@ -200,6 +200,7 @@ export class LauncherDockService {
       justify-content: center;
       width: 24px;
       height: 24px;
+      transition: all 0.2s ease-in-out;
     `;
 
     const icon = document.createElement('img');
@@ -209,15 +210,24 @@ export class LauncherDockService {
       height: 24px;
       border-radius: 4px;
       object-fit: cover;
+      transition: all 0.2s ease-in-out;
     `;
 
     // Add hover effects
     container.addEventListener('mouseenter', () => {
       tooltip.style.opacity = '1';
+      icon.style.width = '30px';
+      icon.style.height = '30px';
+      iconContainer.style.width = '30px';
+      iconContainer.style.height = '30px';
     });
 
     container.addEventListener('mouseleave', () => {
       tooltip.style.opacity = '0';
+      icon.style.width = '24px';
+      icon.style.height = '24px';
+      iconContainer.style.width = '24px';
+      iconContainer.style.height = '24px';
     });
 
     // Add click handler
