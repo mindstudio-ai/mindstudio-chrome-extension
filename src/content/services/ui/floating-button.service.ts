@@ -1,8 +1,8 @@
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth.service';
 import { LauncherDockService } from './launcher-dock.service';
-import { LauncherStateService } from './launcher-state.service';
-import { FrameService } from './frame.service';
-import { ElementIds, ZIndexes } from '../constants';
+import { LauncherStateService } from '../launcher-state.service';
+import { FrameService } from '../frame.service';
+import { ElementIds, ZIndexes } from '../../constants';
 
 export class FloatingButtonService {
   private static instance: FloatingButtonService;

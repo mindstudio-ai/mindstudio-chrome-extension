@@ -1,11 +1,11 @@
-import { ElementIds, FrameDimensions, ZIndexes } from '../constants';
-import { MessagingService } from './messaging.service';
-import { AuthService } from './auth.service';
-import { LauncherStateService } from './launcher-state.service';
+import { ElementIds, FrameDimensions, ZIndexes } from '../../constants';
+import { MessagingService } from '../messaging.service';
+import { AuthService } from '../auth.service';
+import { LauncherStateService } from '../launcher-state.service';
 import { FloatingButtonService } from './floating-button.service';
-import { StorageKeys } from '../constants';
-import { PlayerService } from './player.service';
-import { LayoutService } from './layout.service';
+import { StorageKeys } from '../../constants';
+import { PlayerService } from '../player.service';
+import { LayoutService } from '../layout.service';
 
 interface AppData {
   id: string;

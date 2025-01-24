@@ -2,8 +2,8 @@ import { AuthService } from './services/auth.service';
 import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
-import { FloatingButtonService } from './services/floating-button.service';
-import { LauncherDockService } from './services/launcher-dock.service';
+import { FloatingButtonService } from './services/ui/floating-button.service';
+import { LauncherDockService } from './services/ui/launcher-dock.service';
 import { LauncherStateService } from './services/launcher-state.service';
 import { LauncherSyncService } from './services/frames/launcher-sync.service';
 
