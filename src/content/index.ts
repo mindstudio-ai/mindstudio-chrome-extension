@@ -3,7 +3,6 @@ import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
 import { PlayerService } from './services/player.service';
 import { FloatingButtonService } from './services/floating-button.service';
-import { URLService } from './services/url.service';
 import { LauncherDockService } from './services/launcher-dock.service';
 import { LauncherStateService } from './services/launcher-state.service';
 import { LauncherSyncService } from './services/frames/launcher-sync.service';
@@ -14,7 +13,7 @@ class ContentScript {
   private authService = AuthService.getInstance();
   private playerService = PlayerService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
-  private urlService = URLService.getInstance();
+  private launcherStateService = LauncherStateService.getInstance();
 
   private setupEventHandlers(): void {
     this.messagingService.subscribe(
@@ -27,6 +26,13 @@ class ContentScript {
         await launcherSync.reinjectFrame(authToken);
 
         this.messagingService.sendToPlayer('auth/token_changed', { authToken });
+
+        // Hide auth frame after successful login
+        this.frameService.hideAuth();
+        await this.launcherStateService.setCollapsed(false);
+        const launcherDock = LauncherDockService.getInstance();
+        launcherDock.showDock();
+
         this.floatingButtonService.hideButton();
       },
     );
@@ -58,8 +64,11 @@ class ContentScript {
     const launcherState = LauncherStateService.getInstance();
     const authService = AuthService.getInstance();
 
-    // Check auth first
+    // Set initial collapsed state if no token exists
     const token = await authService.getToken();
+    if (!token) {
+      await launcherState.setCollapsed(true);
+    }
 
     launcherDock.injectDock();
     await this.frameService.injectFrames();
@@ -74,7 +83,6 @@ class ContentScript {
 
     this.setupEventHandlers();
     this.floatingButtonService.injectButton();
-    this.urlService.startTracking();
   }
 }
 
