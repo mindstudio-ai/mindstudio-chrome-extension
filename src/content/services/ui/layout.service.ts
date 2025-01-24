@@ -5,9 +5,8 @@ export class LayoutService {
   private contentWrapper: HTMLElement | null = null;
 
   private constructor() {
-    // Initialize body transition
-    document.body.style.transition =
-      'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    // Keep the body's transitions minimal or remove them entirely
+    document.body.style.transition = 'none';
   }
 
   public static getInstance(): LayoutService {
@@ -35,12 +34,17 @@ export class LayoutService {
 
         document.body.appendChild(wrapper);
 
-        // Optional: add a smooth transition for transforms
+        // Provide a stable base style
+        // - Let the wrapper flow normally
+        // - We'll control the margin on the right to make room for the dock
+        // - Animate margin changes smoothly
         wrapper.style.cssText = `
-          position: relative;
-          width: 100%;
-          height: 100%;
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: static;
+          width: auto;
+          height: auto;
+          margin-right: 0;
+          transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-sizing: border-box;
         `;
       }
       this.contentWrapper = wrapper;
@@ -50,14 +54,11 @@ export class LayoutService {
   }
 
   /**
-   * Shift the wrapper to the left by the specified number of pixels.
+   * Shift the wrapper to the left by assigning space on the right (for the dock).
    */
   public shiftContent(px: number): void {
     const wrapper = this.ensureContentWrapper();
-    if (px === 0) {
-      wrapper.style.width = '100%';
-    } else {
-      wrapper.style.width = `calc(100% - ${px}px)`;
-    }
+    // If px is zero, we remove extra margin to restore normal positioning
+    wrapper.style.marginRight = px > 0 ? `${px}px` : '0';
   }
 }
