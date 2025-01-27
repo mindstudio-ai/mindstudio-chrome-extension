@@ -6,8 +6,9 @@ import {
   ZIndexes,
 } from '../../constants';
 import { LauncherStateService } from '../launcher-state.service';
-import { PlayerService } from '../player.service';
 import { FloatingButtonService } from './floating-button.service';
+import { SidePanelService } from '../side-panel.service';
+import { DOMService } from '../dom.service';
 
 interface AppData {
   id: string;
@@ -20,7 +21,8 @@ export class LauncherDockService {
   private static instance: LauncherDockService;
   private launcherState = LauncherStateService.getInstance();
   private floatingButton = FloatingButtonService.getInstance();
-  private playerService = PlayerService.getInstance();
+  private sidePanelService = SidePanelService.getInstance();
+  private domService = DOMService.getInstance();
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
@@ -167,10 +169,14 @@ export class LauncherDockService {
   }
 
   private handleAppClick(app: AppData): void {
-    this.playerService.launchWorker({
-      id: app.id,
-      name: app.name,
-      iconUrl: app.iconUrl,
+    // Send click message directly to background script
+    chrome.runtime.sendMessage({
+      _MindStudioEvent: '@@mindstudio/player/launch_worker',
+      payload: {
+        appId: app.id,
+        appName: app.name,
+        appIcon: app.iconUrl,
+      },
     });
   }
 
@@ -262,7 +268,7 @@ export class LauncherDockService {
     });
 
     // Add click handler
-    container.addEventListener('click', () => this.handleAppClick(app));
+    container.addEventListener('mousedown', () => this.handleAppClick(app));
 
     iconContainer.appendChild(icon);
     container.appendChild(tooltip);
@@ -412,7 +418,6 @@ export class LauncherDockService {
 
   async collapse(): Promise<void> {
     await this.launcherState.setCollapsed(true);
-    this.playerService.closePlayer();
     this.hideDock();
     this.floatingButton.showButton();
   }

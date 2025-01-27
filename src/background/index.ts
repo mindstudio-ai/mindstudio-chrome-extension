@@ -16,17 +16,49 @@ class BackgroundService {
     return BackgroundService.instance;
   }
 
+  private async sendMessageToTab(tabId: number, message: any): Promise<void> {
+    try {
+      await chrome.tabs.sendMessage(tabId, message);
+    } catch (error: unknown) {
+      // Ignore errors about receiving end not existing
+      const errorString =
+        error instanceof Error ? error.message : String(error);
+      if (!errorString.includes('Receiving end does not exist')) {
+        console.error('Error sending message to tab:', error);
+      }
+    }
+  }
+
   private setupMessageListeners(): void {
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message, sender) => {
       if (message._MindStudioEvent?.startsWith('@@mindstudio/')) {
-        // Handle messages from content scripts
         const eventType = message._MindStudioEvent.replace('@@mindstudio/', '');
 
-        // Broadcast message to all tabs except sender
+        // Handle worker launch directly from content script click
+        if (eventType === 'player/launch_worker' && sender.tab?.id) {
+          try {
+            // Open side panel synchronously in response to user click
+            chrome.sidePanel.open({ tabId: sender.tab.id });
+
+            // Forward the worker launch details to side panel after a small delay
+            setTimeout(() => {
+              chrome.runtime.sendMessage({
+                _MindStudioEvent: '@@mindstudio/player/init_worker',
+                payload: message.payload,
+              });
+            }, 100);
+
+            return; // Don't continue with broadcast
+          } catch (error) {
+            console.error('Failed to handle worker launch:', error);
+          }
+        }
+
+        // Handle other events asynchronously
         chrome.tabs.query({}, (tabs) => {
           tabs.forEach((tab) => {
             if (tab.id && sender.tab?.id !== tab.id) {
-              chrome.tabs.sendMessage(tab.id, message);
+              this.sendMessageToTab(tab.id, message);
             }
           });
         });
@@ -73,7 +105,7 @@ class BackgroundService {
         chrome.tabs.query({}, (tabs) => {
           tabs.forEach((tab) => {
             if (tab.id) {
-              chrome.tabs.sendMessage(tab.id, {
+              this.sendMessageToTab(tab.id, {
                 _MindStudioEvent: '@@mindstudio/auth/state_changed',
                 payload: undefined,
               });

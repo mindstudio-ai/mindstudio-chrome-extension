@@ -1,7 +1,6 @@
 import { AuthService } from './services/auth.service';
 import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
-import { PlayerService } from './services/player.service';
 import { FloatingButtonService } from './services/ui/floating-button.service';
 import { LauncherDockService } from './services/ui/launcher-dock.service';
 import { LauncherStateService } from './services/launcher-state.service';
@@ -13,7 +12,6 @@ class ContentScript {
   private frameService = FrameService.getInstance();
   private messagingService = MessagingService.getInstance();
   private authService = AuthService.getInstance();
-  private playerService = PlayerService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
   private launcherStateService = LauncherStateService.getInstance();
   private sidePanelService = SidePanelService.getInstance();
@@ -28,8 +26,6 @@ class ContentScript {
         const launcherSync = LauncherSyncService.getInstance();
         await launcherSync.reinjectFrame(authToken);
 
-        this.messagingService.sendToPlayer('auth/token_changed', { authToken });
-
         await this.launcherStateService.setCollapsed(false);
         const launcherDock = LauncherDockService.getInstance();
         launcherDock.showDock();
@@ -38,17 +34,7 @@ class ContentScript {
       },
     );
 
-    this.messagingService.subscribe('player/loaded', async () => {
-      const token = await this.authService.getToken();
-      if (token) {
-        this.messagingService.sendToPlayer('auth/token_changed', {
-          authToken: token,
-        });
-      }
-    });
-
     this.messagingService.subscribe('player/launch_worker', (payload) => {
-      // Launch worker in side panel instead of iframe
       this.sidePanelService.launchWorker(payload);
     });
 
