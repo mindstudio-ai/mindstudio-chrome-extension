@@ -22,7 +22,7 @@ export interface Events {
     id: string;
     name: string;
     iconUrl: string;
-    launchVariables: Record<string, any>;
+    launchVariables: LaunchVariables;
   };
 
   // Launcher events
@@ -42,16 +42,25 @@ export interface Events {
   };
 }
 
+export interface LaunchVariables {
+  url: string;
+  rawHtml: string;
+  fullText: string;
+  userSelection: string | null;
+}
+
 export interface WorkerLaunchPayload {
   appId: string;
   appName: string;
   appIcon: string;
+  launchVariables: LaunchVariables;
 }
 
 export interface WorkerLaunchData {
   appId: string;
   appName: string;
   appIcon: string;
+  launchVariables: LaunchVariables;
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field

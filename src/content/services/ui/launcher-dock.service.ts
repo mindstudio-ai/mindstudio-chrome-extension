@@ -171,7 +171,13 @@ export class LauncherDockService {
   private async handleAppClick(app: AppData): Promise<void> {
     try {
       // This will throw and open auth page if not authenticated
-      await this.authService.ensureAuthenticated();
+      // TODO move this check elsewhere because we can't do it here since it takes too long
+      // await this.authService.ensureAuthenticated();
+
+      // Get DOM content
+      const userSelection = this.domService.getSelectedContent();
+      const rawHtml = document.documentElement.outerHTML;
+      const fullText = document.body.innerText;
 
       // Send launch message directly to background script
       chrome.runtime.sendMessage({
@@ -180,6 +186,12 @@ export class LauncherDockService {
           appId: app.id,
           appName: app.name,
           appIcon: app.iconUrl,
+          launchVariables: {
+            url: window.location.href,
+            rawHtml,
+            fullText,
+            userSelection,
+          },
         },
       });
     } catch (error) {
