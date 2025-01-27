@@ -5,7 +5,7 @@ export const RootUrl =
   Environment === 'dev' ? 'http://localhost:3000' : 'https://app.mindstudio.ai';
 
 export const StorageKeys = {
-  AUTH_TOKEN: `AuthToken_${Environment}`,
+  AUTH_TOKEN: 'mindstudio.extension.auth_token',
   LAUNCHER_COLLAPSED: `LauncherCollapsed_${Environment}`,
   LAUNCHER_APPS: `LauncherApps_${Environment}`,
 } as const;

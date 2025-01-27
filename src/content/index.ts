@@ -30,8 +30,6 @@ class ContentScript {
 
         this.messagingService.sendToPlayer('auth/token_changed', { authToken });
 
-        // Hide auth frame after successful login
-        this.frameService.hideAuth();
         await this.launcherStateService.setCollapsed(false);
         const launcherDock = LauncherDockService.getInstance();
         launcherDock.showDock();

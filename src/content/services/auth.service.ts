@@ -1,7 +1,26 @@
-import { Environment, StorageKeys } from '../constants';
+import { StorageKeys } from '../constants';
+import { MessagingService } from './messaging.service';
 
 export class AuthService {
   private static instance: AuthService;
+  private messagingService: MessagingService;
+
+  private constructor() {
+    this.messagingService = MessagingService.getInstance();
+    this.setupMessageHandlers();
+  }
+
+  private setupMessageHandlers(): void {
+    this.messagingService.subscribe(
+      'auth/token_generated',
+      async ({ token }) => {
+        if (token) {
+          await this.setToken(token);
+          window.close();
+        }
+      },
+    );
+  }
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {

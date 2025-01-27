@@ -1,18 +1,15 @@
 import { AuthService } from '../auth.service';
 import { LauncherDockService } from './launcher-dock.service';
 import { LauncherStateService } from '../launcher-state.service';
-import { FrameService } from '../frame.service';
-import { ElementIds, ZIndexes } from '../../constants';
+import { ElementIds, ZIndexes, RootUrl } from '../../constants';
 
 export class FloatingButtonService {
   private static instance: FloatingButtonService;
   private authService: AuthService;
-  private frameService: FrameService;
   private launcherState: LauncherStateService;
 
   private constructor() {
     this.authService = AuthService.getInstance();
-    this.frameService = FrameService.getInstance();
     this.launcherState = LauncherStateService.getInstance();
   }
 
@@ -69,7 +66,11 @@ export class FloatingButtonService {
       await launcherDock.expand();
       this.hideButton();
     } else {
-      this.frameService.showAuth();
+      // Open auth in new tab instead of iframe
+      window.open(
+        `${RootUrl}/_extension/login?__displayContext=extension`,
+        '_blank',
+      );
       this.hideButton();
     }
   }

@@ -8,6 +8,10 @@ export interface Events {
     authToken: string;
   };
   'auth/login_required': undefined;
+  'auth/token_generated': {
+    token: string;
+  };
+  'auth/state_changed': undefined;
 
   // Player events
   'player/loaded': {
