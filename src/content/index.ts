@@ -5,7 +5,6 @@ import { FloatingButtonService } from './services/ui/floating-button.service';
 import { LauncherDockService } from './services/ui/launcher-dock.service';
 import { LauncherStateService } from './services/launcher-state.service';
 import { LauncherSyncService } from './services/frames/launcher-sync.service';
-import { SidePanelService } from './services/side-panel.service';
 import { RootUrl } from './constants';
 
 class ContentScript {
@@ -14,7 +13,6 @@ class ContentScript {
   private authService = AuthService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
   private launcherStateService = LauncherStateService.getInstance();
-  private sidePanelService = SidePanelService.getInstance();
 
   private setupEventHandlers(): void {
     this.messagingService.subscribe(
@@ -33,14 +31,6 @@ class ContentScript {
         this.floatingButtonService.hideButton();
       },
     );
-
-    this.messagingService.subscribe('player/launch_worker', (payload) => {
-      this.sidePanelService.launchWorker(payload);
-    });
-
-    this.messagingService.subscribe('player/close_worker', () => {
-      this.sidePanelService.closeWorker();
-    });
   }
 
   async initialize(): Promise<void> {

@@ -7,8 +7,8 @@ import {
 } from '../../constants';
 import { LauncherStateService } from '../launcher-state.service';
 import { FloatingButtonService } from './floating-button.service';
-import { SidePanelService } from '../side-panel.service';
 import { DOMService } from '../dom.service';
+import { AuthService } from '../auth.service';
 
 interface AppData {
   id: string;
@@ -21,8 +21,8 @@ export class LauncherDockService {
   private static instance: LauncherDockService;
   private launcherState = LauncherStateService.getInstance();
   private floatingButton = FloatingButtonService.getInstance();
-  private sidePanelService = SidePanelService.getInstance();
   private domService = DOMService.getInstance();
+  private authService = AuthService.getInstance();
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
@@ -168,16 +168,23 @@ export class LauncherDockService {
     this.initialize();
   }
 
-  private handleAppClick(app: AppData): void {
-    // Send click message directly to background script
-    chrome.runtime.sendMessage({
-      _MindStudioEvent: '@@mindstudio/player/launch_worker',
-      payload: {
-        appId: app.id,
-        appName: app.name,
-        appIcon: app.iconUrl,
-      },
-    });
+  private async handleAppClick(app: AppData): Promise<void> {
+    try {
+      // This will throw and open auth page if not authenticated
+      await this.authService.ensureAuthenticated();
+
+      // Send launch message directly to background script
+      chrome.runtime.sendMessage({
+        _MindStudioEvent: '@@mindstudio/player/launch_worker',
+        payload: {
+          appId: app.id,
+          appName: app.name,
+          appIcon: app.iconUrl,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to launch worker:', error);
+    }
   }
 
   private createAppButton(app: AppData): HTMLElement {

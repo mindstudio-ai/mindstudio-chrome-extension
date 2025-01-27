@@ -1,4 +1,4 @@
-import { StorageKeys } from '../constants';
+import { StorageKeys, RootUrl } from '../constants';
 import { MessagingService } from './messaging.service';
 
 export class AuthService {
@@ -48,5 +48,18 @@ export class AuthService {
         resolve();
       });
     });
+  }
+
+  async ensureAuthenticated(): Promise<string> {
+    const token = await this.getToken();
+    if (!token) {
+      // Open auth in new tab
+      window.open(
+        `${RootUrl}/_extension/login?__displayContext=extension`,
+        '_blank',
+      );
+      throw new Error('Authentication required');
+    }
+    return token;
   }
 }

@@ -1,7 +1,7 @@
 import { AuthService } from '../auth.service';
 import { LauncherDockService } from './launcher-dock.service';
 import { LauncherStateService } from '../launcher-state.service';
-import { ElementIds, ZIndexes, RootUrl } from '../../constants';
+import { ElementIds, ZIndexes } from '../../constants';
 
 export class FloatingButtonService {
   private static instance: FloatingButtonService;
@@ -59,18 +59,15 @@ export class FloatingButtonService {
   }
 
   private async handleButtonClick(): Promise<void> {
-    const isAuthenticated = await this.authService.isAuthenticated();
+    try {
+      // This will throw and open auth page if not authenticated
+      await this.authService.ensureAuthenticated();
 
-    if (isAuthenticated) {
       const launcherDock = LauncherDockService.getInstance();
       await launcherDock.expand();
       this.hideButton();
-    } else {
-      // Open auth in new tab instead of iframe
-      window.open(
-        `${RootUrl}/_extension/login?__displayContext=extension`,
-        '_blank',
-      );
+    } catch (error) {
+      console.error('Failed to handle button click:', error);
       this.hideButton();
     }
   }

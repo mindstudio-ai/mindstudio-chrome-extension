@@ -14,21 +14,15 @@ export interface Events {
   'auth/state_changed': undefined;
 
   // Player events
-  'player/loaded': {
-    isLoggedIn: boolean;
-  };
+  'player/loaded': void;
   'player/launch_worker': WorkerLaunchPayload;
-  'player/close_worker': undefined;
+  'player/init': WorkerLaunchPayload;
+  'player/close_worker': void;
   'player/load_worker': {
     id: string;
     name: string;
     iconUrl: string;
-    launchVariables: {
-      url: string;
-      rawHtml: string;
-      fullText: string;
-      userSelection: string | null;
-    };
+    launchVariables: Record<string, any>;
   };
 
   // Launcher events
@@ -49,15 +43,15 @@ export interface Events {
 }
 
 export interface WorkerLaunchPayload {
-  id: string;
-  name: string;
-  iconUrl: string;
-  launchVariables?: {
-    url: string;
-    rawHtml: string;
-    fullText: string;
-    userSelection: string | null;
-  };
+  appId: string;
+  appName: string;
+  appIcon: string;
+}
+
+export interface WorkerLaunchData {
+  appId: string;
+  appName: string;
+  appIcon: string;
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field

@@ -4,11 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MindStudio Side Panel</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100%;
+      }
+      #player-container {
+        width: 100%;
+        height: 100vh;
+      }
+      #player-frame {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    </style>
   </head>
   <body>
     <div id="root">
-      <div id="auth-container"></div>
-      <div id="player-container"></div>
+      <div id="player-container">
+        <iframe
+          id="player-frame"
+          src="http://localhost:3000/_extension/player?__displayContext=extension&__controlledAuth=1"
+        ></iframe>
+      </div>
     </div>
     <script src="sidepanel.js"></script>
   </body>
