@@ -1,7 +1,6 @@
 import { AuthFrameService } from './frames/auth-frame.service';
 import { PlayerFrameService } from './frames/player-frame.service';
 import { LauncherSyncService } from './frames/launcher-sync.service';
-import { LayoutService } from './ui/layout.service';
 
 export class FrameService {
   private static instance: FrameService;

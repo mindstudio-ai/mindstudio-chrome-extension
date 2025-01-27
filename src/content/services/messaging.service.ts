@@ -109,4 +109,19 @@ export class MessagingService {
   ): void {
     this.sendToFrame(ElementIds.LAUNCHER_SYNC, eventType, payload);
   }
+
+  sendToSidePanel<T extends keyof Events>(
+    eventType: T,
+    payload?: Events[T] extends undefined ? never : Events[T],
+  ): void {
+    if (!chrome?.runtime?.id) {
+      console.warn('Chrome runtime not available');
+      return;
+    }
+
+    chrome.runtime.sendMessage({
+      _MindStudioEvent: `@@mindstudio/${eventType}`,
+      payload: payload || {},
+    });
+  }
 }

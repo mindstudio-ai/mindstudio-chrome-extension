@@ -2,15 +2,12 @@ import {
   ElementIds,
   FrameDimensions,
   RootUrl,
+  StorageKeys,
   ZIndexes,
 } from '../../constants';
-import { MessagingService } from '../messaging.service';
-import { AuthService } from '../auth.service';
 import { LauncherStateService } from '../launcher-state.service';
-import { FloatingButtonService } from './floating-button.service';
-import { StorageKeys } from '../../constants';
 import { PlayerService } from '../player.service';
-import { LayoutService } from './layout.service';
+import { FloatingButtonService } from './floating-button.service';
 
 interface AppData {
   id: string;
@@ -24,7 +21,6 @@ export class LauncherDockService {
   private launcherState = LauncherStateService.getInstance();
   private floatingButton = FloatingButtonService.getInstance();
   private playerService = PlayerService.getInstance();
-  private layoutService = LayoutService.getInstance();
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
@@ -162,14 +158,11 @@ export class LauncherDockService {
       return;
     }
 
-    // 1. Ensure the content wrapper is created by LayoutService
-    this.layoutService.ensureContentWrapper();
-
-    // 2. Now create and append our dock to the DOM
+    // Remove layoutService call and just create and append our dock to the DOM
     const dock = this.createDockElement();
     document.body.appendChild(dock);
 
-    // 3. Initialize apps, storage listeners, etc.
+    // Initialize apps, storage listeners, etc.
     this.initialize();
   }
 
@@ -431,24 +424,16 @@ export class LauncherDockService {
   }
 
   async showDock(): Promise<void> {
-    const isCollapsed = await this.launcherState.isCollapsed();
-    if (isCollapsed) {
-      this.floatingButton.showButton();
-      return;
-    }
-
     const dock = document.getElementById(ElementIds.LAUNCHER);
     if (!dock) {
       return;
     }
 
     dock.style.display = 'block';
-
-    requestAnimationFrame(() => {
-      dock.style.opacity = '1';
-      dock.style.transform = 'translateX(0)';
-      this.layoutService.shiftContent(FrameDimensions.LAUNCHER.VISUAL_WIDTH);
-    });
+    // Add small delay to ensure display: block is applied before transition
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    dock.style.opacity = '1';
+    dock.style.transform = 'translateX(0)';
   }
 
   hideDock(): void {
@@ -457,13 +442,14 @@ export class LauncherDockService {
       return;
     }
 
-    dock.style.transform = 'translateX(100%)';
     dock.style.opacity = '0';
+    dock.style.transform = 'translateX(100%)';
 
-    this.layoutService.shiftContent(0);
-
+    // Hide the dock after transition
     setTimeout(() => {
-      dock.style.display = 'none';
+      if (dock.style.opacity === '0') {
+        dock.style.display = 'none';
+      }
     }, 300);
   }
 }

@@ -7,6 +7,7 @@ module.exports = (env) => ({
   entry: {
     background: './src/background/index.ts',
     content: './src/content/index.ts',
+    sidepanel: './src/sidepanel/index.ts',
   },
   module: {
     rules: [
@@ -46,6 +47,10 @@ module.exports = (env) => ({
               ),
             );
           },
+        },
+        {
+          from: './src/sidepanel.html',
+          to: 'sidepanel.html',
         },
         {
           from: './src/assets/icons',

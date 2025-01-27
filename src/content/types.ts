@@ -13,11 +13,7 @@ export interface Events {
   'player/loaded': {
     isLoggedIn: boolean;
   };
-  'player/launch_worker': {
-    id: string;
-    name: string;
-    iconUrl: string;
-  };
+  'player/launch_worker': WorkerLaunchPayload;
   'player/close_worker': undefined;
   'player/load_worker': {
     id: string;
@@ -45,6 +41,18 @@ export interface Events {
   // URL events
   'url/changed': {
     url: string;
+  };
+}
+
+export interface WorkerLaunchPayload {
+  id: string;
+  name: string;
+  iconUrl: string;
+  launchVariables?: {
+    url: string;
+    rawHtml: string;
+    fullText: string;
+    userSelection: string | null;
   };
 }
 

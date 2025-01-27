@@ -6,6 +6,7 @@ import { FloatingButtonService } from './services/ui/floating-button.service';
 import { LauncherDockService } from './services/ui/launcher-dock.service';
 import { LauncherStateService } from './services/launcher-state.service';
 import { LauncherSyncService } from './services/frames/launcher-sync.service';
+import { SidePanelService } from './services/side-panel.service';
 import { RootUrl } from './constants';
 
 class ContentScript {
@@ -15,6 +16,7 @@ class ContentScript {
   private playerService = PlayerService.getInstance();
   private floatingButtonService = FloatingButtonService.getInstance();
   private launcherStateService = LauncherStateService.getInstance();
+  private sidePanelService = SidePanelService.getInstance();
 
   private setupEventHandlers(): void {
     this.messagingService.subscribe(
@@ -48,11 +50,12 @@ class ContentScript {
     });
 
     this.messagingService.subscribe('player/launch_worker', (payload) => {
-      this.playerService.launchWorker(payload);
+      // Launch worker in side panel instead of iframe
+      this.sidePanelService.launchWorker(payload);
     });
 
     this.messagingService.subscribe('player/close_worker', () => {
-      this.frameService.hidePlayer();
+      this.sidePanelService.closeWorker();
     });
   }
 
