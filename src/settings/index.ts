@@ -1,4 +1,4 @@
-import { AuthService } from './common/auth.service';
+import { AuthService } from '../common/auth.service';
 
 class SettingsManager {
   private static instance: SettingsManager;

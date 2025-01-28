@@ -55,6 +55,9 @@ class ContentScript {
       return;
     }
 
+    this.setupEventHandlers();
+    await this.launcherService.initialize();
+
     // If we're on the thank you page, trigger authentication
     if (window.location.href === THANK_YOU_PAGE) {
       try {
@@ -62,11 +65,7 @@ class ContentScript {
       } catch (error) {
         console.error('[ContentScript] Authentication error:', error);
       }
-      return;
     }
-
-    this.setupEventHandlers();
-    await this.launcherService.initialize();
   }
 }
 
