@@ -26,7 +26,9 @@ export class AuthService {
 
         // If we're in the login popup, just close
         if (window.opener) {
-          window.close();
+          setTimeout(() => {
+            window.close();
+          }, 3000);
           return;
         }
 
@@ -92,14 +94,6 @@ export class AuthService {
       StorageKeys.AUTH_TOKEN,
       StorageKeys.LAUNCHER_APPS,
     ]);
-
-    // Reload all tabs where the extension is active
-    const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      if (tab.url?.startsWith('http')) {
-        await chrome.tabs.reload(tab.id!);
-      }
-    }
   }
 
   async ensureAuthenticated(): Promise<string> {
