@@ -1,58 +1,45 @@
-import { AuthService } from './services/auth.service';
-import { FrameService } from './services/frame.service';
+import { AuthService } from '../services/auth.service';
 import { MessagingService } from './services/messaging.service';
-import { PlayerService } from './services/player.service';
-import { FloatingButtonService } from './services/ui/floating-button.service';
-import { LauncherDockService } from './services/ui/launcher-dock.service';
-import { LauncherStateService } from './services/launcher-state.service';
-import { LauncherSyncService } from './services/frames/launcher-sync.service';
-import { RootUrl } from './constants';
+import { LauncherService } from './services/launcher.service';
+import { RootUrl, StorageKeys } from './constants';
 
 class ContentScript {
-  private frameService = FrameService.getInstance();
   private messagingService = MessagingService.getInstance();
   private authService = AuthService.getInstance();
-  private playerService = PlayerService.getInstance();
-  private floatingButtonService = FloatingButtonService.getInstance();
-  private launcherStateService = LauncherStateService.getInstance();
+  private launcherService = LauncherService.getInstance();
 
   private setupEventHandlers(): void {
-    this.messagingService.subscribe(
-      'auth/login_completed',
-      async ({ authToken }) => {
-        await this.authService.setToken(authToken);
-
-        // Reinject launcher sync frame with new token
-        const launcherSync = LauncherSyncService.getInstance();
-        await launcherSync.reinjectFrame(authToken);
-
-        this.messagingService.sendToPlayer('auth/token_changed', { authToken });
-
-        // Hide auth frame after successful login
-        this.frameService.hideAuth();
-        await this.launcherStateService.setCollapsed(false);
-        const launcherDock = LauncherDockService.getInstance();
-        launcherDock.showDock();
-
-        this.floatingButtonService.hideButton();
-      },
-    );
-
-    this.messagingService.subscribe('player/loaded', async () => {
-      const token = await this.authService.getToken();
-      if (token) {
-        this.messagingService.sendToPlayer('auth/token_changed', {
-          authToken: token,
+    // Register handler for login completion
+    this.authService.onLoginComplete(async (token) => {
+      try {
+        // Create a promise that resolves when apps are updated
+        const appsLoadedPromise = new Promise<void>((resolve) => {
+          const unsubscribe = this.messagingService.subscribe(
+            'launcher/apps_updated',
+            () => {
+              console.log('[ContentScript] Received apps_updated event');
+              unsubscribe.unsubscribe();
+              resolve();
+            },
+          );
         });
+
+        // Reinject the sync frame with the new token
+        await this.launcherService.reinjectSyncFrame(token);
+
+        // Wait for apps to be loaded
+        await appsLoadedPromise;
+
+        // Update collapsed state first
+        await chrome.storage.local.set({
+          [StorageKeys.LAUNCHER_COLLAPSED]: false,
+        });
+
+        // Finally expand the launcher
+        await this.launcherService.expand();
+      } catch (error) {
+        console.error('[ContentScript] Login completion error:', error);
       }
-    });
-
-    this.messagingService.subscribe('player/launch_worker', (payload) => {
-      this.playerService.launchWorker(payload);
-    });
-
-    this.messagingService.subscribe('player/close_worker', () => {
-      this.frameService.hidePlayer();
     });
   }
 
@@ -66,31 +53,10 @@ class ContentScript {
       return;
     }
 
-    const launcherDock = LauncherDockService.getInstance();
-    const launcherState = LauncherStateService.getInstance();
-    const authService = AuthService.getInstance();
-
-    // Set initial collapsed state if no token exists
-    const token = await authService.getToken();
-    if (!token) {
-      await launcherState.setCollapsed(true);
-    }
-
-    launcherDock.injectDock();
-    await this.frameService.injectFrames();
-
-    // Check initial state
-    const isAuthenticated = await authService.isAuthenticated();
-    const isCollapsed = await launcherState.isCollapsed();
-
-    if (isAuthenticated && !isCollapsed) {
-      launcherDock.showDock();
-    }
-
     this.setupEventHandlers();
-    this.floatingButtonService.injectButton();
+    await this.launcherService.initialize();
   }
 }
 
 const contentScript = new ContentScript();
-contentScript.initialize();
+contentScript.initialize().catch(console.error);

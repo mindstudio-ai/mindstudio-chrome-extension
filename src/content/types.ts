@@ -8,27 +8,21 @@ export interface Events {
     authToken: string;
   };
   'auth/login_required': undefined;
+  'auth/token_generated': {
+    token: string;
+  };
+  'auth/state_changed': undefined;
 
   // Player events
-  'player/loaded': {
-    isLoggedIn: boolean;
-  };
-  'player/launch_worker': {
-    id: string;
-    name: string;
-    iconUrl: string;
-  };
-  'player/close_worker': undefined;
+  'player/loaded': void;
+  'player/launch_worker': WorkerLaunchPayload;
+  'player/init': WorkerLaunchPayload;
+  'player/close_worker': void;
   'player/load_worker': {
     id: string;
     name: string;
     iconUrl: string;
-    launchVariables: {
-      url: string;
-      rawHtml: string;
-      fullText: string;
-      userSelection: string | null;
-    };
+    launchVariables: LaunchVariables;
   };
 
   // Launcher events
@@ -46,6 +40,34 @@ export interface Events {
   'url/changed': {
     url: string;
   };
+}
+
+export interface LaunchVariables {
+  url: string;
+  rawHtml: string;
+  fullText: string;
+  userSelection: string | null;
+}
+
+export interface WorkerLaunchPayload {
+  appId: string;
+  appName: string;
+  appIcon: string;
+  launchVariables: LaunchVariables;
+}
+
+export interface WorkerLaunchData {
+  appId: string;
+  appName: string;
+  appIcon: string;
+  launchVariables: LaunchVariables;
+}
+
+export interface AppData {
+  id: string;
+  name: string;
+  iconUrl: string;
+  extensionSupportedSites: string[];
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field
