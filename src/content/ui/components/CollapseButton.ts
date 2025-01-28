@@ -25,6 +25,7 @@ export class CollapseButton {
       transform: translateX(-50%);
       pointer-events: auto;
       z-index: 2;
+      box-sizing: content-box;
     `;
 
     button.innerHTML = `

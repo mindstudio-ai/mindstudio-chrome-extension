@@ -2,12 +2,17 @@ import { isEventOfType, MindStudioEvent } from '../content/types';
 import { StorageKeys } from '../content/constants';
 
 let isPlayerLoaded = false;
-let pendingWorker: any = null;
+
+// Connect to background service to detect sidepanel close
+const port = chrome.runtime.connect({ name: 'sidepanel' });
 
 // Listen for player loaded event
 window.addEventListener('message', async (event) => {
-  console.log('[1 - sidepanel] Received message:', event.data);
   if (event.data?._MindStudioEvent === '@@mindstudio/player/loaded') {
+    // Prevent duplicate handling
+    if (isPlayerLoaded) {
+      return;
+    }
     isPlayerLoaded = true;
 
     try {
@@ -32,22 +37,11 @@ window.addEventListener('message', async (event) => {
           '*',
         );
 
-        // If we have a pending worker, launch it now
-        if (pendingWorker) {
-          player.contentWindow.postMessage(
-            {
-              _MindStudioEvent: '@@mindstudio/player/load_worker',
-              payload: {
-                id: pendingWorker.appId,
-                name: pendingWorker.appName,
-                iconUrl: pendingWorker.appIcon,
-                launchVariables: pendingWorker.launchVariables,
-              },
-            },
-            '*',
-          );
-          pendingWorker = null;
-        }
+        // Notify background we're ready for workers
+        chrome.runtime.sendMessage({
+          _MindStudioEvent: '@@mindstudio/sidepanel/ready',
+          payload: undefined,
+        });
       }
     } catch (error) {
       console.error('Failed to handle player loaded:', error);
@@ -57,17 +51,9 @@ window.addEventListener('message', async (event) => {
 
 // Listen for worker launch requests from background
 chrome.runtime.onMessage.addListener((message: MindStudioEvent) => {
-  console.log('[2 - sidepanel] Received message:', message);
   if (isEventOfType(message, 'player/init')) {
     const player = document.getElementById('player-frame') as HTMLIFrameElement;
 
-    if (!isPlayerLoaded) {
-      // Queue the worker for when player is ready
-      pendingWorker = message.payload;
-      return;
-    }
-
-    // Player is ready, launch worker immediately
     if (player?.contentWindow) {
       player.contentWindow.postMessage(
         {

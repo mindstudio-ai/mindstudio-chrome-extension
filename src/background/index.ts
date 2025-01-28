@@ -2,11 +2,14 @@ import { StorageKeys } from '../content/constants';
 
 class BackgroundService {
   private static instance: BackgroundService;
+  private isSidePanelReady = false;
+  private pendingWorker: any = null;
 
   private constructor() {
     this.setupStorageListeners();
     this.setupHeaderRules();
     this.setupMessageListeners();
+    this.setupSidePanelListeners();
   }
 
   static getInstance(): BackgroundService {
@@ -37,19 +40,38 @@ class BackgroundService {
         // Handle worker launch directly from content script click
         if (eventType === 'player/launch_worker' && sender.tab?.id) {
           try {
-            // Open side panel synchronously in response to user click
+            // Store worker details
+            this.pendingWorker = message.payload;
+
+            // Open side panel
             chrome.sidePanel.open({ tabId: sender.tab.id }).then(() => {
-              // Send init event to side panel with worker details
-              chrome.runtime.sendMessage({
-                _MindStudioEvent: '@@mindstudio/player/init',
-                payload: message.payload,
-              });
+              // If sidepanel is ready, send init event immediately
+              if (this.isSidePanelReady) {
+                chrome.runtime.sendMessage({
+                  _MindStudioEvent: '@@mindstudio/player/init',
+                  payload: this.pendingWorker,
+                });
+                this.pendingWorker = null;
+              }
             });
 
             return; // Don't continue with broadcast
           } catch (error) {
             console.error('Failed to handle worker launch:', error);
           }
+        }
+
+        // Handle sidepanel ready event
+        if (eventType === 'sidepanel/ready') {
+          this.isSidePanelReady = true;
+          if (this.pendingWorker) {
+            chrome.runtime.sendMessage({
+              _MindStudioEvent: '@@mindstudio/player/init',
+              payload: this.pendingWorker,
+            });
+            this.pendingWorker = null;
+          }
+          return;
         }
 
         // Handle other events asynchronously
@@ -109,6 +131,19 @@ class BackgroundService {
               });
             }
           });
+        });
+      }
+    });
+  }
+
+  private setupSidePanelListeners(): void {
+    // Reset ready state when sidepanel is closed
+    chrome.runtime.onConnect.addListener((port) => {
+      if (port.name === 'sidepanel') {
+        // Reset state when sidepanel disconnects
+        port.onDisconnect.addListener(() => {
+          console.log('Sidepanel disconnected, resetting ready state');
+          this.isSidePanelReady = false;
         });
       }
     });
