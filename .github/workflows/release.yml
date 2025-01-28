@@ -3,13 +3,13 @@ name: Build and Release Extension
 on:
   push:
     branches:
-      - stiven/followups
+      - main
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
