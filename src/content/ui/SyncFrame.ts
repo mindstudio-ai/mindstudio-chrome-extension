@@ -66,6 +66,19 @@ export class SyncFrame {
           );
           return;
         }
+
+        chrome.storage.local.set(
+          { [StorageKeys.ORGANIZATIONS]: organizations },
+          () => {
+            const error = chrome.runtime.lastError;
+            if (error) {
+              console.error(
+                '[MindStudio Extension] Error saving organizations:',
+                error,
+              );
+            }
+          },
+        );
       },
     );
   }
