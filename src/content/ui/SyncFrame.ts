@@ -55,6 +55,19 @@ export class SyncFrame {
         }
       });
     });
+
+    // Set up message handler for organization data updates
+    this.messagingService.subscribe(
+      'organization/list_updated',
+      ({ organizations }) => {
+        if (!organizations || !Array.isArray(organizations)) {
+          console.error(
+            '[MindStudio Extension] Invalid organizations data received',
+          );
+          return;
+        }
+      },
+    );
   }
 
   public remove(): void {

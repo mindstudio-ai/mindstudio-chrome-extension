@@ -13,6 +13,11 @@ export interface Events {
   };
   'auth/state_changed': undefined;
 
+  // Organization events
+  'organization/list_updated': {
+    organizations: Array<OrganizationData>;
+  };
+
   // Player events
   'player/loaded': void;
   'player/launch_worker': WorkerLaunchPayload;
@@ -68,6 +73,16 @@ export interface AppData {
   name: string;
   iconUrl: string;
   extensionSupportedSites: string[];
+}
+
+export interface OrganizationData {
+  id: string;
+  name: string;
+  logoUrl?: string;
+  description?: string;
+  companyName?: string;
+  requestingUserRole: 'owner' | 'admin' | 'member' | 'guest';
+  requestingUserStatus: 'active' | 'pending' | 'inactive';
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field

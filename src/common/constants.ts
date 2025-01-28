@@ -10,6 +10,7 @@ export const StorageKeys = {
   AUTH_TOKEN: `AuthToken_${Environment}`,
   LAUNCHER_COLLAPSED: `LauncherCollapsed_${Environment}`,
   LAUNCHER_APPS: `LauncherApps_${Environment}`,
+  SELECTED_ORGANIZATION: `SelectedOrganization_${Environment}`,
 } as const;
 
 export const ZIndexes = {
