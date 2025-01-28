@@ -1,4 +1,4 @@
-import { StorageKeys } from '../content/constants';
+import { StorageKeys, THANK_YOU_PAGE } from '../content/constants';
 
 class BackgroundService {
   private static instance: BackgroundService;
@@ -10,6 +10,7 @@ class BackgroundService {
     this.setupMessageListeners();
     this.setupSidePanelListeners();
     this.setupStorageListeners();
+    this.setupInstallationHandler();
   }
 
   static getInstance(): BackgroundService {
@@ -136,9 +137,17 @@ class BackgroundService {
       if (port.name === 'sidepanel') {
         // Reset state when sidepanel disconnects
         port.onDisconnect.addListener(() => {
-          console.log('Sidepanel disconnected, resetting ready state');
           this.isSidePanelReady = false;
         });
+      }
+    });
+  }
+
+  private setupInstallationHandler(): void {
+    chrome.runtime.onInstalled.addListener((details) => {
+      if (details.reason === 'install') {
+        // Open thank you page after installation
+        chrome.tabs.create({ url: THANK_YOU_PAGE });
       }
     });
   }

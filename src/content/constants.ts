@@ -4,6 +4,8 @@ export const Environment =
 export const RootUrl =
   Environment === 'dev' ? 'http://localhost:3000' : 'https://app.mindstudio.ai';
 
+export const THANK_YOU_PAGE = 'https://www.mindstudio.ai/extension/thank-you';
+
 export const StorageKeys = {
   AUTH_TOKEN: `AuthToken_${Environment}`,
   LAUNCHER_COLLAPSED: `LauncherCollapsed_${Environment}`,

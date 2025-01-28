@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let isPlayerLoaded = false;
 
 // Connect to background service to detect sidepanel close
-const port = chrome.runtime.connect({ name: 'sidepanel' });
+chrome.runtime.connect({ name: 'sidepanel' });
 
 // Listen for player loaded event
 window.addEventListener('message', async (event) => {
