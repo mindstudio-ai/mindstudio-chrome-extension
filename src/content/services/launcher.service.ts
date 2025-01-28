@@ -24,8 +24,10 @@ export class LauncherService {
   private syncFrame!: SyncFrame;
   private appButtons: Map<string, AppButton> = new Map();
 
+  private isInitialized = false;
+
   private constructor() {
-    this.initializeState().catch(console.error);
+    // Empty constructor - initialization moved to explicit initialize method
   }
 
   static getInstance(): LauncherService {
@@ -33,6 +35,15 @@ export class LauncherService {
       LauncherService.instance = new LauncherService();
     }
     return LauncherService.instance;
+  }
+
+  async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    this.isInitialized = true;
+    await this.initializeState();
   }
 
   private async initializeState(): Promise<void> {

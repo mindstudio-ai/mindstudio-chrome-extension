@@ -54,6 +54,7 @@ class ContentScript {
     }
 
     this.setupEventHandlers();
+    await this.launcherService.initialize();
   }
 }
 
