@@ -1,3 +1,4 @@
+import { AuthService } from '../../services/auth.service';
 import { StorageKeys } from '../constants';
 import { AppData } from '../types';
 import { AppButton } from '../ui/components/AppButton';
@@ -5,7 +6,6 @@ import { CollapseButton } from '../ui/components/CollapseButton';
 import { LauncherContainer } from '../ui/components/LauncherContainer';
 import { Logo } from '../ui/components/Logo';
 import { SyncFrame } from '../ui/components/SyncFrame';
-import { AuthService } from './auth.service';
 import { DOMService } from './dom.service';
 import { MessagingService } from './messaging.service';
 

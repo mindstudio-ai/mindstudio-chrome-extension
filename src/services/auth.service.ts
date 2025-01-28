@@ -1,5 +1,5 @@
-import { StorageKeys, RootUrl } from '../constants';
-import { MessagingService } from './messaging.service';
+import { StorageKeys, RootUrl } from '../content/constants';
+import { MessagingService } from '../content/services/messaging.service';
 
 export class AuthService {
   private static instance: AuthService;
@@ -50,14 +50,34 @@ export class AuthService {
     });
   }
 
+  async login(): Promise<void> {
+    window.open(
+      `${RootUrl}/_extension/login?__displayContext=extension`,
+      '_blank',
+    );
+  }
+
+  async logout(): Promise<void> {
+    // Clear all storage items
+    await chrome.storage.local.remove([
+      StorageKeys.AUTH_TOKEN,
+      StorageKeys.LAUNCHER_APPS,
+      StorageKeys.LAUNCHER_COLLAPSED,
+    ]);
+
+    // Reload all tabs where the extension is active
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (tab.url?.startsWith('http')) {
+        await chrome.tabs.reload(tab.id!);
+      }
+    }
+  }
+
   async ensureAuthenticated(): Promise<string> {
     const token = await this.getToken();
     if (!token) {
-      // Open auth in new tab
-      window.open(
-        `${RootUrl}/_extension/login?__displayContext=extension`,
-        '_blank',
-      );
+      await this.login();
       throw new Error('Authentication required');
     }
     return token;

@@ -8,6 +8,7 @@ module.exports = (env) => ({
     background: './src/background/index.ts',
     content: './src/content/index.ts',
     sidepanel: './src/sidepanel/index.ts',
+    settings: './src/settings.ts',
   },
   module: {
     rules: [
@@ -51,6 +52,10 @@ module.exports = (env) => ({
         {
           from: './src/sidepanel.html',
           to: 'sidepanel.html',
+        },
+        {
+          from: './src/settings.html',
+          to: 'settings.html',
         },
         {
           from: './src/assets/icons',
