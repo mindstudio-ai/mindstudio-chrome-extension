@@ -11,6 +11,13 @@ A Chrome extension that provides seamless access to MindStudio's AI workers dire
 
 ## Installation
 
+### Get Latest Release
+
+1. Go to the [Releases page](../../releases/latest) of this repository
+2. Download the `mindstudio-chrome-extension.zip` file from the latest release
+3. Unzip the downloaded file
+4. Follow the "Loading in Chrome" instructions below
+
 ### Development Setup
 
 1. Install dependencies:
@@ -27,10 +34,15 @@ A Chrome extension that provides seamless access to MindStudio's AI workers dire
    npm run build  # Production build
    ```
 
-3. Load in Chrome:
-   1. Open `chrome://extensions/`
-   2. Enable "Developer mode"
-   3. Click "Load unpacked" and select the `dist` folder
+3. Follow the "Loading in Chrome" instructions below
+
+### Loading in Chrome
+
+1. Open `chrome://extensions/`
+2. Enable "Developer mode" in the top-right corner
+3. Click "Load unpacked" and select either:
+   - The `dist` folder (for development setup)
+   - The unzipped extension folder (for release version)
 
 ## Project Structure
 
