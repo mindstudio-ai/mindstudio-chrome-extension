@@ -6,6 +6,7 @@ export interface Events {
   };
   'auth/token_changed': {
     authToken: string;
+    organizationId: string;
   };
   'auth/login_required': undefined;
   'auth/token_generated': {
