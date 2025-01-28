@@ -6,6 +6,7 @@ let pendingWorker: any = null;
 
 // Listen for player loaded event
 window.addEventListener('message', async (event) => {
+  console.log('[1 - sidepanel] Received message:', event.data);
   if (event.data?._MindStudioEvent === '@@mindstudio/player/loaded') {
     isPlayerLoaded = true;
 
@@ -56,6 +57,7 @@ window.addEventListener('message', async (event) => {
 
 // Listen for worker launch requests from background
 chrome.runtime.onMessage.addListener((message: MindStudioEvent) => {
+  console.log('[2 - sidepanel] Received message:', message);
   if (isEventOfType(message, 'player/init')) {
     const player = document.getElementById('player-frame') as HTMLIFrameElement;
 

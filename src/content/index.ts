@@ -1,34 +1,20 @@
 import { AuthService } from './services/auth.service';
-import { FrameService } from './services/frame.service';
 import { MessagingService } from './services/messaging.service';
-import { FloatingButtonService } from './services/ui/floating-button.service';
-import { LauncherDockService } from './services/ui/launcher-dock.service';
-import { LauncherStateService } from './services/launcher-state.service';
-import { LauncherSyncService } from './services/frames/launcher-sync.service';
+import { LauncherService } from './services/launcher.service';
 import { RootUrl } from './constants';
 
 class ContentScript {
-  private frameService = FrameService.getInstance();
   private messagingService = MessagingService.getInstance();
   private authService = AuthService.getInstance();
-  private floatingButtonService = FloatingButtonService.getInstance();
-  private launcherStateService = LauncherStateService.getInstance();
+  private launcherService = LauncherService.getInstance();
 
   private setupEventHandlers(): void {
     this.messagingService.subscribe(
       'auth/login_completed',
       async ({ authToken }) => {
         await this.authService.setToken(authToken);
-
-        // Reinject launcher sync frame with new token
-        const launcherSync = LauncherSyncService.getInstance();
-        await launcherSync.reinjectFrame(authToken);
-
-        await this.launcherStateService.setCollapsed(false);
-        const launcherDock = LauncherDockService.getInstance();
-        launcherDock.showDock();
-
-        this.floatingButtonService.hideButton();
+        await this.launcherService.reinjectSyncFrame(authToken);
+        await this.launcherService.expand();
       },
     );
   }
@@ -43,29 +29,21 @@ class ContentScript {
       return;
     }
 
-    const launcherDock = LauncherDockService.getInstance();
-    const launcherState = LauncherStateService.getInstance();
-    const authService = AuthService.getInstance();
-
     // Set initial collapsed state if no token exists
-    const token = await authService.getToken();
+    const token = await this.authService.getToken();
     if (!token) {
-      await launcherState.setCollapsed(true);
+      await this.launcherService.collapse();
     }
 
-    launcherDock.injectDock();
-    await this.frameService.injectFrames();
+    await this.launcherService.initialize();
 
     // Check initial state
-    const isAuthenticated = await authService.isAuthenticated();
-    const isCollapsed = await launcherState.isCollapsed();
-
-    if (isAuthenticated && !isCollapsed) {
-      launcherDock.showDock();
+    const isAuthenticated = await this.authService.isAuthenticated();
+    if (isAuthenticated) {
+      await this.launcherService.expand();
     }
 
     this.setupEventHandlers();
-    this.floatingButtonService.injectButton();
   }
 }
 

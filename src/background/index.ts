@@ -38,12 +38,12 @@ class BackgroundService {
         if (eventType === 'player/launch_worker' && sender.tab?.id) {
           try {
             // Open side panel synchronously in response to user click
-            chrome.sidePanel.open({ tabId: sender.tab.id });
-
-            // Send init event to side panel with worker details
-            chrome.runtime.sendMessage({
-              _MindStudioEvent: '@@mindstudio/player/init',
-              payload: message.payload,
+            chrome.sidePanel.open({ tabId: sender.tab.id }).then(() => {
+              // Send init event to side panel with worker details
+              chrome.runtime.sendMessage({
+                _MindStudioEvent: '@@mindstudio/player/init',
+                payload: message.payload,
+              });
             });
 
             return; // Don't continue with broadcast
