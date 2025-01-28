@@ -1,15 +1,19 @@
-import { FrameDimensions, ZIndexes } from '../../constants';
-import { AppData } from '../../types';
+import { FrameDimensions } from '../../common/constants';
+import { AppData } from '../../common/types';
+import { Tooltip } from './Tooltip';
 
 export class AppButton {
   private container: HTMLElement;
-  private tooltip: HTMLElement;
+  private tooltip: Tooltip;
   private app: AppData;
 
   constructor(app: AppData, onClickHandler: (app: AppData) => void) {
     this.app = app;
     this.container = this.createContainer(onClickHandler);
-    this.tooltip = this.createTooltip();
+    this.tooltip = new Tooltip({
+      text: app.name,
+      rightOffset: FrameDimensions.LAUNCHER.VISUAL_WIDTH + 5,
+    });
   }
 
   private createContainer(onClickHandler: (app: AppData) => void): HTMLElement {
@@ -50,11 +54,7 @@ export class AppButton {
 
     // Add hover effects
     container.addEventListener('mouseenter', () => {
-      this.tooltip.style.opacity = '1';
-      // Position the tooltip at the center of the container
-      const rect = container.getBoundingClientRect();
-      this.tooltip.style.top = `${rect.top + rect.height / 2}px`;
-
+      this.tooltip.show(container);
       icon.style.width = '30px';
       icon.style.height = '30px';
       iconContainer.style.width = '30px';
@@ -62,7 +62,7 @@ export class AppButton {
     });
 
     container.addEventListener('mouseleave', () => {
-      this.tooltip.style.opacity = '0';
+      this.tooltip.hide();
       icon.style.width = '24px';
       icon.style.height = '24px';
       iconContainer.style.width = '24px';
@@ -85,50 +85,12 @@ export class AppButton {
     return `${url}?w=96`;
   }
 
-  private createTooltip(): HTMLElement {
-    const tooltip = document.createElement('div');
-    tooltip.style.cssText = `
-      opacity: 0;
-      display: flex;
-      max-width: 200px;
-      padding: 8px 12px;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 8px;
-      
-      position: fixed;
-      right: ${FrameDimensions.LAUNCHER.VISUAL_WIDTH + 5}px;
-      transform: translateY(-50%);
-      
-      border-radius: 8px;
-      background: #121213;
-      box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
-      
-      color: #FEFEFF;
-      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 12px;
-      font-weight: 400;
-      line-height: 120%;
-      text-align: right;
-      
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      
-      pointer-events: none;
-      z-index: ${ZIndexes.LAUNCHER + 1};
-      transition: opacity 0.2s ease-in-out;
-    `;
-    tooltip.textContent = this.app.name;
-    return tooltip;
-  }
-
   public getElement(): HTMLElement {
     return this.container;
   }
 
   public getTooltip(): HTMLElement {
-    return this.tooltip;
+    return this.tooltip.getElement();
   }
 
   public updateApp(app: AppData): void {
@@ -137,6 +99,6 @@ export class AppButton {
     if (icon && icon.src !== this.getScaledIconSrc(app.iconUrl)) {
       icon.src = this.getScaledIconSrc(app.iconUrl);
     }
-    this.tooltip.textContent = app.name;
+    this.tooltip.setText(app.name);
   }
 }

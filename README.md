@@ -1,90 +1,84 @@
 # MindStudio Chrome Extension
 
-This repository contains the MindStudio Chrome Extension, allowing users to interact with MindStudio workers from any webpage. It injects a launcher dock for quick access to workers, provides page context (such as DOM content and user selections) to these workers, and maintains authentication state.
+A Chrome extension that provides seamless access to MindStudio's AI workers directly from any webpage. Currently in beta.
 
-## Overview
+## Features
 
-• Injects iframes (launcher and player) onto webpages  
-• Gathers page context (DOM, selected text, current URL)  
-• Manages user authentication tokens  
-• Communicates with the MindStudio platform via message passing
+• **Side Panel Integration**: Native Chrome side panel for persistent access  
+• **Smart Context**: Automatically captures relevant page content and selections  
+• **Cross-Origin Support**: Works across different websites  
+• **Customizable Settings**: Personalize your experience  
 
-## Quick Start
+## Installation
 
-1. Install dependencies:  
+### Get Latest Release
+
+1. Go to the [Releases page](https://github.com/youai1/mindstudio-chrome-extension/releases/latest) of this repository
+2. Download the `mindstudio-chrome-extension.zip` file from the latest release
+3. Unzip the downloaded file
+4. Follow the "Loading in Chrome" instructions below
+
+### Development Setup
+
+1. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. For development, run:  
+2. Build the extension:
 
    ```bash
-   npm run dev
+   npm run dev    # Watch mode
+   # or
+   npm run build  # Production build
    ```
 
-   This watches for file changes and automatically rebuilds.
+3. Follow the "Loading in Chrome" instructions below
 
-3. For a production build, run:  
+### Loading in Chrome
 
-   ```bash
-   npm run build
-   ```
-
-4. Load the extension in Chrome:  
-   1. Open chrome://extensions/  
-   2. Enable "Developer mode"  
-   3. Click "Load unpacked" and select the dist folder  
+1. Open `chrome://extensions/`
+2. Enable "Developer mode" in the top-right corner
+3. Click "Load unpacked" and select either:
+   - The `dist` folder (for development setup)
+   - The unzipped extension folder (for release version)
 
 ## Project Structure
 
-```
+```sh
 src/
-├── background/        # Chrome extension background script
-├── content/          # Content script injected into pages
-│   ├── services/     # Core services (frames, messaging, auth, DOM, URL)
-│   └── types/        # TypeScript types and interfaces
-└── assets/          # Static assets like icons
+├── background/     # Service worker & background processes
+├── common/        # Shared utilities and types
+├── content/       # Content scripts and UI components
+├── settings/      # Extension settings
+├── sidepanel/    # Chrome side panel implementation
+└── assets/       # Static assets
 ```
-
-• background/: Handles extension events (e.g., updates, service_worker)  
-• content/: Core logic that runs in webpages, injecting iframes and handling messages  
-
-## Architecture
-
-The extension uses a message-passing architecture among:  
-
-1. Background Script (background/)  
-2. Content Script (content/)  
-3. Iframes (launcher and player)  
-
-We have several primary services to keep the code maintainable and modular:
-
-- DOMService: Cleans the DOM and extracts selected text  
-- URLService: Detects changes in the page URL  
-- PlayerService: Manages the player iframe (launching workers, showing/hiding the UI)  
-- MessagingService: Sends and receives strongly-typed messages  
-- AuthService: Manages storing/retrieving user authentication tokens  
 
 ## Development
 
-• npm run dev – Watch mode for development  
-• npm run build – Production build  
-• npm run lint – Check for linting issues  
-• npm run lint:fix – Fix linting issues  
-• npm run format – Format code with Prettier  
-• npm run type-check – Ensure valid TypeScript types  
+### Available Scripts
 
-### Recommended Setup
+- `npm run dev`: Watch mode for development
+- `npm run build`: Production build
+- `npm run lint`: Check and fix linting issues
+- `npm run format`: Format code with Prettier
+- `npm run type-check`: TypeScript type checking
 
-• Use Visual Studio Code  
-• Install ESLint and Prettier extensions  
-• The project automatically formats on save using `.editorconfig` and `.prettierrc`
+### Development Environment
+
+- VS Code recommended
+- Install ESLint and Prettier extensions
+- Use Chrome DevTools for extension debugging
 
 ## Contributing
 
-1. Create a new branch from main  
-2. Make and test your changes (lint, format, type-check)  
-3. Open a pull request for review  
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Open a Pull Request
 
-We welcome feedback and contributions that help improve the MindStudio Chrome Extension!
+## License
+
+MIT License

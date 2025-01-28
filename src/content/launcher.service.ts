@@ -1,13 +1,13 @@
-import { AuthService } from '../../services/auth.service';
-import { StorageKeys } from '../constants';
-import { AppData } from '../types';
-import { AppButton } from '../ui/components/AppButton';
-import { CollapseButton } from '../ui/components/CollapseButton';
-import { LauncherContainer } from '../ui/components/LauncherContainer';
-import { Logo } from '../ui/components/Logo';
-import { SyncFrame } from '../ui/components/SyncFrame';
+import { AuthService } from '../common/auth.service';
+import { StorageKeys } from '../common/constants';
+import { AppData } from '../common/types';
+import { AppButton } from './ui/AppButton';
+import { CollapseButton } from './ui/CollapseButton';
+import { LauncherContainer } from './ui/LauncherContainer';
+import { Logo } from './ui/Logo';
+import { SyncFrame } from './ui/SyncFrame';
 import { DOMService } from './dom.service';
-import { MessagingService } from './messaging.service';
+import { MessagingService } from '../common/messaging.service';
 
 export class LauncherService {
   private static instance: LauncherService;

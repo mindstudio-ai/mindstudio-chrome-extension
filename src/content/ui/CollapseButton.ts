@@ -26,6 +26,7 @@ export class CollapseButton {
       pointer-events: auto;
       z-index: 2;
       box-sizing: content-box;
+      padding: 0;
     `;
 
     button.innerHTML = `

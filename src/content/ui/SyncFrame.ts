@@ -1,5 +1,5 @@
-import { ElementIds, RootUrl, StorageKeys } from '../../constants';
-import { MessagingService } from '../../services/messaging.service';
+import { ElementIds, RootUrl, StorageKeys } from '../../common/constants';
+import { MessagingService } from '../../common/messaging.service';
 
 export class SyncFrame {
   private frame: HTMLIFrameElement | null = null;

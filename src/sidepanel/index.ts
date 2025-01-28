@@ -1,27 +1,76 @@
-import { isEventOfType, MindStudioEvent } from '../content/types';
-import { StorageKeys, RootUrl } from '../content/constants';
+import {
+  isEventOfType,
+  MindStudioEvent,
+  WorkerLaunchPayload,
+} from '../common/types';
+import { StorageKeys, RootUrl } from '../common/constants';
 
-// Set iframe src using RootUrl
-document.addEventListener('DOMContentLoaded', () => {
-  const player = document.getElementById('player-frame') as HTMLIFrameElement;
-  if (player) {
-    player.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
+class SidePanelService {
+  private static instance: SidePanelService;
+  private isPlayerLoaded = false;
+  private player: HTMLIFrameElement | null = null;
+
+  private constructor() {
+    this.setupEventListeners();
+    this.initialize();
   }
-});
 
-let isPlayerLoaded = false;
+  static getInstance(): SidePanelService {
+    if (!SidePanelService.instance) {
+      SidePanelService.instance = new SidePanelService();
+    }
+    return SidePanelService.instance;
+  }
 
-// Connect to background service to detect sidepanel close
-const port = chrome.runtime.connect({ name: 'sidepanel' });
+  private initialize(): void {
+    // Set iframe src using RootUrl when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      this.setupPlayer();
+    });
 
-// Listen for player loaded event
-window.addEventListener('message', async (event) => {
-  if (event.data?._MindStudioEvent === '@@mindstudio/player/loaded') {
+    // Connect to background service to detect sidepanel close
+    chrome.runtime.connect({ name: 'sidepanel' });
+  }
+
+  private setupPlayer(): void {
+    this.player = document.getElementById('player-frame') as HTMLIFrameElement;
+    if (this.player) {
+      this.player.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
+    }
+  }
+
+  private async reinitializePlayer(): Promise<void> {
+    // Reset state
+    this.isPlayerLoaded = false;
+
+    // Refresh the iframe
+    if (this.player) {
+      this.player.src = this.player.src;
+    }
+  }
+
+  private setupEventListeners(): void {
+    // Listen for player loaded event
+    window.addEventListener('message', async (event) => {
+      if (event.data?._MindStudioEvent === '@@mindstudio/player/loaded') {
+        await this.handlePlayerLoaded();
+      }
+    });
+
+    // Listen for worker launch requests from background
+    chrome.runtime.onMessage.addListener((message: MindStudioEvent) => {
+      if (isEventOfType(message, 'player/init')) {
+        this.handleWorkerInit(message.payload);
+      }
+    });
+  }
+
+  private async handlePlayerLoaded(): Promise<void> {
     // Prevent duplicate handling
-    if (isPlayerLoaded) {
+    if (this.isPlayerLoaded) {
       return;
     }
-    isPlayerLoaded = true;
+    this.isPlayerLoaded = true;
 
     try {
       // Get auth token from storage
@@ -33,11 +82,8 @@ window.addEventListener('message', async (event) => {
       }
 
       // Send auth token to player
-      const player = document.getElementById(
-        'player-frame',
-      ) as HTMLIFrameElement;
-      if (player?.contentWindow) {
-        player.contentWindow.postMessage(
+      if (this.player?.contentWindow) {
+        this.player.contentWindow.postMessage(
           {
             _MindStudioEvent: '@@mindstudio/auth/token_changed',
             payload: { authToken },
@@ -55,26 +101,42 @@ window.addEventListener('message', async (event) => {
       console.error('Failed to handle player loaded:', error);
     }
   }
-});
 
-// Listen for worker launch requests from background
-chrome.runtime.onMessage.addListener((message: MindStudioEvent) => {
-  if (isEventOfType(message, 'player/init')) {
-    const player = document.getElementById('player-frame') as HTMLIFrameElement;
+  private async handleWorkerInit(payload: WorkerLaunchPayload): Promise<void> {
+    // First reinitialize the player
+    await this.reinitializePlayer();
 
-    if (player?.contentWindow) {
-      player.contentWindow.postMessage(
+    // Wait for the player to load before sending the worker init
+    const waitForLoad = new Promise<void>((resolve) => {
+      const checkLoaded = () => {
+        if (this.isPlayerLoaded) {
+          resolve();
+        } else {
+          setTimeout(checkLoaded, 100);
+        }
+      };
+      checkLoaded();
+    });
+
+    await waitForLoad;
+
+    // Now send the worker init message
+    if (this.player?.contentWindow) {
+      this.player.contentWindow.postMessage(
         {
           _MindStudioEvent: '@@mindstudio/player/load_worker',
           payload: {
-            id: message.payload.appId,
-            name: message.payload.appName,
-            iconUrl: message.payload.appIcon,
-            launchVariables: message.payload.launchVariables,
+            id: payload.appId,
+            name: payload.appName,
+            iconUrl: payload.appIcon,
+            launchVariables: payload.launchVariables,
           },
         },
         '*',
       );
     }
   }
-});
+}
+
+// Initialize the service
+SidePanelService.getInstance();

@@ -1,4 +1,4 @@
-import { StorageKeys } from '../content/constants';
+import { StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
 class BackgroundService {
   private static instance: BackgroundService;
@@ -10,6 +10,8 @@ class BackgroundService {
     this.setupMessageListeners();
     this.setupSidePanelListeners();
     this.setupStorageListeners();
+    this.setupInstallationHandler();
+    this.setupActionButtonListener();
   }
 
   static getInstance(): BackgroundService {
@@ -56,6 +58,12 @@ class BackgroundService {
     chrome.runtime.onMessage.addListener((message, sender) => {
       if (message._MindStudioEvent?.startsWith('@@mindstudio/')) {
         const eventType = message._MindStudioEvent.replace('@@mindstudio/', '');
+
+        // Handle settings/open event
+        if (eventType === 'settings/open') {
+          chrome.runtime.openOptionsPage();
+          return;
+        }
 
         // Handle worker launch directly from content script click
         if (eventType === 'player/launch_worker' && sender.tab?.id) {
@@ -136,9 +144,39 @@ class BackgroundService {
       if (port.name === 'sidepanel') {
         // Reset state when sidepanel disconnects
         port.onDisconnect.addListener(() => {
-          console.log('Sidepanel disconnected, resetting ready state');
           this.isSidePanelReady = false;
         });
+      }
+    });
+  }
+
+  private setupInstallationHandler(): void {
+    chrome.runtime.onInstalled.addListener((details) => {
+      if (details.reason === 'install') {
+        // Open thank you page after installation
+        chrome.tabs.create({ url: THANK_YOU_PAGE });
+      }
+    });
+  }
+
+  private setupActionButtonListener(): void {
+    chrome.action.onClicked.addListener(async (tab) => {
+      if (tab.id) {
+        try {
+          // Get current state
+          const { [StorageKeys.LAUNCHER_COLLAPSED]: isCollapsed } =
+            await chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED);
+
+          // Toggle state
+          await chrome.storage.local.set({
+            [StorageKeys.LAUNCHER_COLLAPSED]: !isCollapsed,
+          });
+        } catch (error) {
+          console.error(
+            '[Background] Failed to handle action button click:',
+            error,
+          );
+        }
       }
     });
   }

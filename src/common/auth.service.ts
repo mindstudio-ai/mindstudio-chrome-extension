@@ -1,5 +1,5 @@
-import { StorageKeys, RootUrl } from '../content/constants';
-import { MessagingService } from '../content/services/messaging.service';
+import { StorageKeys, RootUrl } from './constants';
+import { MessagingService } from './messaging.service';
 
 export class AuthService {
   private static instance: AuthService;
@@ -106,7 +106,7 @@ export class AuthService {
     const token = await this.getToken();
     if (!token) {
       // Return a promise that resolves when login completes
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const handler = (newToken: string) => {
           // Remove this handler from the list
           const index = this.loginCompletionHandlers.indexOf(handler);

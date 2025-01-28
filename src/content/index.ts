@@ -1,7 +1,7 @@
-import { AuthService } from '../services/auth.service';
-import { MessagingService } from './services/messaging.service';
-import { LauncherService } from './services/launcher.service';
-import { RootUrl, StorageKeys } from './constants';
+import { AuthService } from '../common/auth.service';
+import { MessagingService } from '../common/messaging.service';
+import { LauncherService } from './launcher.service';
+import { RootUrl, StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
 class ContentScript {
   private messagingService = MessagingService.getInstance();
@@ -17,7 +17,6 @@ class ContentScript {
           const unsubscribe = this.messagingService.subscribe(
             'launcher/apps_updated',
             () => {
-              console.log('[ContentScript] Received apps_updated event');
               unsubscribe.unsubscribe();
               resolve();
             },
@@ -48,13 +47,25 @@ class ContentScript {
       return;
     }
 
-    // Don't initialize on MindStudio app pages
-    if (window.location.origin === RootUrl) {
+    // Don't initialize on MindStudio app pages except for the thank you page
+    if (
+      window.location.origin === RootUrl &&
+      window.location.href !== THANK_YOU_PAGE
+    ) {
       return;
     }
 
     this.setupEventHandlers();
     await this.launcherService.initialize();
+
+    // If we're on the thank you page, trigger authentication
+    if (window.location.href === THANK_YOU_PAGE) {
+      try {
+        await this.authService.ensureAuthenticated();
+      } catch (error) {
+        console.error('[ContentScript] Authentication error:', error);
+      }
+    }
   }
 }
 
