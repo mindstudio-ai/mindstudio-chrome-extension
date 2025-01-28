@@ -26,10 +26,6 @@ export class LauncherService {
 
   private isInitialized = false;
 
-  private constructor() {
-    // Empty constructor - initialization moved to explicit initialize method
-  }
-
   static getInstance(): LauncherService {
     if (!LauncherService.instance) {
       LauncherService.instance = new LauncherService();
