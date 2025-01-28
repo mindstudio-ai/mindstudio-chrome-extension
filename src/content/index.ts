@@ -1,4 +1,4 @@
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../common/auth.service';
 import { MessagingService } from './services/messaging.service';
 import { LauncherService } from './services/launcher.service';
 import { RootUrl, StorageKeys, THANK_YOU_PAGE } from './constants';

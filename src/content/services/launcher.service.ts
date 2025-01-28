@@ -1,4 +1,4 @@
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../common/auth.service';
 import { StorageKeys } from '../constants';
 import { AppData } from '../types';
 import { AppButton } from '../ui/components/AppButton';
