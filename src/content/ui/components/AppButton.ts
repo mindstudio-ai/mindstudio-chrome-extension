@@ -1,4 +1,4 @@
-import { ElementIds, FrameDimensions, ZIndexes } from '../../constants';
+import { FrameDimensions, ZIndexes } from '../../constants';
 import { AppData } from '../../types';
 
 export class AppButton {
@@ -38,7 +38,7 @@ export class AppButton {
     `;
 
     const icon = document.createElement('img');
-    icon.src = this.app.iconUrl;
+    icon.src = this.getScaledIconSrc(this.app.iconUrl);
     icon.alt = `${this.app.name} icon`;
     icon.style.cssText = `
       width: 24px;
@@ -79,6 +79,10 @@ export class AppButton {
     container.setAttribute('data-app-id', this.app.id);
 
     return container;
+  }
+
+  private getScaledIconSrc(url: string): string {
+    return `${url}?w=96`;
   }
 
   private createTooltip(): HTMLElement {
@@ -130,8 +134,8 @@ export class AppButton {
   public updateApp(app: AppData): void {
     this.app = app;
     const icon = this.container.querySelector('img');
-    if (icon && icon.src !== app.iconUrl) {
-      icon.src = app.iconUrl;
+    if (icon && icon.src !== this.getScaledIconSrc(app.iconUrl)) {
+      icon.src = this.getScaledIconSrc(app.iconUrl);
     }
     this.tooltip.textContent = app.name;
   }
