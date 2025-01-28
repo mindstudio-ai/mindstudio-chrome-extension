@@ -6,10 +6,10 @@ class BackgroundService {
   private pendingWorker: any = null;
 
   private constructor() {
-    this.setupStorageListeners();
     this.setupHeaderRules();
     this.setupMessageListeners();
     this.setupSidePanelListeners();
+    this.setupStorageListeners();
   }
 
   static getInstance(): BackgroundService {
@@ -27,9 +27,29 @@ class BackgroundService {
       const errorString =
         error instanceof Error ? error.message : String(error);
       if (!errorString.includes('Receiving end does not exist')) {
-        console.error('Error sending message to tab:', error);
+        console.error('[Background] Error sending message to tab:', error);
       }
     }
+  }
+
+  private setupStorageListeners(): void {
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local' && changes[StorageKeys.AUTH_TOKEN]) {
+        const newToken = changes[StorageKeys.AUTH_TOKEN].newValue;
+
+        // Notify all tabs about the token change
+        chrome.tabs.query({}, (tabs) => {
+          tabs.forEach((tab) => {
+            if (tab.id) {
+              this.sendMessageToTab(tab.id, {
+                _MindStudioEvent: '@@mindstudio/auth/token_generated',
+                payload: { token: newToken },
+              });
+            }
+          });
+        });
+      }
+    });
   }
 
   private setupMessageListeners(): void {
@@ -54,11 +74,13 @@ class BackgroundService {
                 this.pendingWorker = null;
               }
             });
-
-            return; // Don't continue with broadcast
           } catch (error) {
-            console.error('Failed to handle worker launch:', error);
+            console.error(
+              '[Background] Failed to handle worker launch:',
+              error,
+            );
           }
+          return;
         }
 
         // Handle sidepanel ready event
@@ -73,15 +95,6 @@ class BackgroundService {
           }
           return;
         }
-
-        // Handle other events asynchronously
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.id && sender.tab?.id !== tab.id) {
-              this.sendMessageToTab(tab.id, message);
-            }
-          });
-        });
       }
     });
   }
@@ -114,25 +127,6 @@ class BackgroundService {
         },
       ],
       removeRuleIds: [1],
-    });
-  }
-
-  private setupStorageListeners(): void {
-    // Listen for auth token changes
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local' && changes[StorageKeys.AUTH_TOKEN]) {
-        // Notify all tabs that auth state has changed
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.id) {
-              this.sendMessageToTab(tab.id, {
-                _MindStudioEvent: '@@mindstudio/auth/state_changed',
-                payload: undefined,
-              });
-            }
-          });
-        });
-      }
     });
   }
 

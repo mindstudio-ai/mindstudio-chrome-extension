@@ -4,6 +4,9 @@ import { MessagingService } from '../content/services/messaging.service';
 export class AuthService {
   private static instance: AuthService;
   private messagingService: MessagingService;
+  private loginCompletionHandlers: Array<
+    (token: string) => void | Promise<void>
+  > = [];
 
   private constructor() {
     this.messagingService = MessagingService.getInstance();
@@ -14,12 +17,35 @@ export class AuthService {
     this.messagingService.subscribe(
       'auth/token_generated',
       async ({ token }) => {
-        if (token) {
-          await this.setToken(token);
+        if (!token) {
+          return;
+        }
+
+        // Set the token first
+        await this.setToken(token);
+
+        // If we're in the login popup, just close
+        if (window.opener) {
           window.close();
+          return;
+        }
+
+        // Otherwise, we're in a content script receiving the token
+        for (const handler of this.loginCompletionHandlers) {
+          try {
+            await handler(token);
+          } catch (error) {
+            console.error('[AuthService] Error in completion handler:', error);
+          }
         }
       },
     );
+  }
+
+  public onLoginComplete(
+    handler: (token: string) => void | Promise<void>,
+  ): void {
+    this.loginCompletionHandlers.push(handler);
   }
 
   static getInstance(): AuthService {
@@ -58,11 +84,13 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    // Set launcher to collapsed state first
+    await chrome.storage.local.set({ [StorageKeys.LAUNCHER_COLLAPSED]: true });
+
     // Clear all storage items
     await chrome.storage.local.remove([
       StorageKeys.AUTH_TOKEN,
       StorageKeys.LAUNCHER_APPS,
-      StorageKeys.LAUNCHER_COLLAPSED,
     ]);
 
     // Reload all tabs where the extension is active
@@ -77,8 +105,23 @@ export class AuthService {
   async ensureAuthenticated(): Promise<string> {
     const token = await this.getToken();
     if (!token) {
-      await this.login();
-      throw new Error('Authentication required');
+      // Return a promise that resolves when login completes
+      return new Promise((resolve, reject) => {
+        const handler = (newToken: string) => {
+          // Remove this handler from the list
+          const index = this.loginCompletionHandlers.indexOf(handler);
+          if (index > -1) {
+            this.loginCompletionHandlers.splice(index, 1);
+          }
+          resolve(newToken);
+        };
+
+        // Add the handler
+        this.loginCompletionHandlers.push(handler);
+
+        // Start the login process
+        this.login();
+      });
     }
     return token;
   }

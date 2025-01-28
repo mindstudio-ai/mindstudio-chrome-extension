@@ -1,9 +1,10 @@
-import { ElementIds, RootUrl } from '../../constants';
+import { ElementIds, RootUrl, StorageKeys } from '../../constants';
 import { MessagingService } from '../../services/messaging.service';
 
 export class SyncFrame {
   private frame: HTMLIFrameElement | null = null;
   private messagingService: MessagingService;
+  private isWaitingForToken = false;
 
   constructor(messagingService: MessagingService) {
     this.messagingService = messagingService;
@@ -28,17 +29,31 @@ export class SyncFrame {
     frame.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1`;
     document.body.appendChild(frame);
     this.frame = frame;
+    this.isWaitingForToken = true;
 
     // Wait for launcher to be ready before sending token
     this.messagingService.subscribe('launcher/loaded', () => {
-      this.messagingService.sendToLauncherSync('auth/token_changed', {
-        authToken: token,
-      });
+      if (this.isWaitingForToken) {
+        this.messagingService.sendToLauncherSync('auth/token_changed', {
+          authToken: token,
+        });
+        this.isWaitingForToken = false;
+      }
     });
 
     // Set up message handler for app data updates
     this.messagingService.subscribe('launcher/apps_updated', ({ apps }) => {
-      chrome.storage.local.set({ 'launcher:apps': apps }, () => {});
+      if (!apps || !Array.isArray(apps)) {
+        console.error('[MindStudio Extension] Invalid apps data received');
+        return;
+      }
+
+      chrome.storage.local.set({ [StorageKeys.LAUNCHER_APPS]: apps }, () => {
+        const error = chrome.runtime.lastError;
+        if (error) {
+          console.error('[MindStudio Extension] Error saving apps:', error);
+        }
+      });
     });
   }
 
@@ -47,6 +62,7 @@ export class SyncFrame {
       this.frame.remove();
       this.frame = null;
     }
+    this.isWaitingForToken = false;
   }
 
   public async reinject(token: string): Promise<void> {

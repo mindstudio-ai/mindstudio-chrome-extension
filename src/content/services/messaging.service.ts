@@ -10,7 +10,15 @@ export class MessagingService {
   private eventHandlers: Map<keyof Events, Set<EventHandler<any>>> = new Map();
 
   private constructor() {
+    // Listen for window messages (from iframes)
     window.addEventListener('message', this.handleMessage.bind(this));
+
+    // Listen for chrome runtime messages (from background)
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message._MindStudioEvent?.startsWith('@@mindstudio/')) {
+        this.handleMessage({ data: message } as MessageEvent);
+      }
+    });
   }
 
   static getInstance(): MessagingService {
@@ -29,15 +37,15 @@ export class MessagingService {
       '@@mindstudio/',
       '',
     ) as keyof Events;
-    const handlers = this.eventHandlers.get(eventType);
 
+    const handlers = this.eventHandlers.get(eventType);
     if (handlers) {
       try {
         for (const handler of handlers) {
           await handler(data.payload);
         }
       } catch (err) {
-        console.error('[MindStudio Extension] Error handling message:', err);
+        console.error('[MessagingService] Error handling message:', err);
       }
     }
   }
