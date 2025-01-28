@@ -58,6 +58,12 @@ class BackgroundService {
       if (message._MindStudioEvent?.startsWith('@@mindstudio/')) {
         const eventType = message._MindStudioEvent.replace('@@mindstudio/', '');
 
+        // Handle settings/open event
+        if (eventType === 'settings/open') {
+          chrome.runtime.openOptionsPage();
+          return;
+        }
+
         // Handle worker launch directly from content script click
         if (eventType === 'player/launch_worker' && sender.tab?.id) {
           try {

@@ -24,14 +24,19 @@ export class Logo {
       align-items: center;
       justify-content: center;
       transition: opacity 0.2s ease-in-out;
-      pointer-events: none;
       flex-shrink: 0;
       color: #FEFEFE;
+      pointer-events: auto;
+      cursor: pointer;
     `;
     return logo;
   }
 
   public getElement(): HTMLElement {
     return this.element;
+  }
+
+  public addEventHandler(type: string, handler: (e: Event) => void): void {
+    this.element.addEventListener(type, handler);
   }
 }

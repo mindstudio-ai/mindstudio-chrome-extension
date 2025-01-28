@@ -1,13 +1,56 @@
 import { ElementIds, FrameDimensions, ZIndexes } from '../../common/constants';
+import { Tooltip } from './Tooltip';
 
 export class LauncherContainer {
   private element: HTMLElement;
   private appsContainer: HTMLElement;
+  private settingsTooltip: Tooltip;
 
   constructor() {
     this.element = this.createLauncherElement();
     this.appsContainer = this.createAppsContainer();
+    this.settingsTooltip = new Tooltip({ text: 'Settings' });
+
     this.getInnerElement().appendChild(this.appsContainer);
+    this.element.appendChild(this.settingsTooltip.getElement());
+  }
+
+  private createSettingsTooltip(): HTMLElement {
+    const tooltip = document.createElement('div');
+    tooltip.style.cssText = `
+      opacity: 0;
+      display: flex;
+      max-width: 200px;
+      padding: 8px 12px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      
+      position: fixed;
+      right: 48px; /* Align with the expanded launcher width */
+      transform: translateY(-50%);
+      
+      border-radius: 8px;
+      background: #121213;
+      box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
+      
+      color: #FEFEFF;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 120%;
+      text-align: right;
+      
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      
+      pointer-events: none;
+      z-index: ${ZIndexes.LAUNCHER + 1};
+      transition: opacity 0.2s ease-in-out;
+    `;
+    tooltip.textContent = 'Settings';
+    return tooltip;
   }
 
   private createLauncherElement(): HTMLElement {
@@ -131,12 +174,38 @@ export class LauncherContainer {
 
   public setExpandClickHandler(handler: (e: MouseEvent) => void): void {
     const inner = this.getInnerElement();
+    const logoElement = inner.querySelector('div:has(svg)') as HTMLElement; // Find the logo div containing SVG
+
+    // Handle click on the entire inner element when collapsed
     inner.addEventListener('click', (e) => {
       if (inner.style.width === '48px') {
         e.stopPropagation();
         handler(e);
       }
     });
+
+    // Handle settings click and tooltip only on logo when expanded
+    if (logoElement) {
+      logoElement.addEventListener('mouseenter', () => {
+        if (inner.style.width !== '48px') {
+          this.settingsTooltip.show(logoElement);
+        }
+      });
+
+      logoElement.addEventListener('mouseleave', () => {
+        this.settingsTooltip.hide();
+      });
+
+      logoElement.addEventListener('click', (e) => {
+        if (inner.style.width !== '48px') {
+          e.stopPropagation();
+          chrome.runtime.sendMessage({
+            _MindStudioEvent: '@@mindstudio/settings/open',
+            payload: undefined,
+          });
+        }
+      });
+    }
   }
 
   public addTooltip(tooltip: HTMLElement): void {

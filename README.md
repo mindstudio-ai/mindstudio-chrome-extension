@@ -34,7 +34,7 @@ A Chrome extension that provides seamless access to MindStudio's AI workers dire
 
 ## Project Structure
 
-```
+```sh
 src/
 ├── background/     # Service worker & background processes
 ├── common/        # Shared utilities and types
