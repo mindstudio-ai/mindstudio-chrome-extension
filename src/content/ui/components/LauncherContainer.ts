@@ -39,7 +39,6 @@ export class LauncherContainer {
       overflow: hidden;
       pointer-events: all;
       box-sizing: border-box;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       height: 40px; /* Initial collapsed height */
       cursor: pointer;
     `;
@@ -60,7 +59,6 @@ export class LauncherContainer {
       width: 100%;
       overflow-y: auto;
       opacity: 0;
-      transition: opacity 0.2s ease-in-out;
       scrollbar-width: none;
       &::-webkit-scrollbar {
         display: none;
@@ -79,6 +77,34 @@ export class LauncherContainer {
 
   public getAppsContainer(): HTMLElement {
     return this.appsContainer;
+  }
+
+  private enableTransitions(): void {
+    const inner = this.getInnerElement();
+    inner.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    this.appsContainer.style.transition = 'opacity 0.2s ease-in-out';
+  }
+
+  public setInitialState(collapsed: boolean): void {
+    const inner = this.getInnerElement();
+    if (collapsed) {
+      inner.style.height = '40px';
+      inner.style.width = '48px';
+      inner.style.cursor = 'pointer';
+      this.appsContainer.style.opacity = '0';
+    } else {
+      inner.style.cursor = 'default';
+      inner.style.width = '40px';
+      // First set height to auto to get the natural height
+      inner.style.height = 'auto';
+      // Get the natural height
+      const height = inner.offsetHeight;
+      // Set the final height
+      inner.style.height = `${Math.min(height, window.innerHeight - 256)}px`;
+      this.appsContainer.style.opacity = '1';
+    }
+    // Enable transitions after initial state is set
+    setTimeout(() => this.enableTransitions(), 0);
   }
 
   public setCollapsedState(collapsed: boolean): void {

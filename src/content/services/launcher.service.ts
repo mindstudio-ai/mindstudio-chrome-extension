@@ -25,8 +25,6 @@ export class LauncherService {
   private appButtons: Map<string, AppButton> = new Map();
 
   private constructor() {
-    this.setupComponents();
-    this.setupStorageListeners();
     this.initializeState().catch(console.error);
   }
 
@@ -35,6 +33,29 @@ export class LauncherService {
       LauncherService.instance = new LauncherService();
     }
     return LauncherService.instance;
+  }
+
+  private async initializeState(): Promise<void> {
+    // Check initial state before setting up components
+    const hasStoredState = await this.hasStoredState();
+    const initialCollapsed = hasStoredState ? await this.isCollapsed() : true; // Default to collapsed if no stored state
+
+    // Setup components without initial state
+    await this.setupComponents();
+    this.setupStorageListeners();
+
+    // Load initial apps
+    await this.loadAppsFromStorage();
+
+    // Initialize sync frame if authenticated
+    const token = await this.authService.getToken();
+    if (token) {
+      await this.syncFrame.inject(token);
+    }
+
+    // Now set initial state after all content is loaded
+    this.container.setInitialState(initialCollapsed);
+    this.collapseButton.setVisibility(!initialCollapsed);
   }
 
   private async setupComponents(): Promise<void> {
@@ -79,27 +100,6 @@ export class LauncherService {
         }
       }
     });
-  }
-
-  private async initializeState(): Promise<void> {
-    // Initialize sync frame if authenticated
-    const token = await this.authService.getToken();
-    if (token) {
-      await this.syncFrame.inject(token);
-    }
-
-    // Load initial apps
-    await this.loadAppsFromStorage();
-
-    // Set initial collapsed state
-    const isCollapsed = await this.isCollapsed();
-    if (isCollapsed) {
-      this.container.setCollapsedState(true);
-      this.collapseButton.setVisibility(false);
-    } else {
-      this.container.setCollapsedState(false);
-      this.collapseButton.setVisibility(true);
-    }
   }
 
   private async handleAppClick(app: AppData): Promise<void> {
@@ -207,10 +207,18 @@ export class LauncherService {
     });
   }
 
+  private async hasStoredState(): Promise<boolean> {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED, (result) => {
+        resolve(StorageKeys.LAUNCHER_COLLAPSED in result);
+      });
+    });
+  }
+
   private async isCollapsed(): Promise<boolean> {
     return new Promise((resolve) => {
       chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED, (result) => {
-        resolve(result[StorageKeys.LAUNCHER_COLLAPSED] || false);
+        resolve(result[StorageKeys.LAUNCHER_COLLAPSED] ?? true); // Default to collapsed
       });
     });
   }

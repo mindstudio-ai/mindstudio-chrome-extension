@@ -30,16 +30,6 @@ class ContentScript {
     }
 
     this.setupEventHandlers();
-
-    // Check initial auth state
-    const token = await this.authService.getToken();
-    const isAuthenticated = await this.authService.isAuthenticated();
-
-    if (!isAuthenticated || !token) {
-      await this.launcherService.collapse();
-    } else {
-      await this.launcherService.expand();
-    }
   }
 }
 
