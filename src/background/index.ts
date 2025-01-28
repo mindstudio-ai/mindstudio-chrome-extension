@@ -11,6 +11,7 @@ class BackgroundService {
     this.setupSidePanelListeners();
     this.setupStorageListeners();
     this.setupInstallationHandler();
+    this.setupActionButtonListener();
   }
 
   static getInstance(): BackgroundService {
@@ -154,6 +155,28 @@ class BackgroundService {
       if (details.reason === 'install') {
         // Open thank you page after installation
         chrome.tabs.create({ url: THANK_YOU_PAGE });
+      }
+    });
+  }
+
+  private setupActionButtonListener(): void {
+    chrome.action.onClicked.addListener(async (tab) => {
+      if (tab.id) {
+        try {
+          // Get current state
+          const { [StorageKeys.LAUNCHER_COLLAPSED]: isCollapsed } =
+            await chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED);
+
+          // Toggle state
+          await chrome.storage.local.set({
+            [StorageKeys.LAUNCHER_COLLAPSED]: !isCollapsed,
+          });
+        } catch (error) {
+          console.error(
+            '[Background] Failed to handle action button click:',
+            error,
+          );
+        }
       }
     });
   }
