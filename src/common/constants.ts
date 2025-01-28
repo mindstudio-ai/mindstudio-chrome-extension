@@ -43,3 +43,9 @@ export const FrameDimensions = {
     WIDTH: 440,
   },
 } as const;
+
+// Default icons
+export const DefaultIcons = {
+  WORKSPACE:
+    'https://images.mindstudio-cdn.com/images/a47f3f3a-a1fa-41ca-8de3-e415452b4611_1731693706328.png?w=120&fm=auto',
+} as const;
