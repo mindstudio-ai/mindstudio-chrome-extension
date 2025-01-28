@@ -1,4 +1,4 @@
-import { StorageKeys, THANK_YOU_PAGE } from '../content/constants';
+import { StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
 class BackgroundService {
   private static instance: BackgroundService;

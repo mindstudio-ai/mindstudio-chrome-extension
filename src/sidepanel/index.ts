@@ -1,5 +1,5 @@
-import { isEventOfType, MindStudioEvent } from '../content/types';
-import { StorageKeys, RootUrl } from '../content/constants';
+import { isEventOfType, MindStudioEvent } from '../common/types';
+import { StorageKeys, RootUrl } from '../common/constants';
 
 // Set iframe src using RootUrl
 document.addEventListener('DOMContentLoaded', () => {

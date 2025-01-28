@@ -1,5 +1,5 @@
-import { ElementIds } from '../constants';
-import { Events } from '../types';
+import { ElementIds } from './constants';
+import { Events } from './types';
 
 type EventHandler<T extends keyof Events> = (
   payload: Events[T],

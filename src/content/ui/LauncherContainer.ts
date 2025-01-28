@@ -1,4 +1,4 @@
-import { ElementIds, FrameDimensions, ZIndexes } from '../../constants';
+import { ElementIds, FrameDimensions, ZIndexes } from '../../common/constants';
 
 export class LauncherContainer {
   private element: HTMLElement;

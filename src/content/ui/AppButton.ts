@@ -1,5 +1,5 @@
-import { FrameDimensions, ZIndexes } from '../../constants';
-import { AppData } from '../../types';
+import { FrameDimensions, ZIndexes } from '../../common/constants';
+import { AppData } from '../../common/types';
 
 export class AppButton {
   private container: HTMLElement;

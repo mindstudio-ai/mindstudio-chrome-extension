@@ -1,7 +1,7 @@
 import { AuthService } from '../common/auth.service';
-import { MessagingService } from './services/messaging.service';
-import { LauncherService } from './services/launcher.service';
-import { RootUrl, StorageKeys, THANK_YOU_PAGE } from './constants';
+import { MessagingService } from '../common/messaging.service';
+import { LauncherService } from './launcher.service';
+import { RootUrl, StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
 class ContentScript {
   private messagingService = MessagingService.getInstance();
