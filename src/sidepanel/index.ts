@@ -1,5 +1,13 @@
 import { isEventOfType, MindStudioEvent } from '../content/types';
-import { StorageKeys } from '../content/constants';
+import { StorageKeys, RootUrl } from '../content/constants';
+
+// Set iframe src using RootUrl
+document.addEventListener('DOMContentLoaded', () => {
+  const player = document.getElementById('player-frame') as HTMLIFrameElement;
+  if (player) {
+    player.src = `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`;
+  }
+});
 
 let isPlayerLoaded = false;
 
