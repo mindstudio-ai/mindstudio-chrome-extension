@@ -29,23 +29,19 @@ class ContentScript {
       return;
     }
 
-    // Set initial collapsed state if no token exists
+    this.setupEventHandlers();
+
+    // Check initial auth state
     const token = await this.authService.getToken();
-    if (!token) {
-      await this.launcherService.collapse();
-    }
-
-    await this.launcherService.initialize();
-
-    // Check initial state
     const isAuthenticated = await this.authService.isAuthenticated();
-    if (isAuthenticated) {
+
+    if (!isAuthenticated || !token) {
+      await this.launcherService.collapse();
+    } else {
       await this.launcherService.expand();
     }
-
-    this.setupEventHandlers();
   }
 }
 
 const contentScript = new ContentScript();
-contentScript.initialize();
+contentScript.initialize().catch(console.error);

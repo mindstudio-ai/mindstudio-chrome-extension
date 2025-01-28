@@ -63,6 +63,13 @@ export interface WorkerLaunchData {
   launchVariables: LaunchVariables;
 }
 
+export interface AppData {
+  id: string;
+  name: string;
+  iconUrl: string;
+  extensionSupportedSites: string[];
+}
+
 // Make event type a discriminated union based on the _MindStudioEvent field
 export type MindStudioEvent = {
   [K in keyof Events]: {
