@@ -13,7 +13,7 @@ A Chrome extension that provides seamless access to MindStudio's AI workers dire
 
 ### Get Latest Release
 
-1. Go to the [Releases page](../../releases/latest) of this repository
+1. Go to the [Releases page](https://github.com/youai1/mindstudio-chrome-extension/releases/latest) of this repository
 2. Download the `mindstudio-chrome-extension.zip` file from the latest release
 3. Unzip the downloaded file
 4. Follow the "Loading in Chrome" instructions below
