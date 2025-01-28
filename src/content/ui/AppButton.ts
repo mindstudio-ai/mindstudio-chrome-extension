@@ -82,7 +82,8 @@ export class AppButton {
   }
 
   private getScaledIconSrc(url: string): string {
-    return `${url}?w=96`;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}w=96`;
   }
 
   public getElement(): HTMLElement {
