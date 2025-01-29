@@ -1,6 +1,6 @@
-import { RootUrl, StorageKeys } from './constants';
-import { MessagingService } from './messaging.service';
 import { storage } from '../shared/storage';
+import { RootUrl } from './constants';
+import { MessagingService } from './messaging.service';
 
 export class AuthService {
   private static instance: AuthService;
