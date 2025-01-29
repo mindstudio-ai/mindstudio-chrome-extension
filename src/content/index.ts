@@ -1,10 +1,9 @@
 import { AuthService } from '../common/auth.service';
-import { MessagingService } from '../common/messaging.service';
+import { runtime } from '../shared/messaging';
 import { LauncherService } from './launcher.service';
 import { RootUrl, StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
 class ContentScript {
-  private messagingService = MessagingService.getInstance();
   private authService = AuthService.getInstance();
   private launcherService = LauncherService.getInstance();
 
@@ -14,13 +13,10 @@ class ContentScript {
       try {
         // Create a promise that resolves when apps are updated
         const appsLoadedPromise = new Promise<void>((resolve) => {
-          const unsubscribe = this.messagingService.subscribe(
-            'launcher/apps_updated',
-            () => {
-              unsubscribe.unsubscribe();
-              resolve();
-            },
-          );
+          const unsubscribe = runtime.listen('launcher/apps_updated', () => {
+            unsubscribe();
+            resolve();
+          });
         });
 
         // Reinject the sync frame with the new token

@@ -1,6 +1,9 @@
 import { Events } from '../common/types';
 
-type Handler<T> = (payload: T) => void | Promise<void>;
+type Handler<T> = (
+  payload: T,
+  sender?: chrome.runtime.MessageSender,
+) => void | Promise<void>;
 
 // Simple message bus for runtime messages
 export const runtime = {
@@ -12,9 +15,9 @@ export const runtime = {
   },
 
   listen<K extends keyof Events>(type: K, handler: Handler<Events[K]>) {
-    const listener = (message: any) => {
+    const listener = (message: any, sender: chrome.runtime.MessageSender) => {
       if (message._MindStudioEvent === `@@mindstudio/${type}`) {
-        handler(message.payload);
+        handler(message.payload, sender);
       }
     };
 
@@ -43,7 +46,7 @@ export const frame = {
   listen<K extends keyof Events>(type: K, handler: Handler<Events[K]>) {
     const listener = (event: MessageEvent) => {
       const { data } = event;
-      if (data._MindStudioEvent === `@@mindstudio/${type}`) {
+      if (data?._MindStudioEvent === `@@mindstudio/${type}`) {
         handler(data.payload);
       }
     };

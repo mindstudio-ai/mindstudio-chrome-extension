@@ -70,7 +70,7 @@ export class LauncherService {
     this.container = new LauncherContainer();
     this.collapseButton = new CollapseButton(() => this.collapse());
     this.logo = new Logo();
-    this.syncFrame = new SyncFrame(this.messagingService);
+    this.syncFrame = new SyncFrame();
 
     // Add components to container
     const inner = this.container.getInnerElement();

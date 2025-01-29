@@ -1,13 +1,29 @@
 import { ElementIds, RootUrl, StorageKeys } from '../../common/constants';
-import { MessagingService } from '../../common/messaging.service';
+import { AppData } from '../../common/types';
+import { frame } from '../../shared/messaging';
 
 export class SyncFrame {
   private frame: HTMLIFrameElement | null = null;
-  private messagingService: MessagingService;
   private isWaitingForToken = false;
+  private unsubscribeLauncherLoaded: (() => void) | null = null;
+  private unsubscribeAppsUpdated: (() => void) | null = null;
 
-  constructor(messagingService: MessagingService) {
-    this.messagingService = messagingService;
+  constructor() {
+    // Listen for storage changes to keep launcher in sync
+    chrome.storage.onChanged.addListener((changes, namespace) => {
+      if (namespace === 'local' && changes[StorageKeys.AUTH_TOKEN]?.newValue) {
+        this.sendTokenToLauncher(changes[StorageKeys.AUTH_TOKEN].newValue);
+      }
+    });
+  }
+
+  private sendTokenToLauncher(token: string): void {
+    if (this.frame?.contentWindow && this.isWaitingForToken) {
+      frame.send(ElementIds.LAUNCHER_SYNC, 'auth/token_changed', {
+        authToken: token,
+      });
+      this.isWaitingForToken = false;
+    }
   }
 
   public async inject(token: string): Promise<void> {
@@ -15,9 +31,9 @@ export class SyncFrame {
       return;
     }
 
-    const frame = document.createElement('iframe');
-    frame.id = ElementIds.LAUNCHER_SYNC;
-    frame.style.cssText = `
+    const iframe = document.createElement('iframe');
+    iframe.id = ElementIds.LAUNCHER_SYNC;
+    iframe.style.cssText = `
       width: 0;
       height: 0;
       border: none;
@@ -26,38 +42,50 @@ export class SyncFrame {
       left: -9999px;
     `;
 
-    frame.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1`;
-    document.body.appendChild(frame);
-    this.frame = frame;
+    iframe.src = `${RootUrl}/_extension/launcher?__displayContext=extension&__controlledAuth=1`;
+    document.body.appendChild(iframe);
+    this.frame = iframe;
     this.isWaitingForToken = true;
 
+    // Set up message handlers
+    this.setupMessageHandlers(token);
+  }
+
+  private setupMessageHandlers(token: string): void {
     // Wait for launcher to be ready before sending token
-    this.messagingService.subscribe('launcher/loaded', () => {
+    this.unsubscribeLauncherLoaded = frame.listen('launcher/loaded', () => {
       if (this.isWaitingForToken) {
-        this.messagingService.sendToLauncherSync('auth/token_changed', {
-          authToken: token,
-        });
-        this.isWaitingForToken = false;
+        this.sendTokenToLauncher(token);
       }
     });
 
     // Set up message handler for app data updates
-    this.messagingService.subscribe('launcher/apps_updated', ({ apps }) => {
-      if (!apps || !Array.isArray(apps)) {
-        console.error('[MindStudio Extension] Invalid apps data received');
-        return;
-      }
-
-      chrome.storage.local.set({ [StorageKeys.LAUNCHER_APPS]: apps }, () => {
-        const error = chrome.runtime.lastError;
-        if (error) {
-          console.error('[MindStudio Extension] Error saving apps:', error);
+    this.unsubscribeAppsUpdated = frame.listen(
+      'launcher/apps_updated',
+      ({ apps }: { apps: AppData[] }) => {
+        if (!apps || !Array.isArray(apps)) {
+          console.error('[MindStudio Extension] Invalid apps data received');
+          return;
         }
-      });
-    });
+
+        chrome.storage.local
+          .set({ [StorageKeys.LAUNCHER_APPS]: apps })
+          .catch((error) => {
+            console.error('[MindStudio Extension] Error saving apps:', error);
+          });
+      },
+    );
   }
 
   public remove(): void {
+    if (this.unsubscribeLauncherLoaded) {
+      this.unsubscribeLauncherLoaded();
+      this.unsubscribeLauncherLoaded = null;
+    }
+    if (this.unsubscribeAppsUpdated) {
+      this.unsubscribeAppsUpdated();
+      this.unsubscribeAppsUpdated = null;
+    }
     if (this.frame) {
       this.frame.remove();
       this.frame = null;

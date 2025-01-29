@@ -40,6 +40,12 @@ export interface Events {
   'url/changed': {
     url: string;
   };
+
+  // Settings events
+  'settings/open': undefined;
+
+  // Sidepanel events
+  'sidepanel/ready': undefined;
 }
 
 export interface LaunchVariables {
