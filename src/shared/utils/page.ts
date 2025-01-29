@@ -1,10 +1,10 @@
-import { isMindStudioElement } from '../shared/utils/dom';
+import { isMindStudioElement } from './dom';
 
 /**
  * Utilities for interacting with the current web page.
  * These utilities only work in the content script context.
  */
-export const pageUtils = {
+export const page = {
   /**
    * Gets the currently selected content from the page.
    * Works with both text selections and input fields.

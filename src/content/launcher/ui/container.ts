@@ -159,7 +159,6 @@ export class LauncherContainer {
 
   public setExpandClickHandler(handler: (e: MouseEvent) => void): void {
     const inner = this.getInnerElement();
-    const logoElement = inner.querySelector('div:has(svg)') as HTMLElement; // Find the logo div containing SVG
 
     // Handle click on the entire inner element when collapsed
     inner.addEventListener('click', (e) => {
@@ -168,33 +167,14 @@ export class LauncherContainer {
         handler(e);
       }
     });
-
-    // Handle settings click and tooltip only on logo when expanded
-    if (logoElement) {
-      logoElement.addEventListener('mouseenter', () => {
-        if (inner.style.width !== '48px') {
-          this.settingsTooltip.show(logoElement);
-        }
-      });
-
-      logoElement.addEventListener('mouseleave', () => {
-        this.settingsTooltip.hide();
-      });
-
-      logoElement.addEventListener('click', (e) => {
-        if (inner.style.width !== '48px') {
-          e.stopPropagation();
-          chrome.runtime.sendMessage({
-            _MindStudioEvent: '@@mindstudio/settings/open',
-            payload: undefined,
-          });
-        }
-      });
-    }
   }
 
   public addTooltip(tooltip: HTMLElement): void {
     this.element.appendChild(tooltip);
+  }
+
+  public getSettingsTooltip(): Tooltip {
+    return this.settingsTooltip;
   }
 
   public recalculateHeight(): void {

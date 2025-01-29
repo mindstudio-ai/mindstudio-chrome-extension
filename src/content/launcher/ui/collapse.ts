@@ -24,7 +24,7 @@ export class CollapseButton {
       background: transparent;
       cursor: pointer;
       transition: all 0.2s ease;
-      color: #FEFEFE;
+      color: #99999A;
       opacity: 0;
       position: absolute;
       top: 4px;
@@ -38,16 +38,16 @@ export class CollapseButton {
 
     button.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M4 6L8 10L12 6" stroke="#99999A" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     `;
 
     button.addEventListener('mouseenter', () => {
-      button.style.backgroundColor = '#12121310';
+      button.style.color = '#FEFEFE';
     });
 
     button.addEventListener('mouseleave', () => {
-      button.style.backgroundColor = 'transparent';
+      button.style.color = '#99999A';
     });
 
     button.addEventListener('click', onClickHandler);

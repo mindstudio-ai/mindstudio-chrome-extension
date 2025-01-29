@@ -1,4 +1,4 @@
-import { AppData } from '../../shared/types/app';
+import { AppData } from '../types/app';
 
 export function filterAppsByUrl(
   apps: AppData[],
