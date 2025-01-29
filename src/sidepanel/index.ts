@@ -4,27 +4,28 @@ class SidePanel {
   private player: PlayerFrame;
 
   constructor() {
+    console.info('[MindStudio][Sidepanel] Initializing sidepanel');
     const container = document.getElementById('player-container');
     if (!container) {
+      console.error('[MindStudio][Sidepanel] Player container not found');
       throw new Error('Player container not found');
     }
 
     this.player = new PlayerFrame(container);
-    this.setupConnectionHandling();
+    this.setupConnection();
   }
 
-  private setupConnectionHandling(): void {
-    // Connect to background service to detect sidepanel close
-    const port = chrome.runtime.connect({ name: 'sidepanel' });
-
-    // Reset frame when connection is lost (sidepanel closed)
-    port.onDisconnect.addListener(() => {
-      this.player.reset();
-    });
+  private setupConnection(): void {
+    // Connect to background service to enable messaging
+    chrome.runtime.connect({ name: 'sidepanel' });
   }
 }
 
 // Initialize the panel
 document.addEventListener('DOMContentLoaded', () => {
-  new SidePanel();
+  try {
+    new SidePanel();
+  } catch (error) {
+    console.error('[MindStudio][Sidepanel] Initialization failed:', error);
+  }
 });
