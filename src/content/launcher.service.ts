@@ -7,7 +7,7 @@ import { AppButton } from './ui/AppButton';
 import { CollapseButton } from './ui/CollapseButton';
 import { LauncherContainer } from './ui/LauncherContainer';
 import { Logo } from './ui/Logo';
-import { SyncFrame } from './ui/SyncFrame';
+import { SyncFrame } from './launcher/sync-frame';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -46,12 +46,6 @@ export class LauncherService {
 
     // Load initial apps
     await this.loadAppsFromStorage();
-
-    // Initialize sync frame if authenticated
-    const token = await auth.getToken();
-    if (token) {
-      await this.syncFrame.inject(token);
-    }
 
     // Set up storage listeners
     storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
@@ -173,10 +167,6 @@ export class LauncherService {
   private async loadAppsFromStorage(): Promise<void> {
     const apps = (await storage.get('LAUNCHER_APPS')) || [];
     this.updateApps(apps);
-  }
-
-  async reinjectSyncFrame(token: string): Promise<void> {
-    await this.syncFrame.reinject(token);
   }
 
   private async handleExpand(): Promise<void> {

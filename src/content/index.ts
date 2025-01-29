@@ -27,10 +27,6 @@ class ContentScript {
           });
         });
 
-        // Reinject the sync frame with the new token
-        console.log('[ContentScript] Reinjecting sync frame');
-        await this.launcherService.reinjectSyncFrame(token);
-
         // Wait for apps to be loaded
         await appsLoadedPromise;
       } catch (error) {
