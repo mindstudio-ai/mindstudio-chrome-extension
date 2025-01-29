@@ -6,6 +6,10 @@ export const RootUrl =
 
 export const THANK_YOU_PAGE = 'https://www.mindstudio.ai/extension/thank-you';
 
+export const QueryParams = {
+  VERSION: '__ext_version',
+} as const;
+
 export const ZIndexes = {
   FLOATING_BUTTON: 999997,
   LAUNCHER: 999999,

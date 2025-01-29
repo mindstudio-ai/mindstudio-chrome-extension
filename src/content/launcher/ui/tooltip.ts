@@ -47,9 +47,8 @@ export class Tooltip {
       line-height: 120%;
       text-align: right;
       
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
       
       pointer-events: none;
       z-index: ${ZIndexes.LAUNCHER + 1};
