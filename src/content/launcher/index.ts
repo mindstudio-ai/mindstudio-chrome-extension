@@ -16,6 +16,8 @@ export class LauncherService {
   private syncFrame!: SyncFrame;
   private isInitialized = false;
 
+  private constructor() {}
+
   static getInstance(): LauncherService {
     if (!LauncherService.instance) {
       LauncherService.instance = new LauncherService();
@@ -38,21 +40,21 @@ export class LauncherService {
 
     // Set up storage listeners
     storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
-      console.log('[LauncherService] Collapsed state changed:', isCollapsed);
       this.ui.setCollapsed(isCollapsed ?? true);
     });
 
     storage.onChange('LAUNCHER_APPS', (apps) => {
-      console.log('[LauncherService] Apps updated from storage');
       this.updateApps(apps || []);
     });
 
     // Set initial states from storage
-    const initialCollapsed = (await storage.get('LAUNCHER_COLLAPSED')) ?? true;
-    this.ui.setCollapsed(initialCollapsed);
+    this.ui.setCollapsed(
+      (await storage.get('LAUNCHER_COLLAPSED')) ?? true,
+      true,
+    );
 
     // Load initial apps
-    await this.loadAppsFromStorage();
+    this.updateApps((await storage.get('LAUNCHER_APPS')) || []);
   }
 
   private async setupComponents(): Promise<void> {
@@ -89,20 +91,8 @@ export class LauncherService {
   }
 
   updateApps(apps: AppData[]): void {
-    console.log(
-      '[LauncherService] Updating apps for URL:',
-      this.currentHostUrl,
-    );
     this.apps = filterAppsByUrl(apps, this.currentHostUrl);
     this.ui.updateApps(this.apps);
-    runtime
-      .send('launcher/apps_updated', { apps: this.apps })
-      .catch(console.error);
-  }
-
-  private async loadAppsFromStorage(): Promise<void> {
-    const apps = (await storage.get('LAUNCHER_APPS')) || [];
-    this.updateApps(apps);
   }
 
   private async handleExpand(): Promise<void> {

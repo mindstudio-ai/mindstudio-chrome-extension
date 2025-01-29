@@ -19,7 +19,6 @@ class SidePanel {
 
     // Reset frame when connection is lost (sidepanel closed)
     port.onDisconnect.addListener(() => {
-      console.log('[SidePanel] Connection lost, resetting frame');
       this.player.reset();
     });
   }

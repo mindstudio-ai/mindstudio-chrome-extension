@@ -1,6 +1,6 @@
-import { storage } from './storage';
-import { runtime, frame } from './messaging';
 import { RootUrl } from '../constants';
+import { frame } from './messaging';
+import { storage } from './storage';
 
 type LoginHandler = (token: string) => void | Promise<void>;
 
@@ -42,11 +42,10 @@ if (window.location.pathname === '/_extension/login') {
       return;
     }
 
-    // Forward token to background
-    await runtime.send('auth/token_generated', { token });
+    storage.set('AUTH_TOKEN', token);
 
     // Close window after delay
-    setTimeout(() => window.close(), 1000);
+    setTimeout(() => window.close(), 3000);
   });
 }
 

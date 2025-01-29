@@ -60,8 +60,12 @@ export class LauncherUI {
     });
   }
 
-  setCollapsed(collapsed: boolean): void {
-    this.container.setCollapsedState(collapsed);
+  setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
+    if (isInitial) {
+      this.container.setInitialState(collapsed);
+    } else {
+      this.container.setCollapsedState(collapsed);
+    }
     this.collapseButton.setVisibility(!collapsed);
   }
 }

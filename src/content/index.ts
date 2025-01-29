@@ -5,18 +5,6 @@ import { LauncherService } from './launcher';
 class ContentScript {
   private launcherService = LauncherService.getInstance();
 
-  private setupEventHandlers(): void {
-    // Register handler for login completion
-    auth.onLoginComplete(async (token) => {
-      console.log('[ContentScript] Login completed');
-      try {
-        await auth.ensureAuthenticated();
-      } catch (error) {
-        console.error('[ContentScript] Login completion error:', error);
-      }
-    });
-  }
-
   async initialize(): Promise<void> {
     if (window.self !== window.top) {
       return;
@@ -30,8 +18,6 @@ class ContentScript {
       return;
     }
 
-    console.log('[ContentScript] Initializing');
-    this.setupEventHandlers();
     await this.launcherService.initialize();
 
     // If we're on the thank you page, trigger authentication

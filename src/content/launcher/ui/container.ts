@@ -48,7 +48,7 @@ export class LauncherContainer {
       overflow: hidden;
       pointer-events: all;
       box-sizing: border-box;
-      height: 40px; /* Initial collapsed height */
+      height: 40px;
       cursor: pointer;
     `;
 
@@ -96,6 +96,7 @@ export class LauncherContainer {
 
   public setInitialState(collapsed: boolean): void {
     const inner = this.getInnerElement();
+
     if (collapsed) {
       inner.style.height = '40px';
       inner.style.width = '48px';
@@ -104,20 +105,25 @@ export class LauncherContainer {
     } else {
       inner.style.cursor = 'default';
       inner.style.width = '40px';
-      // First set height to auto to get the natural height
       inner.style.height = 'auto';
-      // Get the natural height
-      const height = inner.offsetHeight;
-      // Set the final height
-      inner.style.height = `${Math.min(height, window.innerHeight - 256)}px`;
+      const targetHeight = Math.min(
+        inner.offsetHeight,
+        window.innerHeight - 256,
+      );
+      inner.style.height = `${targetHeight}px`;
       this.appsContainer.style.opacity = '1';
     }
-    // Enable transitions after initial state is set
-    setTimeout(() => this.enableTransitions(), 0);
+
+    // Enable transitions only after initial state is set
+    requestAnimationFrame(() => this.enableTransitions());
   }
 
   public setCollapsedState(collapsed: boolean): void {
     const inner = this.getInnerElement();
+
+    // Ensure transitions are enabled
+    this.enableTransitions();
+
     if (collapsed) {
       inner.style.height = '40px';
       inner.style.width = '48px';
@@ -126,14 +132,22 @@ export class LauncherContainer {
     } else {
       inner.style.cursor = 'default';
       inner.style.width = '40px';
+
+      // First calculate the target height
       inner.style.height = 'auto';
-      const height = inner.offsetHeight;
+      const targetHeight = Math.min(
+        inner.offsetHeight,
+        window.innerHeight - 256,
+      );
+
+      // Reset to collapsed height
       inner.style.height = '40px';
 
       // Force a reflow
       inner.offsetHeight;
 
-      inner.style.height = `${Math.min(height, window.innerHeight - 256)}px`;
+      // Animate to target height
+      inner.style.height = `${targetHeight}px`;
       this.appsContainer.style.opacity = '1';
     }
   }

@@ -17,8 +17,6 @@ export class SyncFrame extends Frame {
   private setupEventListeners(): void {
     // Listen for launcher loaded event
     frame.listen('launcher/loaded', async () => {
-      console.log('[SyncFrame] Launcher loaded');
-
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
       if (token) {
@@ -28,7 +26,6 @@ export class SyncFrame extends Frame {
 
     // Listen for apps updates from launcher
     frame.listen('launcher/apps_updated', async ({ apps }) => {
-      console.log('[SyncFrame] Apps updated, saving to storage');
       await storage.set('LAUNCHER_APPS', apps);
     });
 
@@ -40,7 +37,5 @@ export class SyncFrame extends Frame {
     });
   }
 
-  protected onFrameLoad(): void {
-    console.log('[SyncFrame] Frame loaded');
-  }
+  protected onFrameLoad(): void {}
 }

@@ -21,7 +21,6 @@ export class PlayerFrame extends Frame {
   private setupEventListeners(): void {
     // Listen for player loaded event
     frame.listen('player/loaded', async () => {
-      console.log('[PlayerFrame] Player loaded');
       this.setLoaded(true);
 
       // Send auth token if available
@@ -77,9 +76,7 @@ export class PlayerFrame extends Frame {
     });
   }
 
-  protected onFrameLoad(): void {
-    console.log('[PlayerFrame] Frame DOM loaded');
-  }
+  protected onFrameLoad(): void {}
 
   reset(): void {
     this.setLoaded(false);
