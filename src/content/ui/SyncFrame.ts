@@ -1,4 +1,4 @@
-import { ElementIds, RootUrl, StorageKeys } from '../../common/constants';
+import { ElementIds, RootUrl } from '../../common/constants';
 import { AppData } from '../../common/types';
 import { frame } from '../../shared/messaging';
 import { storage } from '../../shared/storage';

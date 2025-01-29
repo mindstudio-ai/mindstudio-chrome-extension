@@ -1,8 +1,8 @@
 import { AuthService } from '../common/auth.service';
+import { RootUrl, THANK_YOU_PAGE } from '../common/constants';
 import { runtime } from '../shared/messaging';
 import { storage } from '../shared/storage';
 import { LauncherService } from './launcher.service';
-import { RootUrl, StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
 class ContentScript {
   private authService = AuthService.getInstance();

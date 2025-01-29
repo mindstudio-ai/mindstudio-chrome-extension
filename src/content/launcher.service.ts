@@ -1,14 +1,13 @@
 import { AuthService } from '../common/auth.service';
-import { StorageKeys } from '../common/constants';
 import { AppData } from '../common/types';
-import { storage } from '../shared/storage';
 import { runtime } from '../shared/messaging';
+import { storage } from '../shared/storage';
+import { DOMService } from './dom.service';
 import { AppButton } from './ui/AppButton';
 import { CollapseButton } from './ui/CollapseButton';
 import { LauncherContainer } from './ui/LauncherContainer';
 import { Logo } from './ui/Logo';
 import { SyncFrame } from './ui/SyncFrame';
-import { DOMService } from './dom.service';
 
 export class LauncherService {
   private static instance: LauncherService;

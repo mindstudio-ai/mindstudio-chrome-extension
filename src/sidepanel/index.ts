@@ -1,11 +1,7 @@
-import {
-  isEventOfType,
-  MindStudioEvent,
-  WorkerLaunchPayload,
-} from '../common/types';
-import { StorageKeys, RootUrl } from '../common/constants';
+import { RootUrl } from '../common/constants';
+import { WorkerLaunchPayload } from '../common/types';
+import { frame, runtime } from '../shared/messaging';
 import { storage } from '../shared/storage';
-import { runtime, frame } from '../shared/messaging';
 
 class SidePanelService {
   private static instance: SidePanelService;

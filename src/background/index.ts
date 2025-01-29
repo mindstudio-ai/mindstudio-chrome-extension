@@ -1,7 +1,7 @@
-import { StorageKeys, THANK_YOU_PAGE } from '../common/constants';
-import { storage } from '../shared/storage';
-import { runtime } from '../shared/messaging';
+import { THANK_YOU_PAGE } from '../common/constants';
 import { WorkerLaunchPayload } from '../common/types';
+import { runtime } from '../shared/messaging';
+import { storage } from '../shared/storage';
 
 class BackgroundService {
   private static instance: BackgroundService;
