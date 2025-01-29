@@ -15,7 +15,7 @@ type StorageValues = {
 export const storage = {
   async get<K extends keyof StorageValues>(key: K): Promise<StorageValues[K]> {
     const result = await chrome.storage.local.get(StorageKeys[key]);
-    return result[StorageKeys[key]] || null;
+    return result[StorageKeys[key]] ?? null;
   },
 
   async set<K extends keyof StorageValues>(
