@@ -25,8 +25,12 @@ export class PlayerFrame extends Frame {
 
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
-      if (token) {
-        frame.send('player-frame', 'auth/token_changed', { authToken: token });
+      const organizationId = await storage.get('SELECTED_ORGANIZATION');
+      if (token && organizationId) {
+        frame.send('player-frame', 'auth/token_changed', {
+          authToken: token,
+          organizationId,
+        });
       }
 
       // Notify background we're ready for workers
@@ -44,8 +48,12 @@ export class PlayerFrame extends Frame {
 
     // Listen for auth token changes
     storage.onChange('AUTH_TOKEN', async (token) => {
-      if (token && this.isReady()) {
-        frame.send('player-frame', 'auth/token_changed', { authToken: token });
+      const organizationId = await storage.get('SELECTED_ORGANIZATION');
+      if (organizationId && token && this.isReady()) {
+        frame.send('player-frame', 'auth/token_changed', {
+          authToken: token,
+          organizationId,
+        });
       }
     });
 

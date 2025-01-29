@@ -1,10 +1,14 @@
+import { OrganizationData } from './organization';
+
 // Consolidate all event types in one place
 export interface Events {
   'auth/token_changed': {
     authToken: string;
+    organizationId: string;
   };
-  'auth/token_generated': {
+  'auth/login_completed': {
     token: string;
+    organizations: Array<OrganizationData>;
   };
 
   // Player events

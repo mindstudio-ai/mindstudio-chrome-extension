@@ -19,22 +19,45 @@ export class SyncFrame extends Frame {
     frame.listen('launcher/loaded', async () => {
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
-      if (token) {
-        frame.send('sync-frame', 'auth/token_changed', { authToken: token });
+      const organizationId = await storage.get('SELECTED_ORGANIZATION');
+      if (token && organizationId) {
+        frame.send('sync-frame', 'auth/token_changed', {
+          authToken: token,
+          organizationId,
+        });
       }
     });
 
     // Listen for apps updates from launcher
     frame.listen('launcher/apps_updated', async ({ apps }) => {
-      await storage.set('LAUNCHER_APPS', apps);
+      const selectedOrg = await storage.get('SELECTED_ORGANIZATION');
+      if (!selectedOrg) {
+        return;
+      }
+
+      const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
+      await storage.set('LAUNCHER_APPS', {
+        ...existingApps,
+        [selectedOrg]: apps,
+      });
     });
 
     // Listen for auth token changes
-    storage.onChange('AUTH_TOKEN', async (token) => {
-      if (token && this.isReady()) {
-        frame.send('sync-frame', 'auth/token_changed', { authToken: token });
-      }
-    });
+    storage.onChange('AUTH_TOKEN', this.sendAuthToken.bind(this));
+
+    // Listen for organization selection changes
+    storage.onChange('SELECTED_ORGANIZATION', this.sendAuthToken.bind(this));
+  }
+
+  private async sendAuthToken(): Promise<void> {
+    const token = await storage.get('AUTH_TOKEN');
+    const organizationId = await storage.get('SELECTED_ORGANIZATION');
+    if (token && organizationId && this.isReady()) {
+      frame.send('sync-frame', 'auth/token_changed', {
+        authToken: token,
+        organizationId,
+      });
+    }
   }
 
   protected onFrameLoad(): void {}
