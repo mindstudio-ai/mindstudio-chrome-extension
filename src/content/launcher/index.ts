@@ -36,18 +36,23 @@ export class LauncherService {
     // Setup components first
     await this.setupComponents();
 
-    // Load initial apps
-    await this.loadAppsFromStorage();
-
     // Set up storage listeners
     storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
       console.log('[LauncherService] Collapsed state changed:', isCollapsed);
       this.ui.setCollapsed(isCollapsed ?? true);
     });
 
-    // Set initial state from storage
+    storage.onChange('LAUNCHER_APPS', (apps) => {
+      console.log('[LauncherService] Apps updated from storage');
+      this.updateApps(apps || []);
+    });
+
+    // Set initial states from storage
     const initialCollapsed = (await storage.get('LAUNCHER_COLLAPSED')) ?? true;
     this.ui.setCollapsed(initialCollapsed);
+
+    // Load initial apps
+    await this.loadAppsFromStorage();
   }
 
   private async setupComponents(): Promise<void> {
@@ -84,8 +89,15 @@ export class LauncherService {
   }
 
   updateApps(apps: AppData[]): void {
+    console.log(
+      '[LauncherService] Updating apps for URL:',
+      this.currentHostUrl,
+    );
     this.apps = filterAppsByUrl(apps, this.currentHostUrl);
     this.ui.updateApps(this.apps);
+    runtime
+      .send('launcher/apps_updated', { apps: this.apps })
+      .catch(console.error);
   }
 
   private async loadAppsFromStorage(): Promise<void> {

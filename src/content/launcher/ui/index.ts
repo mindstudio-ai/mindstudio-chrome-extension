@@ -53,6 +53,11 @@ export class LauncherUI {
       button.getElement().remove();
       button.getTooltip().remove();
     });
+
+    // Recalculate container height after updating apps
+    requestAnimationFrame(() => {
+      this.container.recalculateHeight();
+    });
   }
 
   setCollapsed(collapsed: boolean): void {

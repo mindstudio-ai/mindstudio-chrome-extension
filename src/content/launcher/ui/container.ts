@@ -177,4 +177,18 @@ export class LauncherContainer {
   public addTooltip(tooltip: HTMLElement): void {
     this.element.appendChild(tooltip);
   }
+
+  public recalculateHeight(): void {
+    const inner = this.getInnerElement();
+    if (inner.style.width === '48px') {
+      return; // Don't recalculate if collapsed
+    }
+
+    // Temporarily set height to auto to get natural height
+    inner.style.height = 'auto';
+    const height = inner.offsetHeight;
+
+    // Set the final height with max height constraint
+    inner.style.height = `${Math.min(height, window.innerHeight - 256)}px`;
+  }
 }

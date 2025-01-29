@@ -1,34 +1,16 @@
-import { auth } from '../shared/services/auth';
 import { RootUrl, THANK_YOU_PAGE } from '../shared/constants';
-import { runtime } from '../shared/services/messaging';
-import { storage } from '../shared/services/storage';
+import { auth } from '../shared/services/auth';
 import { LauncherService } from './launcher';
 
 class ContentScript {
   private launcherService = LauncherService.getInstance();
 
   private setupEventHandlers(): void {
-    // Listen for app updates
-    storage.onChange('LAUNCHER_APPS', (apps) => {
-      console.log('[ContentScript] Apps updated from storage');
-      this.launcherService.updateApps(apps || []);
-    });
-
     // Register handler for login completion
     auth.onLoginComplete(async (token) => {
-      console.log('[ContentScript] Login completed, handling UI updates');
+      console.log('[ContentScript] Login completed');
       try {
-        // Create a promise that resolves when apps are updated
-        const appsLoadedPromise = new Promise<void>((resolve) => {
-          const unsubscribe = runtime.listen('launcher/apps_updated', () => {
-            console.log('[ContentScript] Apps updated, resolving promise');
-            unsubscribe();
-            resolve();
-          });
-        });
-
-        // Wait for apps to be loaded
-        await appsLoadedPromise;
+        await auth.ensureAuthenticated();
       } catch (error) {
         console.error('[ContentScript] Login completion error:', error);
       }
