@@ -1,5 +1,6 @@
-import { StorageKeys, RootUrl } from './constants';
+import { RootUrl, StorageKeys } from './constants';
 import { MessagingService } from './messaging.service';
+import { storage } from '../shared/storage';
 
 export class AuthService {
   private static instance: AuthService;
@@ -61,19 +62,11 @@ export class AuthService {
   }
 
   async getToken(): Promise<string | null> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(StorageKeys.AUTH_TOKEN, (result) => {
-        resolve(result[StorageKeys.AUTH_TOKEN] || null);
-      });
-    });
+    return storage.get('AUTH_TOKEN');
   }
 
   async setToken(token: string): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ [StorageKeys.AUTH_TOKEN]: token }, () => {
-        resolve();
-      });
-    });
+    return storage.set('AUTH_TOKEN', token);
   }
 
   async login(): Promise<void> {
@@ -85,13 +78,10 @@ export class AuthService {
 
   async logout(): Promise<void> {
     // Set launcher to collapsed state first
-    await chrome.storage.local.set({ [StorageKeys.LAUNCHER_COLLAPSED]: true });
+    await storage.set('LAUNCHER_COLLAPSED', true);
 
-    // Clear all storage items
-    await chrome.storage.local.remove([
-      StorageKeys.AUTH_TOKEN,
-      StorageKeys.LAUNCHER_APPS,
-    ]);
+    // Clear auth items
+    await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS']);
 
     // Reload all tabs where the extension is active
     const tabs = await chrome.tabs.query({});

@@ -6,10 +6,13 @@ export const RootUrl =
 
 export const THANK_YOU_PAGE = 'https://www.mindstudio.ai/extension/thank-you';
 
+// Storage keys with their environment suffix
+const createStorageKey = (key: string) => `${key}_${Environment}` as const;
+
 export const StorageKeys = {
-  AUTH_TOKEN: `AuthToken_${Environment}`,
-  LAUNCHER_COLLAPSED: `LauncherCollapsed_${Environment}`,
-  LAUNCHER_APPS: `LauncherApps_${Environment}`,
+  AUTH_TOKEN: createStorageKey('AuthToken'),
+  LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
+  LAUNCHER_APPS: createStorageKey('LauncherApps'),
 } as const;
 
 export const ZIndexes = {
