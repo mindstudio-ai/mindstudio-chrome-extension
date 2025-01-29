@@ -1,17 +1,11 @@
 // Consolidate all event types in one place
 export interface Events {
-  // Auth events
-  'auth/login_completed': {
-    authToken: string;
-  };
   'auth/token_changed': {
     authToken: string;
   };
-  'auth/login_required': undefined;
   'auth/token_generated': {
     token: string;
   };
-  'auth/state_changed': undefined;
 
   // Player events
   'player/loaded': void;
@@ -36,10 +30,11 @@ export interface Events {
     }>;
   };
 
-  // URL events
-  'url/changed': {
-    url: string;
-  };
+  // Settings events
+  'settings/open': undefined;
+
+  // Sidepanel events
+  'sidepanel/ready': undefined;
 }
 
 export interface LaunchVariables {
@@ -54,20 +49,6 @@ export interface WorkerLaunchPayload {
   appName: string;
   appIcon: string;
   launchVariables: LaunchVariables;
-}
-
-export interface WorkerLaunchData {
-  appId: string;
-  appName: string;
-  appIcon: string;
-  launchVariables: LaunchVariables;
-}
-
-export interface AppData {
-  id: string;
-  name: string;
-  iconUrl: string;
-  extensionSupportedSites: string[];
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field

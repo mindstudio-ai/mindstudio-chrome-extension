@@ -1,15 +1,17 @@
-import { StorageKeys, THANK_YOU_PAGE } from '../common/constants';
+import { THANK_YOU_PAGE } from '../shared/constants';
+import { WorkerLaunchPayload } from '../shared/types/events';
+import { runtime } from '../shared/services/messaging';
+import { storage } from '../shared/services/storage';
 
 class BackgroundService {
   private static instance: BackgroundService;
   private isSidePanelReady = false;
-  private pendingWorker: any = null;
+  private pendingWorker: WorkerLaunchPayload | null = null;
 
   private constructor() {
     this.setupHeaderRules();
     this.setupMessageListeners();
     this.setupSidePanelListeners();
-    this.setupStorageListeners();
     this.setupInstallationHandler();
     this.setupActionButtonListener();
   }
@@ -21,88 +23,47 @@ class BackgroundService {
     return BackgroundService.instance;
   }
 
-  private async sendMessageToTab(tabId: number, message: any): Promise<void> {
-    try {
-      await chrome.tabs.sendMessage(tabId, message);
-    } catch (error: unknown) {
-      // Ignore errors about receiving end not existing
-      const errorString =
-        error instanceof Error ? error.message : String(error);
-      if (!errorString.includes('Receiving end does not exist')) {
-        console.error('[Background] Error sending message to tab:', error);
-      }
-    }
-  }
-
-  private setupStorageListeners(): void {
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local' && changes[StorageKeys.AUTH_TOKEN]) {
-        const newToken = changes[StorageKeys.AUTH_TOKEN].newValue;
-
-        // Notify all tabs about the token change
-        chrome.tabs.query({}, (tabs) => {
-          tabs.forEach((tab) => {
-            if (tab.id) {
-              this.sendMessageToTab(tab.id, {
-                _MindStudioEvent: '@@mindstudio/auth/token_generated',
-                payload: { token: newToken },
-              });
-            }
-          });
-        });
-      }
-    });
-  }
-
   private setupMessageListeners(): void {
-    chrome.runtime.onMessage.addListener((message, sender) => {
-      if (message._MindStudioEvent?.startsWith('@@mindstudio/')) {
-        const eventType = message._MindStudioEvent.replace('@@mindstudio/', '');
+    // Handle settings/open event
+    runtime.listen('settings/open', () => {
+      chrome.runtime.openOptionsPage();
+    });
 
-        // Handle settings/open event
-        if (eventType === 'settings/open') {
-          chrome.runtime.openOptionsPage();
+    // Handle worker launch directly from content script click
+    runtime.listen(
+      'player/launch_worker',
+      async (
+        payload: WorkerLaunchPayload,
+        sender?: chrome.runtime.MessageSender,
+      ) => {
+        if (!sender?.tab?.id) {
           return;
         }
 
-        // Handle worker launch directly from content script click
-        if (eventType === 'player/launch_worker' && sender.tab?.id) {
-          try {
-            // Store worker details
-            this.pendingWorker = message.payload;
+        try {
+          // Store worker details
+          this.pendingWorker = payload;
 
-            // Open side panel
-            chrome.sidePanel.open({ tabId: sender.tab.id }).then(() => {
-              // If sidepanel is ready, send init event immediately
-              if (this.isSidePanelReady) {
-                chrome.runtime.sendMessage({
-                  _MindStudioEvent: '@@mindstudio/player/init',
-                  payload: this.pendingWorker,
-                });
-                this.pendingWorker = null;
-              }
-            });
-          } catch (error) {
-            console.error(
-              '[Background] Failed to handle worker launch:',
-              error,
-            );
-          }
-          return;
-        }
+          // Open side panel
+          await chrome.sidePanel.open({ tabId: sender.tab.id });
 
-        // Handle sidepanel ready event
-        if (eventType === 'sidepanel/ready') {
-          this.isSidePanelReady = true;
-          if (this.pendingWorker) {
-            chrome.runtime.sendMessage({
-              _MindStudioEvent: '@@mindstudio/player/init',
-              payload: this.pendingWorker,
-            });
+          // If sidepanel is ready, send init event immediately
+          if (this.isSidePanelReady) {
+            runtime.send('player/init', this.pendingWorker);
             this.pendingWorker = null;
           }
-          return;
+        } catch (error) {
+          console.error('[Background] Failed to handle worker launch:', error);
         }
+      },
+    );
+
+    // Handle sidepanel ready event
+    runtime.listen('sidepanel/ready', () => {
+      this.isSidePanelReady = true;
+      if (this.pendingWorker) {
+        runtime.send('player/init', this.pendingWorker);
+        this.pendingWorker = null;
       }
     });
   }
@@ -164,13 +125,10 @@ class BackgroundService {
       if (tab.id) {
         try {
           // Get current state
-          const { [StorageKeys.LAUNCHER_COLLAPSED]: isCollapsed } =
-            await chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED);
+          const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
 
           // Toggle state
-          await chrome.storage.local.set({
-            [StorageKeys.LAUNCHER_COLLAPSED]: !isCollapsed,
-          });
+          await storage.set('LAUNCHER_COLLAPSED', !isCollapsed);
         } catch (error) {
           console.error(
             '[Background] Failed to handle action button click:',

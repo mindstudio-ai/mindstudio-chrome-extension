@@ -1,4 +1,4 @@
-import { ZIndexes } from '../../common/constants';
+import { ZIndexes } from '../../../shared/constants';
 
 export interface TooltipOptions {
   text: string;

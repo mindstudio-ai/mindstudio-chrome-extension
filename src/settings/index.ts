@@ -1,17 +1,15 @@
-import { AuthService } from '../common/auth.service';
+import { auth } from '../shared/services/auth';
 
 class SettingsManager {
   private static instance: SettingsManager;
   private status: HTMLElement | null;
   private authButton: HTMLElement | null;
   private authStatus: HTMLElement | null;
-  private authService: AuthService;
 
   private constructor() {
     this.status = document.getElementById('status');
     this.authButton = document.getElementById('authButton');
     this.authStatus = document.getElementById('authStatus');
-    this.authService = AuthService.getInstance();
     this.setupEventListeners();
     this.checkAuthState();
   }
@@ -30,7 +28,7 @@ class SettingsManager {
   }
 
   private async checkAuthState(): Promise<void> {
-    const isAuthenticated = await this.authService.isAuthenticated();
+    const isAuthenticated = await auth.isAuthenticated();
     this.updateAuthUI(isAuthenticated);
   }
 
@@ -49,15 +47,15 @@ class SettingsManager {
   }
 
   private async handleAuthClick(): Promise<void> {
-    const isAuthenticated = await this.authService.isAuthenticated();
+    const isAuthenticated = await auth.isAuthenticated();
 
     try {
       if (isAuthenticated) {
-        await this.authService.logout();
+        await auth.logout();
         this.updateAuthUI(false);
         this.showSuccess('Successfully logged out');
       } else {
-        await this.authService.login();
+        await auth.login();
       }
     } catch (error: unknown) {
       this.showError(

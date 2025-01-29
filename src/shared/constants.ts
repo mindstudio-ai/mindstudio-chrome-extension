@@ -6,12 +6,6 @@ export const RootUrl =
 
 export const THANK_YOU_PAGE = 'https://www.mindstudio.ai/extension/thank-you';
 
-export const StorageKeys = {
-  AUTH_TOKEN: `AuthToken_${Environment}`,
-  LAUNCHER_COLLAPSED: `LauncherCollapsed_${Environment}`,
-  LAUNCHER_APPS: `LauncherApps_${Environment}`,
-} as const;
-
 export const ZIndexes = {
   FLOATING_BUTTON: 999997,
   LAUNCHER: 999999,
@@ -33,11 +27,5 @@ export const FrameDimensions = {
   LAUNCHER: {
     VISUAL_WIDTH: 40,
     TOTAL_WIDTH: 340, // 40px visible + 300px for tooltip
-  },
-  PLAYER: {
-    WIDTH: 440,
-  },
-  AUTH: {
-    WIDTH: 440,
   },
 } as const;
