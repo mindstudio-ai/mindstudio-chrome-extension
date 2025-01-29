@@ -4,6 +4,7 @@ import { OrganizationData } from './organization';
 export interface Events {
   'auth/token_changed': {
     authToken: string;
+    organizationId: string;
   };
   'auth/login_completed': {
     token: string;

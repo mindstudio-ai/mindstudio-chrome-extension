@@ -3,12 +3,15 @@ import { Environment } from '../constants';
 // Define the value types
 type StorageValues = {
   AUTH_TOKEN: string | null;
-  LAUNCHER_APPS: Array<{
-    id: string;
-    name: string;
-    iconUrl: string;
-    extensionSupportedSites: string[];
-  }> | null;
+  LAUNCHER_APPS: Record<
+    string,
+    Array<{
+      id: string;
+      name: string;
+      iconUrl: string;
+      extensionSupportedSites: string[];
+    }>
+  > | null;
   LAUNCHER_COLLAPSED: boolean;
   SELECTED_ORGANIZATION: string | null;
   ORGANIZATIONS: Array<{
