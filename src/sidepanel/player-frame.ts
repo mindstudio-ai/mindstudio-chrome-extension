@@ -1,8 +1,8 @@
-import { RootUrl } from '../common/constants';
-import { WorkerLaunchPayload } from '../common/types';
-import { Frame } from '../shared/frame';
-import { frame, runtime } from '../shared/messaging';
-import { storage } from '../shared/storage';
+import { RootUrl } from '../shared/constants';
+import { WorkerLaunchPayload } from '../shared/types/events';
+import { Frame } from '../shared/services/frame';
+import { frame, runtime } from '../shared/services/messaging';
+import { storage } from '../shared/services/storage';
 
 export class PlayerFrame extends Frame {
   private pendingWorker: WorkerLaunchPayload | null = null;

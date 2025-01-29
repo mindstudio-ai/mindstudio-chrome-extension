@@ -1,4 +1,4 @@
-import { ElementIds, FrameDimensions, ZIndexes } from '../../common/constants';
+import { ElementIds, FrameDimensions, ZIndexes } from '../../shared/constants';
 import { Tooltip } from './Tooltip';
 
 export class LauncherContainer {

@@ -1,7 +1,7 @@
-import { RootUrl } from '../../common/constants';
-import { Frame } from '../../shared/frame';
-import { frame } from '../../shared/messaging';
-import { storage } from '../../shared/storage';
+import { RootUrl } from '../../shared/constants';
+import { Frame } from '../../shared/services/frame';
+import { frame } from '../../shared/services/messaging';
+import { storage } from '../../shared/services/storage';
 
 export class SyncFrame extends Frame {
   constructor() {

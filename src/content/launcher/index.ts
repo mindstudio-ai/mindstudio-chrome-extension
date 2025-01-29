@@ -1,10 +1,11 @@
-import { auth } from '../../shared/auth';
-import { AppData } from '../../common/types';
-import { runtime } from '../../shared/messaging';
-import { storage } from '../../shared/storage';
+import { auth } from '../../shared/services/auth';
+import { AppData } from '../../shared/types/app';
+import { runtime } from '../../shared/services/messaging';
+import { storage } from '../../shared/services/storage';
 import { DOMService } from '../dom.service';
 import { LauncherUI } from '../ui/LauncherUI';
 import { SyncFrame } from './sync-frame';
+import { filterAppsByUrl } from './url-filter';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -83,33 +84,8 @@ export class LauncherService {
     }
   }
 
-  private filterAppsByUrl(apps: AppData[]): AppData[] {
-    return apps.filter(({ extensionSupportedSites }) => {
-      if (extensionSupportedSites.length === 0 || !this.currentHostUrl) {
-        return true;
-      }
-
-      for (let i = 0; i < extensionSupportedSites.length; i += 1) {
-        const escapedPattern = extensionSupportedSites[i].replace(
-          /[-/\\^$+?.()|[\]{}]/g,
-          '\\$&',
-        );
-
-        const regexPattern = new RegExp(
-          `^${escapedPattern.replace(/\*/g, '.*')}$`,
-        );
-
-        const isValid = regexPattern.test(this.currentHostUrl);
-        if (!isValid) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }
-
   updateApps(apps: AppData[]): void {
-    this.apps = this.filterAppsByUrl(apps);
+    this.apps = filterAppsByUrl(apps, this.currentHostUrl);
     this.ui.updateApps(this.apps);
   }
 

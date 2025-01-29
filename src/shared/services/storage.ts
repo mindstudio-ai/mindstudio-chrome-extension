@@ -1,4 +1,4 @@
-import { Environment } from '../common/constants';
+import { Environment } from '../constants';
 
 // Define the value types
 type StorageValues = {

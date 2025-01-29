@@ -1,7 +1,7 @@
-import { auth } from '../shared/auth';
-import { RootUrl, THANK_YOU_PAGE } from '../common/constants';
-import { runtime } from '../shared/messaging';
-import { storage } from '../shared/storage';
+import { auth } from '../shared/services/auth';
+import { RootUrl, THANK_YOU_PAGE } from '../shared/constants';
+import { runtime } from '../shared/services/messaging';
+import { storage } from '../shared/services/storage';
 import { LauncherService } from './launcher';
 
 class ContentScript {

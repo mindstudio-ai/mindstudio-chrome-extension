@@ -1,4 +1,4 @@
-import { Events } from '../common/types';
+import { Events } from '../../shared/types/events';
 
 type Handler<T> = (
   payload: T,

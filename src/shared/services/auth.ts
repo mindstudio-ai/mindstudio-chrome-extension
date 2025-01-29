@@ -1,6 +1,6 @@
 import { storage } from './storage';
 import { runtime, frame } from './messaging';
-import { RootUrl } from '../common/constants';
+import { RootUrl } from '../constants';
 
 type LoginHandler = (token: string) => void | Promise<void>;
 

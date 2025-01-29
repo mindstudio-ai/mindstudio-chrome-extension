@@ -1,4 +1,4 @@
-import { auth } from '../shared/auth';
+import { auth } from '../shared/services/auth';
 
 class SettingsManager {
   private static instance: SettingsManager;

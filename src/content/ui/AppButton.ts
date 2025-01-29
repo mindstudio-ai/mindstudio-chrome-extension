@@ -1,5 +1,5 @@
-import { FrameDimensions } from '../../common/constants';
-import { AppData } from '../../common/types';
+import { FrameDimensions } from '../../shared/constants';
+import { AppData } from '../../shared/types/app';
 import { Tooltip } from './Tooltip';
 
 export class AppButton {

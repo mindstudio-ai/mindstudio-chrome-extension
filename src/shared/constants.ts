@@ -28,10 +28,4 @@ export const FrameDimensions = {
     VISUAL_WIDTH: 40,
     TOTAL_WIDTH: 340, // 40px visible + 300px for tooltip
   },
-  PLAYER: {
-    WIDTH: 440,
-  },
-  AUTH: {
-    WIDTH: 440,
-  },
 } as const;
