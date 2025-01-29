@@ -1,8 +1,8 @@
-import { AppButton } from './AppButton';
-import { CollapseButton } from './CollapseButton';
-import { LauncherContainer } from './LauncherContainer';
-import { Logo } from './Logo';
-import { AppData } from '../../shared/types/app';
+import { AppButton } from './app-button';
+import { CollapseButton } from './collapse';
+import { LauncherContainer } from './container';
+import { Logo } from './logo';
+import { AppData } from '../../../shared/types/app';
 
 export class LauncherUI {
   private container: LauncherContainer;

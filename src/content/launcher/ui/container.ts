@@ -1,5 +1,9 @@
-import { ElementIds, FrameDimensions, ZIndexes } from '../../shared/constants';
-import { Tooltip } from './Tooltip';
+import {
+  ElementIds,
+  FrameDimensions,
+  ZIndexes,
+} from '../../../shared/constants';
+import { Tooltip } from './tooltip';
 
 export class LauncherContainer {
   private element: HTMLElement;

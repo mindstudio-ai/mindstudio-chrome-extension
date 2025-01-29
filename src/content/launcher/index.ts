@@ -3,7 +3,7 @@ import { AppData } from '../../shared/types/app';
 import { runtime } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
 import { DOMService } from '../dom.service';
-import { LauncherUI } from '../ui/LauncherUI';
+import { LauncherUI } from './ui';
 import { SyncFrame } from './sync-frame';
 import { filterAppsByUrl } from './url-filter';
 

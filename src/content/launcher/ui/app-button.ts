@@ -1,6 +1,6 @@
-import { FrameDimensions } from '../../shared/constants';
-import { AppData } from '../../shared/types/app';
-import { Tooltip } from './Tooltip';
+import { FrameDimensions } from '../../../shared/constants';
+import { AppData } from '../../../shared/types/app';
+import { Tooltip } from './tooltip';
 
 export class AppButton {
   private container: HTMLElement;
