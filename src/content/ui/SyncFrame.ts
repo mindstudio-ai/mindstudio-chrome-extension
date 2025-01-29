@@ -1,6 +1,7 @@
 import { ElementIds, RootUrl, StorageKeys } from '../../common/constants';
 import { AppData } from '../../common/types';
 import { frame } from '../../shared/messaging';
+import { storage } from '../../shared/storage';
 
 export class SyncFrame {
   private frame: HTMLIFrameElement | null = null;
@@ -10,9 +11,9 @@ export class SyncFrame {
 
   constructor() {
     // Listen for storage changes to keep launcher in sync
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local' && changes[StorageKeys.AUTH_TOKEN]?.newValue) {
-        this.sendTokenToLauncher(changes[StorageKeys.AUTH_TOKEN].newValue);
+    storage.onChange('AUTH_TOKEN', (token) => {
+      if (token) {
+        this.sendTokenToLauncher(token);
       }
     });
   }
@@ -68,11 +69,9 @@ export class SyncFrame {
           return;
         }
 
-        chrome.storage.local
-          .set({ [StorageKeys.LAUNCHER_APPS]: apps })
-          .catch((error) => {
-            console.error('[MindStudio Extension] Error saving apps:', error);
-          });
+        storage.set('LAUNCHER_APPS', apps).catch((error) => {
+          console.error('[MindStudio Extension] Error saving apps:', error);
+        });
       },
     );
   }

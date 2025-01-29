@@ -136,13 +136,10 @@ class BackgroundService {
       if (tab.id) {
         try {
           // Get current state
-          const { [StorageKeys.LAUNCHER_COLLAPSED]: isCollapsed } =
-            await chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED);
+          const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
 
           // Toggle state
-          await chrome.storage.local.set({
-            [StorageKeys.LAUNCHER_COLLAPSED]: !isCollapsed,
-          });
+          await storage.set('LAUNCHER_COLLAPSED', !isCollapsed);
         } catch (error) {
           console.error(
             '[Background] Failed to handle action button click:',

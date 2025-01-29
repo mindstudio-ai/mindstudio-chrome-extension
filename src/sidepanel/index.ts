@@ -4,6 +4,8 @@ import {
   WorkerLaunchPayload,
 } from '../common/types';
 import { StorageKeys, RootUrl } from '../common/constants';
+import { storage } from '../shared/storage';
+import { runtime, frame } from '../shared/messaging';
 
 class SidePanelService {
   private static instance: SidePanelService;
@@ -51,17 +53,13 @@ class SidePanelService {
 
   private setupEventListeners(): void {
     // Listen for player loaded event
-    window.addEventListener('message', async (event) => {
-      if (event.data?._MindStudioEvent === '@@mindstudio/player/loaded') {
-        await this.handlePlayerLoaded();
-      }
+    frame.listen('player/loaded', async () => {
+      await this.handlePlayerLoaded();
     });
 
     // Listen for worker launch requests from background
-    chrome.runtime.onMessage.addListener((message: MindStudioEvent) => {
-      if (isEventOfType(message, 'player/init')) {
-        this.handleWorkerInit(message.payload);
-      }
+    runtime.listen('player/init', (payload: WorkerLaunchPayload) => {
+      this.handleWorkerInit(payload);
     });
   }
 
@@ -74,8 +72,7 @@ class SidePanelService {
 
     try {
       // Get auth token from storage
-      const { [StorageKeys.AUTH_TOKEN]: authToken } =
-        await chrome.storage.local.get(StorageKeys.AUTH_TOKEN);
+      const authToken = await storage.get('AUTH_TOKEN');
       if (!authToken) {
         console.error('No auth token available');
         return;
@@ -83,19 +80,10 @@ class SidePanelService {
 
       // Send auth token to player
       if (this.player?.contentWindow) {
-        this.player.contentWindow.postMessage(
-          {
-            _MindStudioEvent: '@@mindstudio/auth/token_changed',
-            payload: { authToken },
-          },
-          '*',
-        );
+        frame.send('player-frame', 'auth/token_changed', { authToken });
 
         // Notify background we're ready for workers
-        chrome.runtime.sendMessage({
-          _MindStudioEvent: '@@mindstudio/sidepanel/ready',
-          payload: undefined,
-        });
+        await runtime.send('sidepanel/ready', undefined);
       }
     } catch (error) {
       console.error('Failed to handle player loaded:', error);
@@ -122,18 +110,12 @@ class SidePanelService {
 
     // Now send the worker init message
     if (this.player?.contentWindow) {
-      this.player.contentWindow.postMessage(
-        {
-          _MindStudioEvent: '@@mindstudio/player/load_worker',
-          payload: {
-            id: payload.appId,
-            name: payload.appName,
-            iconUrl: payload.appIcon,
-            launchVariables: payload.launchVariables,
-          },
-        },
-        '*',
-      );
+      frame.send('player-frame', 'player/load_worker', {
+        id: payload.appId,
+        name: payload.appName,
+        iconUrl: payload.appIcon,
+        launchVariables: payload.launchVariables,
+      });
     }
   }
 }
