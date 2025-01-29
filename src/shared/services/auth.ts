@@ -45,6 +45,25 @@ if (window.location.pathname === '/_extension/login') {
     storage.set('AUTH_TOKEN', token);
     storage.set('ORGANIZATIONS', organizations);
 
+    // Handle organization selection
+    const currentSelectedOrg = await storage.get('SELECTED_ORGANIZATION');
+    if (organizations.length === 0) {
+      // Reset selection if there are no organizations
+      await storage.remove(['SELECTED_ORGANIZATION']);
+    } else if (currentSelectedOrg) {
+      // Check if the currently selected org still exists in the new list
+      const orgExists = organizations.some(
+        (org) => org.id === currentSelectedOrg,
+      );
+      if (!orgExists) {
+        // If not, select the first organization
+        await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
+      }
+    } else {
+      // If no organization was selected before, select the first one
+      await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
+    }
+
     // Close window after delay
     setTimeout(() => window.close(), 3000);
   });
@@ -72,7 +91,7 @@ export const auth = {
 
   async logout(): Promise<void> {
     await storage.set('LAUNCHER_COLLAPSED', true);
-    await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS']);
+    await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS', 'ORGANIZATIONS']);
   },
 
   onLoginComplete(handler: LoginHandler): () => void {
