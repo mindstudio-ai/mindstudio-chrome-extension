@@ -46,6 +46,15 @@ export const pageUtils = {
     cleanNode(clone);
     return clone.innerHTML;
   },
+
+  /**
+   * Gets a cleaned version of the page's text content.
+   */
+  getCleanTextContent(): string {
+    const clone = document.body.cloneNode(true) as HTMLElement;
+    cleanNode(clone);
+    return clone.innerText;
+  },
 };
 
 // Private helper

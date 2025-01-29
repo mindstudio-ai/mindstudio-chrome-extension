@@ -87,8 +87,8 @@ export class LauncherService {
   private async handleAppClick(app: AppData): Promise<void> {
     try {
       const userSelection = pageUtils.getSelectedContent();
-      const rawHtml = document.documentElement.outerHTML;
-      const fullText = document.body.innerText;
+      const rawHtml = pageUtils.cleanDOM();
+      const fullText = pageUtils.getCleanTextContent();
 
       await runtime.send('player/launch_worker', {
         appId: app.id,
