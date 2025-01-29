@@ -2,14 +2,13 @@ import { auth } from '../../shared/services/auth';
 import { AppData } from '../../shared/types/app';
 import { runtime } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
-import { DOMService } from '../dom.service';
+import { pageUtils } from '../page-utils';
 import { LauncherUI } from './ui';
 import { SyncFrame } from './sync-frame';
 import { filterAppsByUrl } from './url-filter';
 
 export class LauncherService {
   private static instance: LauncherService;
-  private domService = DOMService.getInstance();
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
@@ -64,7 +63,7 @@ export class LauncherService {
 
   private async handleAppClick(app: AppData): Promise<void> {
     try {
-      const userSelection = this.domService.getSelectedContent();
+      const userSelection = pageUtils.getSelectedContent();
       const rawHtml = document.documentElement.outerHTML;
       const fullText = document.body.innerText;
 
