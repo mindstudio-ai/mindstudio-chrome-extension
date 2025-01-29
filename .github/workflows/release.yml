@@ -33,10 +33,12 @@ jobs:
           zip -r ../mindstudio-chrome-extension.zip ./*
           cd ..
 
-      - name: Generate version
+      - name: Get version from package.json with timestamp
         id: version
         run: |
-          echo "version=$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_OUTPUT
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TIMESTAMP=$(date +'%Y%m%d%H%M')
+          echo "version=$PKG_VERSION-$TIMESTAMP" >> $GITHUB_OUTPUT
 
       - name: Create Release
         env:
