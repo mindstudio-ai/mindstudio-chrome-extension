@@ -1,4 +1,4 @@
-import { StorageKeys } from '../common/constants';
+import { Environment } from '../common/constants';
 
 // Define the value types
 type StorageValues = {
@@ -11,6 +11,16 @@ type StorageValues = {
   }> | null;
   LAUNCHER_COLLAPSED: boolean;
 };
+
+// Move key generation here
+const createStorageKey = (key: string) => `${key}_${Environment}` as const;
+
+// Define storage keys
+const StorageKeys = {
+  AUTH_TOKEN: createStorageKey('AuthToken'),
+  LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
+  LAUNCHER_APPS: createStorageKey('LauncherApps'),
+} as const;
 
 export const storage = {
   async get<K extends keyof StorageValues>(key: K): Promise<StorageValues[K]> {
