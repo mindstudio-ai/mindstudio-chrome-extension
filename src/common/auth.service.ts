@@ -1,5 +1,5 @@
 import { storage } from '../shared/storage';
-import { runtime } from '../shared/messaging';
+import { runtime, frame } from '../shared/messaging';
 import { RootUrl } from './constants';
 
 export class AuthService {
@@ -9,22 +9,13 @@ export class AuthService {
   > = [];
 
   private constructor() {
-    // Listen for token generation
-    runtime.listen('auth/token_generated', async ({ token }) => {
+    // Listen for token changes via storage
+    storage.onChange('AUTH_TOKEN', async (token) => {
       if (!token) {
         return;
       }
 
-      // Set the token first
-      await this.setToken(token);
-
-      // If we're in the login popup, just close
-      if (window.opener) {
-        window.close();
-        return;
-      }
-
-      // Otherwise, notify completion handlers
+      // Notify completion handlers
       for (const handler of this.loginCompletionHandlers) {
         try {
           await handler(token);
@@ -32,6 +23,18 @@ export class AuthService {
           console.error('[AuthService] Error in completion handler:', error);
         }
       }
+    });
+
+    // Listen for auth token generation via window message
+    frame.listen('auth/token_generated', async ({ token }) => {
+      if (!token) {
+        return;
+      }
+
+      // Forward token to background
+      await runtime.send('auth/token_generated', { token });
+      // Close this window after a delay
+      setTimeout(() => window.close(), 3000);
     });
   }
 
@@ -57,10 +60,6 @@ export class AuthService {
     return storage.get('AUTH_TOKEN');
   }
 
-  async setToken(token: string): Promise<void> {
-    return storage.set('AUTH_TOKEN', token);
-  }
-
   async login(): Promise<void> {
     window.open(
       `${RootUrl}/_extension/login?__displayContext=extension`,
@@ -74,14 +73,6 @@ export class AuthService {
 
     // Clear auth items
     await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS']);
-
-    // Reload all tabs where the extension is active
-    const tabs = await chrome.tabs.query({});
-    for (const tab of tabs) {
-      if (tab.url?.startsWith('http')) {
-        await chrome.tabs.reload(tab.id!);
-      }
-    }
   }
 
   async ensureAuthenticated(): Promise<string> {

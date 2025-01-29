@@ -1,4 +1,6 @@
 import { StorageKeys, THANK_YOU_PAGE } from '../common/constants';
+import { storage } from '../shared/storage';
+import { runtime } from '../shared/messaging';
 
 class BackgroundService {
   private static instance: BackgroundService;
@@ -12,6 +14,15 @@ class BackgroundService {
     this.setupStorageListeners();
     this.setupInstallationHandler();
     this.setupActionButtonListener();
+
+    // Listen for auth token generation
+    runtime.listen('auth/token_generated', async ({ token }) => {
+      if (!token) {
+        return;
+      }
+      // Just store the token, storage listeners will handle notification
+      await storage.set('AUTH_TOKEN', token);
+    });
   }
 
   static getInstance(): BackgroundService {
