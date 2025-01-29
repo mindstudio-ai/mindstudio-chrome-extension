@@ -37,12 +37,13 @@ function initializeStorageListener() {
 
 // Setup frame listener immediately if we're in the login window
 if (window.location.pathname === '/_extension/login') {
-  frame.listen('auth/token_generated', async ({ token }) => {
+  frame.listen('auth/login_completed', async ({ token, organizations }) => {
     if (!token) {
       return;
     }
 
     storage.set('AUTH_TOKEN', token);
+    storage.set('ORGANIZATIONS', organizations);
 
     // Close window after delay
     setTimeout(() => window.close(), 3000);

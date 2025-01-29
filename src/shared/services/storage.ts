@@ -10,16 +10,23 @@ type StorageValues = {
     extensionSupportedSites: string[];
   }> | null;
   LAUNCHER_COLLAPSED: boolean;
+  SELECTED_ORGANIZATION: string | null;
+  ORGANIZATIONS: Array<{
+    id: string;
+    name: string;
+  }> | null;
 };
 
 // Move key generation here
 const createStorageKey = (key: string) => `${key}_${Environment}` as const;
 
 // Define storage keys
-const StorageKeys = {
+const StorageKeys: Record<keyof StorageValues, string> = {
   AUTH_TOKEN: createStorageKey('AuthToken'),
   LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
+  SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
+  ORGANIZATIONS: createStorageKey('Organizations'),
 } as const;
 
 export const storage = {
