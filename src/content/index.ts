@@ -1,11 +1,10 @@
-import { AuthService } from '../common/auth.service';
+import { auth } from '../shared/auth';
 import { RootUrl, THANK_YOU_PAGE } from '../common/constants';
 import { runtime } from '../shared/messaging';
 import { storage } from '../shared/storage';
 import { LauncherService } from './launcher.service';
 
 class ContentScript {
-  private authService = AuthService.getInstance();
   private launcherService = LauncherService.getInstance();
 
   private setupEventHandlers(): void {
@@ -16,7 +15,7 @@ class ContentScript {
     });
 
     // Register handler for login completion
-    this.authService.onLoginComplete(async (token) => {
+    auth.onLoginComplete(async (token) => {
       console.log('[ContentScript] Login completed, handling UI updates');
       try {
         // Create a promise that resolves when apps are updated
@@ -60,7 +59,7 @@ class ContentScript {
     // If we're on the thank you page, trigger authentication
     if (window.location.href === THANK_YOU_PAGE) {
       try {
-        await this.authService.ensureAuthenticated();
+        await auth.ensureAuthenticated();
       } catch (error) {
         console.error('[ContentScript] Authentication error:', error);
       }

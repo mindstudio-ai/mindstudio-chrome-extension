@@ -1,4 +1,4 @@
-import { AuthService } from '../common/auth.service';
+import { auth } from '../shared/auth';
 import { AppData } from '../common/types';
 import { runtime } from '../shared/messaging';
 import { storage } from '../shared/storage';
@@ -12,7 +12,6 @@ import { SyncFrame } from './ui/SyncFrame';
 export class LauncherService {
   private static instance: LauncherService;
   private domService = DOMService.getInstance();
-  private authService = AuthService.getInstance();
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
@@ -49,7 +48,7 @@ export class LauncherService {
     await this.loadAppsFromStorage();
 
     // Initialize sync frame if authenticated
-    const token = await this.authService.getToken();
+    const token = await auth.getToken();
     if (token) {
       await this.syncFrame.inject(token);
     }
@@ -86,8 +85,7 @@ export class LauncherService {
 
     // Set up expand click handler
     this.container.setExpandClickHandler(async () => {
-      await this.authService.ensureAuthenticated();
-      await storage.set('LAUNCHER_COLLAPSED', false);
+      await this.handleExpand();
     });
   }
 
@@ -179,5 +177,10 @@ export class LauncherService {
 
   async reinjectSyncFrame(token: string): Promise<void> {
     await this.syncFrame.reinject(token);
+  }
+
+  private async handleExpand(): Promise<void> {
+    await auth.ensureAuthenticated();
+    await storage.set('LAUNCHER_COLLAPSED', false);
   }
 }
