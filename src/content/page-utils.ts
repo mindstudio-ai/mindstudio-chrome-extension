@@ -1,3 +1,5 @@
+import { isMindStudioElement } from '../shared/utils/dom';
+
 /**
  * Utilities for interacting with the current web page.
  * These utilities only work in the content script context.
@@ -50,6 +52,13 @@ export const pageUtils = {
 function cleanNode(node: Node): void {
   if (node.nodeType === Node.ELEMENT_NODE) {
     const el = node as HTMLElement;
+
+    // Remove MindStudio elements
+    if (isMindStudioElement(el.id)) {
+      el.remove();
+      return;
+    }
+
     const tagsToRemove = ['script', 'iframe', 'svg'];
     if (tagsToRemove.includes(el.tagName.toLowerCase())) {
       el.remove();

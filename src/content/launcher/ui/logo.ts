@@ -1,4 +1,10 @@
+import { createElementId } from '../../../shared/utils/dom';
+
 export class Logo {
+  static readonly ElementId = {
+    LOGO: createElementId('LauncherLogo'),
+  };
+
   private element: HTMLElement;
 
   constructor() {
@@ -17,6 +23,7 @@ export class Logo {
 
   private createLogoElement(): HTMLElement {
     const logo = document.createElement('div');
+    logo.id = Logo.ElementId.LOGO;
     logo.innerHTML = this.createLogoSvg();
     logo.style.cssText = `
       padding: 8px 0;

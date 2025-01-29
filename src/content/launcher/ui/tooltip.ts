@@ -1,4 +1,5 @@
 import { ZIndexes } from '../../../shared/constants';
+import { createElementId } from '../../../shared/utils/dom';
 
 export interface TooltipOptions {
   text: string;
@@ -6,6 +7,10 @@ export interface TooltipOptions {
 }
 
 export class Tooltip {
+  static readonly ElementId = {
+    TOOLTIP: createElementId('LauncherTooltip'),
+  };
+
   private element: HTMLElement;
 
   constructor(options: TooltipOptions) {
@@ -17,6 +22,7 @@ export class Tooltip {
     rightOffset = 48,
   }: TooltipOptions): HTMLElement {
     const tooltip = document.createElement('div');
+    tooltip.id = Tooltip.ElementId.TOOLTIP;
     tooltip.style.cssText = `
       opacity: 0;
       display: flex;

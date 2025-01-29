@@ -5,7 +5,7 @@ export interface FrameOptions {
   hidden?: boolean;
 }
 
-export class Frame {
+export abstract class Frame {
   protected element: HTMLIFrameElement;
   protected isLoaded = false;
 
