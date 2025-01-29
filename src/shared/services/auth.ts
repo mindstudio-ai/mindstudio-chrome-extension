@@ -42,6 +42,7 @@ if (window.location.pathname === '/_extension/login') {
       return;
     }
 
+    console.info('[MindStudio][Auth] Login completed, storing credentials');
     storage.set('AUTH_TOKEN', token);
     storage.set('ORGANIZATIONS', organizations);
 
@@ -57,10 +58,14 @@ if (window.location.pathname === '/_extension/login') {
       );
       if (!orgExists) {
         // If not, select the first organization
+        console.info(
+          '[MindStudio][Auth] Updating to first available organization',
+        );
         await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
       }
     } else {
       // If no organization was selected before, select the first one
+      console.info('[MindStudio][Auth] Setting initial organization');
       await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
     }
 
@@ -82,7 +87,7 @@ export const auth = {
   async login(): Promise<void> {
     // Only need storage listener for completion handlers
     initializeStorageListener();
-
+    console.info('[MindStudio][Auth] Opening login window');
     window.open(
       `${RootUrl}/_extension/login?__displayContext=extension`,
       '_blank',
@@ -90,6 +95,7 @@ export const auth = {
   },
 
   async logout(): Promise<void> {
+    console.info('[MindStudio][Auth] Logging out');
     await storage.set('LAUNCHER_COLLAPSED', true);
     await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS', 'ORGANIZATIONS']);
   },

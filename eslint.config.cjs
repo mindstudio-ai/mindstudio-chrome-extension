@@ -30,7 +30,7 @@ module.exports = [
         'warn',
         { argsIgnorePattern: '^_' },
       ],
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
     },
   },
   // Ignore patterns

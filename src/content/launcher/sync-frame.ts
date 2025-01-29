@@ -25,7 +25,9 @@ export class SyncFrame extends Frame {
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
+
       if (token && organizationId) {
+        console.info('[MindStudio][Launcher] Authenticating sync frame');
         frame.send(SyncFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
@@ -37,6 +39,9 @@ export class SyncFrame extends Frame {
     frame.listen('launcher/apps_updated', async ({ apps }) => {
       const selectedOrg = await storage.get('SELECTED_ORGANIZATION');
       if (!selectedOrg) {
+        console.info(
+          '[MindStudio][Launcher] No organization selected, skipping apps update',
+        );
         return;
       }
 
@@ -44,6 +49,10 @@ export class SyncFrame extends Frame {
       await storage.set('LAUNCHER_APPS', {
         ...existingApps,
         [selectedOrg]: apps,
+      });
+      console.info('[MindStudio][Launcher] Updated apps list:', {
+        organizationId: selectedOrg,
+        count: apps.length,
       });
     });
 
@@ -57,7 +66,9 @@ export class SyncFrame extends Frame {
   private async sendAuthToken(): Promise<void> {
     const token = await storage.get('AUTH_TOKEN');
     const organizationId = await storage.get('SELECTED_ORGANIZATION');
+
     if (token && organizationId && this.isReady()) {
+      console.info('[MindStudio][Launcher] Updating auth token');
       frame.send(SyncFrame.ElementId.FRAME, 'auth/token_changed', {
         authToken: token,
         organizationId,
@@ -65,5 +76,7 @@ export class SyncFrame extends Frame {
     }
   }
 
-  protected onFrameLoad(): void {}
+  protected onFrameLoad(): void {
+    console.info('[MindStudio][Launcher] Sync frame loaded');
+  }
 }

@@ -37,12 +37,20 @@ class BackgroundService {
         sender?: chrome.runtime.MessageSender,
       ) => {
         if (!sender?.tab?.id) {
+          console.info(
+            '[MindStudio][Background] Worker launch failed: No tab ID',
+          );
           return;
         }
 
         try {
           // Store worker details
           this.pendingWorker = payload;
+          console.info('[MindStudio][Background] Launching worker:', {
+            appId: payload.appId,
+            appName: payload.appName,
+            tabId: sender.tab.id,
+          });
 
           // Open side panel
           await chrome.sidePanel.open({ tabId: sender.tab.id });
@@ -53,7 +61,7 @@ class BackgroundService {
             this.pendingWorker = null;
           }
         } catch (error) {
-          console.error('[Background] Failed to handle worker launch:', error);
+          console.error('[MindStudio][Background] Launch failed:', error);
         }
       },
     );
@@ -62,6 +70,10 @@ class BackgroundService {
     runtime.listen('sidepanel/ready', () => {
       this.isSidePanelReady = true;
       if (this.pendingWorker) {
+        console.info('[MindStudio][Background] Initializing pending worker:', {
+          appId: this.pendingWorker.appId,
+          appName: this.pendingWorker.appName,
+        });
         runtime.send('player/init', this.pendingWorker);
         this.pendingWorker = null;
       }
@@ -105,6 +117,7 @@ class BackgroundService {
       if (port.name === 'sidepanel') {
         // Reset state when sidepanel disconnects
         port.onDisconnect.addListener(() => {
+          console.info('[MindStudio][Background] Sidepanel disconnected');
           this.isSidePanelReady = false;
         });
       }
@@ -114,7 +127,7 @@ class BackgroundService {
   private setupInstallationHandler(): void {
     chrome.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'install') {
-        // Open thank you page after installation
+        console.info('[MindStudio][Background] Extension installed');
         chrome.tabs.create({ url: THANK_YOU_PAGE });
       }
     });
@@ -124,16 +137,10 @@ class BackgroundService {
     chrome.action.onClicked.addListener(async (tab) => {
       if (tab.id) {
         try {
-          // Get current state
           const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
-
-          // Toggle state
           await storage.set('LAUNCHER_COLLAPSED', !isCollapsed);
         } catch (error) {
-          console.error(
-            '[Background] Failed to handle action button click:',
-            error,
-          );
+          console.error('[MindStudio][Background] Toggle failed:', error);
         }
       }
     });

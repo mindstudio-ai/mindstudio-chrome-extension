@@ -8,10 +8,18 @@ type Handler<T> = (
 // Simple message bus for runtime messages
 export const runtime = {
   send<K extends keyof Events>(type: K, payload: Events[K]): Promise<void> {
-    return chrome.runtime.sendMessage({
-      _MindStudioEvent: `@@mindstudio/${type}`,
-      payload,
-    });
+    return chrome.runtime
+      .sendMessage({
+        _MindStudioEvent: `@@mindstudio/${type}`,
+        payload,
+      })
+      .catch((error) => {
+        console.error('[MindStudio][Messaging] Runtime message failed:', {
+          type,
+          error,
+        });
+        throw error;
+      });
   },
 
   listen<K extends keyof Events>(type: K, handler: Handler<Events[K]>) {
@@ -34,7 +42,12 @@ export const frame = {
     payload: Events[K],
   ): void {
     const frame = document.getElementById(frameId) as HTMLIFrameElement;
-    frame?.contentWindow?.postMessage(
+    if (!frame?.contentWindow) {
+      console.error('[MindStudio][Messaging] Frame not found:', frameId);
+      return;
+    }
+
+    frame.contentWindow.postMessage(
       {
         _MindStudioEvent: `@@mindstudio/${type}`,
         payload,
