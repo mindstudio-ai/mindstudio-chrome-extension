@@ -2,7 +2,7 @@ import { auth } from '../shared/auth';
 import { RootUrl, THANK_YOU_PAGE } from '../common/constants';
 import { runtime } from '../shared/messaging';
 import { storage } from '../shared/storage';
-import { LauncherService } from './launcher.service';
+import { LauncherService } from './launcher';
 
 class ContentScript {
   private launcherService = LauncherService.getInstance();

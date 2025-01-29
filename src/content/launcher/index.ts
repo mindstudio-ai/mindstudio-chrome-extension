@@ -1,13 +1,10 @@
-import { auth } from '../shared/auth';
-import { AppData } from '../common/types';
-import { runtime } from '../shared/messaging';
-import { storage } from '../shared/storage';
-import { DOMService } from './dom.service';
-import { AppButton } from './ui/AppButton';
-import { CollapseButton } from './ui/CollapseButton';
-import { LauncherContainer } from './ui/LauncherContainer';
-import { Logo } from './ui/Logo';
-import { SyncFrame } from './launcher/sync-frame';
+import { auth } from '../../shared/auth';
+import { AppData } from '../../common/types';
+import { runtime } from '../../shared/messaging';
+import { storage } from '../../shared/storage';
+import { DOMService } from '../dom.service';
+import { LauncherUI } from '../ui/LauncherUI';
+import { SyncFrame } from './sync-frame';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -15,13 +12,8 @@ export class LauncherService {
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
-  // UI Components
-  private container!: LauncherContainer;
-  private collapseButton!: CollapseButton;
-  private logo!: Logo;
+  private ui!: LauncherUI;
   private syncFrame!: SyncFrame;
-  private appButtons: Map<string, AppButton> = new Map();
-
   private isInitialized = false;
 
   static getInstance(): LauncherService {
@@ -50,37 +42,23 @@ export class LauncherService {
     // Set up storage listeners
     storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
       console.log('[LauncherService] Collapsed state changed:', isCollapsed);
-      this.container.setCollapsedState(isCollapsed);
-      this.collapseButton.setVisibility(!isCollapsed);
+      this.ui.setCollapsed(isCollapsed ?? true);
     });
 
     // Set initial state from storage
     const initialCollapsed = (await storage.get('LAUNCHER_COLLAPSED')) ?? true;
-    this.container.setCollapsedState(initialCollapsed);
-    this.collapseButton.setVisibility(!initialCollapsed);
+    this.ui.setCollapsed(initialCollapsed);
   }
 
   private async setupComponents(): Promise<void> {
     // Create UI components
-    this.container = new LauncherContainer();
-    this.collapseButton = new CollapseButton(async () => {
-      await storage.set('LAUNCHER_COLLAPSED', true);
-    });
-    this.logo = new Logo();
+    this.ui = new LauncherUI(
+      (app) => this.handleAppClick(app),
+      async () => this.handleCollapse(),
+      async () => this.handleExpand(),
+    );
+
     this.syncFrame = new SyncFrame();
-
-    // Add components to container
-    const inner = this.container.getInnerElement();
-    inner.appendChild(this.collapseButton.getElement());
-    inner.appendChild(this.logo.getElement());
-
-    // Add container to document
-    document.body.appendChild(this.container.getElement());
-
-    // Set up expand click handler
-    this.container.setExpandClickHandler(async () => {
-      await this.handleExpand();
-    });
   }
 
   private async handleAppClick(app: AppData): Promise<void> {
@@ -132,36 +110,7 @@ export class LauncherService {
 
   updateApps(apps: AppData[]): void {
     this.apps = this.filterAppsByUrl(apps);
-    this.updateAppButtons();
-  }
-
-  private updateAppButtons(): void {
-    const appsContainer = this.container.getAppsContainer();
-
-    // Create a map of existing app buttons by app ID
-    const existingButtons = new Map(this.appButtons);
-    this.appButtons.clear();
-
-    // Update or create app buttons
-    this.apps.forEach((app) => {
-      const existingButton = existingButtons.get(app.id);
-      if (existingButton) {
-        existingButtons.delete(app.id);
-        existingButton.updateApp(app);
-        this.appButtons.set(app.id, existingButton);
-      } else {
-        const newButton = new AppButton(app, (app) => this.handleAppClick(app));
-        appsContainer.appendChild(newButton.getElement());
-        this.container.addTooltip(newButton.getTooltip());
-        this.appButtons.set(app.id, newButton);
-      }
-    });
-
-    // Remove any remaining buttons that are no longer needed
-    existingButtons.forEach((button) => {
-      button.getElement().remove();
-      button.getTooltip().remove();
-    });
+    this.ui.updateApps(this.apps);
   }
 
   private async loadAppsFromStorage(): Promise<void> {
@@ -172,5 +121,9 @@ export class LauncherService {
   private async handleExpand(): Promise<void> {
     await auth.ensureAuthenticated();
     await storage.set('LAUNCHER_COLLAPSED', false);
+  }
+
+  private async handleCollapse(): Promise<void> {
+    await storage.set('LAUNCHER_COLLAPSED', true);
   }
 }
