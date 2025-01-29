@@ -1,46 +1,38 @@
 import { storage } from '../shared/storage';
+import { runtime } from '../shared/messaging';
 import { RootUrl } from './constants';
-import { MessagingService } from './messaging.service';
 
 export class AuthService {
   private static instance: AuthService;
-  private messagingService: MessagingService;
   private loginCompletionHandlers: Array<
     (token: string) => void | Promise<void>
   > = [];
 
   private constructor() {
-    this.messagingService = MessagingService.getInstance();
-    this.setupMessageHandlers();
-  }
+    // Listen for token generation
+    runtime.listen('auth/token_generated', async ({ token }) => {
+      if (!token) {
+        return;
+      }
 
-  private setupMessageHandlers(): void {
-    this.messagingService.subscribe(
-      'auth/token_generated',
-      async ({ token }) => {
-        if (!token) {
-          return;
+      // Set the token first
+      await this.setToken(token);
+
+      // If we're in the login popup, just close
+      if (window.opener) {
+        window.close();
+        return;
+      }
+
+      // Otherwise, notify completion handlers
+      for (const handler of this.loginCompletionHandlers) {
+        try {
+          await handler(token);
+        } catch (error) {
+          console.error('[AuthService] Error in completion handler:', error);
         }
-
-        // Set the token first
-        await this.setToken(token);
-
-        // If we're in the login popup, just close
-        if (window.opener) {
-          window.close();
-          return;
-        }
-
-        // Otherwise, we're in a content script receiving the token
-        for (const handler of this.loginCompletionHandlers) {
-          try {
-            await handler(token);
-          } catch (error) {
-            console.error('[AuthService] Error in completion handler:', error);
-          }
-        }
-      },
-    );
+      }
+    });
   }
 
   public onLoginComplete(
