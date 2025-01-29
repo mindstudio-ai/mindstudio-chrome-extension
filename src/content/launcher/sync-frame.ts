@@ -2,11 +2,16 @@ import { RootUrl } from '../../shared/constants';
 import { Frame } from '../../shared/services/frame';
 import { frame } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
+import { createElementId } from '../../shared/utils/dom';
 
 export class SyncFrame extends Frame {
+  static readonly ElementId = {
+    FRAME: createElementId('LauncherSync'),
+  };
+
   constructor() {
     super({
-      id: 'sync-frame',
+      id: SyncFrame.ElementId.FRAME,
       src: `${RootUrl}/_extension/launcher?__displayContext=extension`,
       hidden: true,
     });
@@ -21,7 +26,7 @@ export class SyncFrame extends Frame {
       const token = await storage.get('AUTH_TOKEN');
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
       if (token && organizationId) {
-        frame.send('sync-frame', 'auth/token_changed', {
+        frame.send(SyncFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
         });
@@ -53,7 +58,7 @@ export class SyncFrame extends Frame {
     const token = await storage.get('AUTH_TOKEN');
     const organizationId = await storage.get('SELECTED_ORGANIZATION');
     if (token && organizationId && this.isReady()) {
-      frame.send('sync-frame', 'auth/token_changed', {
+      frame.send(SyncFrame.ElementId.FRAME, 'auth/token_changed', {
         authToken: token,
         organizationId,
       });

@@ -3,17 +3,30 @@ import { WorkerLaunchPayload } from '../shared/types/events';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import { createElementId } from '../shared/utils/dom';
 
 export class PlayerFrame extends Frame {
+  static readonly ElementId = {
+    FRAME: createElementId('PlayerFrame'),
+  };
+
   private pendingWorker: WorkerLaunchPayload | null = null;
   private isFirstLoad = true;
 
   constructor(container: HTMLElement) {
     super({
-      id: 'player-frame',
+      id: PlayerFrame.ElementId.FRAME,
       src: `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`,
       container,
     });
+
+    // Add frame styles
+    this.element.style.cssText = `
+      width: 100%;
+      height: 100%;
+      border: none;
+      overflow: hidden;
+    `;
 
     this.setupEventListeners();
   }
@@ -27,7 +40,7 @@ export class PlayerFrame extends Frame {
       const token = await storage.get('AUTH_TOKEN');
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
       if (token && organizationId) {
-        frame.send('player-frame', 'auth/token_changed', {
+        frame.send(PlayerFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
         });
@@ -50,7 +63,7 @@ export class PlayerFrame extends Frame {
     storage.onChange('AUTH_TOKEN', async (token) => {
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
       if (organizationId && token && this.isReady()) {
-        frame.send('player-frame', 'auth/token_changed', {
+        frame.send(PlayerFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
         });
@@ -76,7 +89,7 @@ export class PlayerFrame extends Frame {
       return;
     }
 
-    frame.send('player-frame', 'player/load_worker', {
+    frame.send(PlayerFrame.ElementId.FRAME, 'player/load_worker', {
       id: payload.appId,
       name: payload.appName,
       iconUrl: payload.appIcon,

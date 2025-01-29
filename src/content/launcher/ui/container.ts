@@ -1,11 +1,14 @@
-import {
-  ElementIds,
-  FrameDimensions,
-  ZIndexes,
-} from '../../../shared/constants';
+import { FrameDimensions, ZIndexes } from '../../../shared/constants';
+import { createElementId } from '../../../shared/utils/dom';
 import { Tooltip } from './tooltip';
 
 export class LauncherContainer {
+  static readonly ElementId = {
+    CONTAINER: createElementId('Launcher'),
+    INNER: createElementId('LauncherInner'),
+    APPS_CONTAINER: createElementId('LauncherAppsContainer'),
+  };
+
   private element: HTMLElement;
   private appsContainer: HTMLElement;
   private settingsTooltip: Tooltip;
@@ -21,7 +24,7 @@ export class LauncherContainer {
 
   private createLauncherElement(): HTMLElement {
     const launcher = document.createElement('div');
-    launcher.id = ElementIds.LAUNCHER;
+    launcher.id = LauncherContainer.ElementId.CONTAINER;
     launcher.style.cssText = `
       position: fixed;
       bottom: 128px;
@@ -33,6 +36,7 @@ export class LauncherContainer {
     `;
 
     const inner = document.createElement('div');
+    inner.id = LauncherContainer.ElementId.INNER;
     inner.style.cssText = `
       margin-left: auto;
       width: 48px;
@@ -58,6 +62,7 @@ export class LauncherContainer {
 
   private createAppsContainer(): HTMLElement {
     const container = document.createElement('div');
+    container.id = LauncherContainer.ElementId.APPS_CONTAINER;
     container.className = 'apps-container';
     container.style.cssText = `
       display: flex;

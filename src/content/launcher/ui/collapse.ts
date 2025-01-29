@@ -1,4 +1,10 @@
+import { createElementId } from '../../../shared/utils/dom';
+
 export class CollapseButton {
+  static readonly ElementId = {
+    BUTTON: createElementId('LauncherCollapseButton'),
+  };
+
   private button: HTMLElement;
 
   constructor(onClickHandler: () => void) {
@@ -7,6 +13,7 @@ export class CollapseButton {
 
   private createButton(onClickHandler: () => void): HTMLElement {
     const button = document.createElement('button');
+    button.id = CollapseButton.ElementId.BUTTON;
     button.style.cssText = `
       display: flex;
       align-items: center;

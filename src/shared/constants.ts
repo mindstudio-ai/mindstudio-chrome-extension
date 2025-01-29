@@ -13,14 +13,7 @@ export const ZIndexes = {
   AUTH: 999998,
 } as const;
 
-export const ElementIds = {
-  FLOATING_BUTTON: '__MindStudioFloatingButton',
-  LAUNCHER: '__MindStudioLauncher',
-  PLAYER: '__MindStudioPlayer',
-  AUTH: '__MindStudioAuth',
-  CONTENT_WRAPPER: '__MindStudioContentWrapper',
-  LAUNCHER_SYNC: '__MindStudioLauncherSync',
-} as const;
+export const MINDSTUDIO_ID_PREFIX = '__MindStudioExtension_';
 
 // Add frame dimensions
 export const FrameDimensions = {
