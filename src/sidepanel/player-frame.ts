@@ -1,9 +1,10 @@
-import { RootUrl } from '../shared/constants';
+import { RootUrl, QueryParams } from '../shared/constants';
 import { WorkerLaunchPayload } from '../shared/types/events';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
 import { createElementId } from '../shared/utils/dom';
+import { removeQueryParam } from '../shared/utils/url';
 
 export class PlayerFrame extends Frame {
   static readonly ElementId = {
@@ -101,6 +102,7 @@ export class PlayerFrame extends Frame {
 
   reset(): void {
     this.setLoaded(false);
-    this.element.src = this.element.src;
+    const cleanedUrl = removeQueryParam(this.element.src, QueryParams.VERSION);
+    this.element.src = this.appendVersionToUrl(cleanedUrl);
   }
 }

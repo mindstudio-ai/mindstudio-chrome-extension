@@ -1,5 +1,6 @@
 import { FrameDimensions } from '../../../shared/constants';
 import { AppData } from '../../../shared/types/app';
+import { appendQueryParam } from '../../../shared/utils/url';
 import { Tooltip } from './tooltip';
 
 export class AppButton {
@@ -82,8 +83,7 @@ export class AppButton {
   }
 
   private getScaledIconSrc(url: string): string {
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}w=96`;
+    return appendQueryParam(url, 'w', '96');
   }
 
   public getElement(): HTMLElement {

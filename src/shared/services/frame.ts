@@ -1,3 +1,6 @@
+import { QueryParams } from '../constants';
+import { appendQueryParam } from '../utils/url';
+
 export interface FrameOptions {
   id: string;
   src: string;
@@ -22,7 +25,7 @@ export abstract class Frame {
   }: FrameOptions): HTMLIFrameElement {
     const frame = document.createElement('iframe');
     frame.id = id;
-    frame.src = src;
+    frame.src = this.appendVersionToUrl(src);
 
     if (hidden) {
       frame.style.cssText = `
@@ -41,6 +44,14 @@ export abstract class Frame {
     }
 
     return frame;
+  }
+
+  protected appendVersionToUrl(url: string): string {
+    return appendQueryParam(
+      url,
+      QueryParams.VERSION,
+      process.env.VERSION || 'unknown',
+    );
   }
 
   private setupLoadListener(): void {
