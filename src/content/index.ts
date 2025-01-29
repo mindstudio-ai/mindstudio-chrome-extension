@@ -18,14 +18,18 @@ class ContentScript {
       return;
     }
 
+    console.info('[MindStudio][Content] Initializing content script');
     await this.launcherService.initialize();
 
     // If we're on the thank you page, trigger authentication
     if (window.location.href === THANK_YOU_PAGE) {
       try {
+        console.info(
+          '[MindStudio][Content] Starting post-install authentication',
+        );
         await auth.ensureAuthenticated();
       } catch (error) {
-        console.error('[ContentScript] Authentication error:', error);
+        console.error('[MindStudio][Content] Authentication failed:', error);
       }
     }
   }

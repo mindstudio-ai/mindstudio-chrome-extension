@@ -13,6 +13,7 @@ export class PlayerFrame extends Frame {
 
   private pendingWorker: WorkerLaunchPayload | null = null;
   private isFirstLoad = true;
+  private hasLoadedFirstWorker = false;
 
   constructor(container: HTMLElement) {
     super({
@@ -40,18 +41,26 @@ export class PlayerFrame extends Frame {
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
+
       if (token && organizationId) {
+        console.info('[MindStudio][Player] Authenticating frame');
         frame.send(PlayerFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
         });
       }
 
-      // Notify background we're ready for workers
-      await runtime.send('sidepanel/ready', undefined);
+      // Only send ready event on first load
+      if (this.isFirstLoad) {
+        await runtime.send('sidepanel/ready', undefined);
+      }
 
       // Send any pending worker
       if (this.pendingWorker) {
+        console.info('[MindStudio][Player] Loading pending worker:', {
+          appId: this.pendingWorker.appId,
+          appName: this.pendingWorker.appName,
+        });
         this.loadWorker(this.pendingWorker);
         this.pendingWorker = null;
       }
@@ -64,6 +73,7 @@ export class PlayerFrame extends Frame {
     storage.onChange('AUTH_TOKEN', async (token) => {
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
       if (organizationId && token && this.isReady()) {
+        console.info('[MindStudio][Player] Updating auth token');
         frame.send(PlayerFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
@@ -73,11 +83,26 @@ export class PlayerFrame extends Frame {
 
     // Listen for worker launch requests
     runtime.listen('player/init', (payload: WorkerLaunchPayload) => {
-      if (this.isFirstLoad) {
-        // On first load, just store the worker to be loaded after frame is ready
+      if (!this.hasLoadedFirstWorker) {
+        // First ever worker, just store it
+        console.info('[MindStudio][Player] Initializing first worker:', {
+          appId: payload.appId,
+          appName: payload.appName,
+        });
         this.pendingWorker = payload;
+        this.hasLoadedFirstWorker = true;
+
+        // Try to load it immediately if we're ready
+        if (this.isReady()) {
+          this.loadWorker(this.pendingWorker);
+          this.pendingWorker = null;
+        }
       } else {
-        // For subsequent workers, store and reload frame
+        // Subsequent workers should reset frame
+        console.info('[MindStudio][Player] Switching to worker:', {
+          appId: payload.appId,
+          appName: payload.appName,
+        });
         this.pendingWorker = payload;
         this.reset();
       }
@@ -86,9 +111,15 @@ export class PlayerFrame extends Frame {
 
   private loadWorker(payload: WorkerLaunchPayload): void {
     if (!this.isReady()) {
+      console.info('[MindStudio][Player] Frame not ready, queuing worker');
       this.pendingWorker = payload;
       return;
     }
+
+    console.info('[MindStudio][Player] Loading worker:', {
+      appId: payload.appId,
+      appName: payload.appName,
+    });
 
     frame.send(PlayerFrame.ElementId.FRAME, 'player/load_worker', {
       id: payload.appId,
@@ -98,9 +129,12 @@ export class PlayerFrame extends Frame {
     });
   }
 
-  protected onFrameLoad(): void {}
+  protected onFrameLoad(): void {
+    console.info('[MindStudio][Player] Frame loaded');
+  }
 
   reset(): void {
+    console.info('[MindStudio][Player] Resetting frame');
     this.setLoaded(false);
     const cleanedUrl = removeQueryParam(this.element.src, QueryParams.VERSION);
     this.element.src = this.appendVersionToUrl(cleanedUrl);

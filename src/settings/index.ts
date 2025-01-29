@@ -16,6 +16,8 @@ class SettingsManager {
     this.workspaceSelect = document.getElementById(
       'workspaceSelect',
     ) as HTMLSelectElement;
+
+    console.info('[MindStudio][Settings] Initializing settings page');
     this.setupEventListeners();
     this.checkAuthState();
   }
@@ -96,11 +98,14 @@ class SettingsManager {
 
     const selectedId = this.workspaceSelect.value;
     try {
+      console.info('[MindStudio][Settings] Changing workspace:', {
+        selectedId,
+      });
       await storage.set('SELECTED_ORGANIZATION', selectedId);
       this.showSuccess('Workspace updated successfully');
     } catch (error) {
       this.showError('Failed to update workspace');
-      console.error('Failed to update workspace:', error);
+      console.error('[MindStudio][Settings] Workspace change failed:', error);
     }
   }
 
@@ -131,10 +136,12 @@ class SettingsManager {
 
     try {
       if (isAuthenticated) {
+        console.info('[MindStudio][Settings] Logging out');
         await auth.logout();
         this.updateAuthUI(false);
         this.showSuccess('Successfully logged out');
       } else {
+        console.info('[MindStudio][Settings] Initiating login');
         await auth.login();
       }
     } catch (error: unknown) {

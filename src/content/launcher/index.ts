@@ -2,10 +2,10 @@ import { auth } from '../../shared/services/auth';
 import { AppData } from '../../shared/types/app';
 import { runtime } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
-import { pageUtils } from '../page-utils';
+import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
 import { SyncFrame } from './sync-frame';
-import { filterAppsByUrl } from './url-filter';
+import { filterAppsByUrl } from '../../shared/utils/url-filter';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -86,9 +86,9 @@ export class LauncherService {
 
   private async handleAppClick(app: AppData): Promise<void> {
     try {
-      const userSelection = pageUtils.getSelectedContent();
-      const rawHtml = document.documentElement.outerHTML;
-      const fullText = document.body.innerText;
+      const userSelection = page.getSelectedContent();
+      const rawHtml = page.cleanDOM();
+      const fullText = page.getCleanTextContent();
 
       await runtime.send('player/launch_worker', {
         appId: app.id,

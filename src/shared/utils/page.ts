@@ -1,10 +1,10 @@
-import { isMindStudioElement } from '../shared/utils/dom';
+import { isMindStudioElement } from './dom';
 
 /**
  * Utilities for interacting with the current web page.
  * These utilities only work in the content script context.
  */
-export const pageUtils = {
+export const page = {
   /**
    * Gets the currently selected content from the page.
    * Works with both text selections and input fields.
@@ -45,6 +45,15 @@ export const pageUtils = {
     const clone = document.body.cloneNode(true) as HTMLElement;
     cleanNode(clone);
     return clone.innerHTML;
+  },
+
+  /**
+   * Gets a cleaned version of the page's text content.
+   */
+  getCleanTextContent(): string {
+    const clone = document.body.cloneNode(true) as HTMLElement;
+    cleanNode(clone);
+    return clone.innerText;
   },
 };
 
