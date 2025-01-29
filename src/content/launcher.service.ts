@@ -1,19 +1,19 @@
 import { AuthService } from '../common/auth.service';
 import { StorageKeys } from '../common/constants';
 import { AppData } from '../common/types';
+import { storage } from '../shared/storage';
+import { runtime } from '../shared/messaging';
 import { AppButton } from './ui/AppButton';
 import { CollapseButton } from './ui/CollapseButton';
 import { LauncherContainer } from './ui/LauncherContainer';
 import { Logo } from './ui/Logo';
 import { SyncFrame } from './ui/SyncFrame';
 import { DOMService } from './dom.service';
-import { MessagingService } from '../common/messaging.service';
 
 export class LauncherService {
   private static instance: LauncherService;
   private domService = DOMService.getInstance();
   private authService = AuthService.getInstance();
-  private messagingService = MessagingService.getInstance();
   private apps: AppData[] = [];
   private currentHostUrl: string = window.location.href;
 
@@ -43,13 +43,8 @@ export class LauncherService {
   }
 
   private async initializeState(): Promise<void> {
-    // Check initial state before setting up components
-    const hasStoredState = await this.hasStoredState();
-    const initialCollapsed = hasStoredState ? await this.isCollapsed() : true; // Default to collapsed if no stored state
-
-    // Setup components without initial state
+    // Setup components first
     await this.setupComponents();
-    this.setupStorageListeners();
 
     // Load initial apps
     await this.loadAppsFromStorage();
@@ -60,15 +55,25 @@ export class LauncherService {
       await this.syncFrame.inject(token);
     }
 
-    // Now set initial state after all content is loaded
-    this.container.setInitialState(initialCollapsed);
+    // Set up storage listeners
+    storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
+      console.log('[LauncherService] Collapsed state changed:', isCollapsed);
+      this.container.setCollapsedState(isCollapsed);
+      this.collapseButton.setVisibility(!isCollapsed);
+    });
+
+    // Set initial state from storage
+    const initialCollapsed = (await storage.get('LAUNCHER_COLLAPSED')) ?? true;
+    this.container.setCollapsedState(initialCollapsed);
     this.collapseButton.setVisibility(!initialCollapsed);
   }
 
   private async setupComponents(): Promise<void> {
     // Create UI components
     this.container = new LauncherContainer();
-    this.collapseButton = new CollapseButton(() => this.collapse());
+    this.collapseButton = new CollapseButton(async () => {
+      await storage.set('LAUNCHER_COLLAPSED', true);
+    });
     this.logo = new Logo();
     this.syncFrame = new SyncFrame();
 
@@ -83,29 +88,7 @@ export class LauncherService {
     // Set up expand click handler
     this.container.setExpandClickHandler(async () => {
       await this.authService.ensureAuthenticated();
-      await this.expand();
-    });
-  }
-
-  private setupStorageListeners(): void {
-    chrome.storage.onChanged.addListener((changes, namespace) => {
-      if (namespace === 'local') {
-        // Handle app data updates
-        if (changes[StorageKeys.LAUNCHER_APPS]) {
-          const apps = changes[StorageKeys.LAUNCHER_APPS].newValue || [];
-          this.updateApps(apps);
-        }
-
-        // Handle collapsed state changes from other contexts
-        if (changes[StorageKeys.LAUNCHER_COLLAPSED]) {
-          const newValue = changes[StorageKeys.LAUNCHER_COLLAPSED].newValue;
-          if (newValue) {
-            this.collapse();
-          } else {
-            this.expand();
-          }
-        }
-      }
+      await storage.set('LAUNCHER_COLLAPSED', false);
     });
   }
 
@@ -115,18 +98,15 @@ export class LauncherService {
       const rawHtml = document.documentElement.outerHTML;
       const fullText = document.body.innerText;
 
-      chrome.runtime.sendMessage({
-        _MindStudioEvent: '@@mindstudio/player/launch_worker',
-        payload: {
-          appId: app.id,
-          appName: app.name,
-          appIcon: app.iconUrl,
-          launchVariables: {
-            url: window.location.href,
-            rawHtml,
-            fullText,
-            userSelection,
-          },
+      await runtime.send('player/launch_worker', {
+        appId: app.id,
+        appName: app.name,
+        appIcon: app.iconUrl,
+        launchVariables: {
+          url: window.location.href,
+          rawHtml,
+          fullText,
+          userSelection,
         },
       });
     } catch (error) {
@@ -159,7 +139,7 @@ export class LauncherService {
     });
   }
 
-  private updateApps(apps: AppData[]): void {
+  updateApps(apps: AppData[]): void {
     this.apps = this.filterAppsByUrl(apps);
     this.updateAppButtons();
   }
@@ -194,52 +174,8 @@ export class LauncherService {
   }
 
   private async loadAppsFromStorage(): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(StorageKeys.LAUNCHER_APPS, (result) => {
-        const apps = result[StorageKeys.LAUNCHER_APPS] || [];
-        this.updateApps(apps);
-        resolve();
-      });
-    });
-  }
-
-  private async setCollapsed(collapsed: boolean): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set(
-        { [StorageKeys.LAUNCHER_COLLAPSED]: collapsed },
-        () => {
-          resolve();
-        },
-      );
-    });
-  }
-
-  private async hasStoredState(): Promise<boolean> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED, (result) => {
-        resolve(StorageKeys.LAUNCHER_COLLAPSED in result);
-      });
-    });
-  }
-
-  private async isCollapsed(): Promise<boolean> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(StorageKeys.LAUNCHER_COLLAPSED, (result) => {
-        resolve(result[StorageKeys.LAUNCHER_COLLAPSED] ?? true); // Default to collapsed
-      });
-    });
-  }
-
-  async collapse(): Promise<void> {
-    await this.setCollapsed(true);
-    this.container.setCollapsedState(true);
-    this.collapseButton.setVisibility(false);
-  }
-
-  async expand(): Promise<void> {
-    await this.setCollapsed(false);
-    this.container.setCollapsedState(false);
-    this.collapseButton.setVisibility(true);
+    const apps = (await storage.get('LAUNCHER_APPS')) || [];
+    this.updateApps(apps);
   }
 
   async reinjectSyncFrame(token: string): Promise<void> {

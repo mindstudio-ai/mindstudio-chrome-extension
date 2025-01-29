@@ -1,5 +1,6 @@
 import { AuthService } from '../common/auth.service';
 import { runtime } from '../shared/messaging';
+import { storage } from '../shared/storage';
 import { LauncherService } from './launcher.service';
 import { RootUrl, StorageKeys, THANK_YOU_PAGE } from '../common/constants';
 
@@ -8,30 +9,31 @@ class ContentScript {
   private launcherService = LauncherService.getInstance();
 
   private setupEventHandlers(): void {
+    // Listen for app updates
+    storage.onChange('LAUNCHER_APPS', (apps) => {
+      console.log('[ContentScript] Apps updated from storage');
+      this.launcherService.updateApps(apps || []);
+    });
+
     // Register handler for login completion
     this.authService.onLoginComplete(async (token) => {
+      console.log('[ContentScript] Login completed, handling UI updates');
       try {
         // Create a promise that resolves when apps are updated
         const appsLoadedPromise = new Promise<void>((resolve) => {
           const unsubscribe = runtime.listen('launcher/apps_updated', () => {
+            console.log('[ContentScript] Apps updated, resolving promise');
             unsubscribe();
             resolve();
           });
         });
 
         // Reinject the sync frame with the new token
+        console.log('[ContentScript] Reinjecting sync frame');
         await this.launcherService.reinjectSyncFrame(token);
 
         // Wait for apps to be loaded
         await appsLoadedPromise;
-
-        // Update collapsed state first
-        await chrome.storage.local.set({
-          [StorageKeys.LAUNCHER_COLLAPSED]: false,
-        });
-
-        // Finally expand the launcher
-        await this.launcherService.expand();
       } catch (error) {
         console.error('[ContentScript] Login completion error:', error);
       }
@@ -51,6 +53,7 @@ class ContentScript {
       return;
     }
 
+    console.log('[ContentScript] Initializing');
     this.setupEventHandlers();
     await this.launcherService.initialize();
 

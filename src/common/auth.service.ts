@@ -11,9 +11,13 @@ export class AuthService {
   private constructor() {
     // Listen for token changes via storage
     storage.onChange('AUTH_TOKEN', async (token) => {
+      console.log('[AuthService] Token changed in storage:', token);
       if (!token) {
         return;
       }
+
+      // Set launcher to expanded state after successful login
+      await storage.set('LAUNCHER_COLLAPSED', false);
 
       // Notify completion handlers
       for (const handler of this.loginCompletionHandlers) {
@@ -27,14 +31,16 @@ export class AuthService {
 
     // Listen for auth token generation via window message
     frame.listen('auth/token_generated', async ({ token }) => {
+      console.log('[AuthService] Received token generation event:', token);
       if (!token) {
         return;
       }
 
       // Forward token to background
       await runtime.send('auth/token_generated', { token });
+      console.log('[AuthService] Sent token to background');
       // Close this window after a delay
-      setTimeout(() => window.close(), 3000);
+      setTimeout(() => window.close(), 1000);
     });
   }
 
@@ -68,9 +74,8 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
-    // Set launcher to collapsed state first
+    // Set launcher to collapsed state before clearing auth
     await storage.set('LAUNCHER_COLLAPSED', true);
-
     // Clear auth items
     await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS']);
   }

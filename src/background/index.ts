@@ -17,11 +17,13 @@ class BackgroundService {
 
     // Listen for auth token generation
     runtime.listen('auth/token_generated', async ({ token }) => {
+      console.log('[Background] Received token generation event:', token);
       if (!token) {
         return;
       }
       // Store the token - components will listen to storage changes directly
       await storage.set('AUTH_TOKEN', token);
+      console.log('[Background] Stored token in storage');
     });
   }
 
