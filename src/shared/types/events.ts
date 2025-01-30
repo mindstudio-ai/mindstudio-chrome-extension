@@ -13,7 +13,7 @@ export interface Events {
 
   // Player events
   'player/loaded': void;
-  'player/launch_worker': WorkerLaunchPayload;
+  'player/launch_worker': BaseWorkerPayload;
   'player/init': WorkerLaunchPayload;
   'player/close_worker': void;
   'player/load_worker': {
@@ -48,11 +48,16 @@ export interface LaunchVariables {
   userSelection: string | null;
 }
 
-export interface WorkerLaunchPayload {
+// Base worker payload without tabId
+export interface BaseWorkerPayload {
   appId: string;
   appName: string;
   appIcon: string;
   launchVariables: LaunchVariables;
+}
+
+// Full worker payload with tabId (used internally)
+export interface WorkerLaunchPayload extends BaseWorkerPayload {
   tabId: number;
 }
 

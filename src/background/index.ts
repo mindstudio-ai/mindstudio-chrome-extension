@@ -30,53 +30,47 @@ class BackgroundService {
     });
 
     // Handle worker launch directly from content script click
-    runtime.listen(
-      'player/launch_worker',
-      async (
-        payload: WorkerLaunchPayload,
-        sender?: chrome.runtime.MessageSender,
-      ) => {
-        if (!sender?.tab?.id) {
-          console.info(
-            '[MindStudio][Background] Worker launch failed: No tab ID',
-          );
-          return;
-        }
+    runtime.listen('player/launch_worker', async (payload, sender) => {
+      if (!sender?.tab?.id) {
+        console.info(
+          '[MindStudio][Background] Worker launch failed: No tab ID',
+        );
+        return;
+      }
 
-        try {
-          const tabId = sender.tab.id;
-          // Store pending worker for this tab
-          this.pendingWorkers.set(tabId, {
-            ...payload,
-            tabId,
-          });
-          console.info('[MindStudio][Background] Launching worker:', {
-            tabId,
-            appId: payload.appId,
-            appName: payload.appName,
-          });
+      try {
+        const tabId = sender.tab.id;
+        // Store pending worker for this tab
+        this.pendingWorkers.set(tabId, {
+          ...payload,
+          tabId,
+        });
+        console.info('[MindStudio][Background] Launching worker:', {
+          tabId,
+          appId: payload.appId,
+          appName: payload.appName,
+        });
 
-          // don't await this - doing so will break sidePanel.open()
-          chrome.sidePanel.setOptions({
-            tabId,
-            path: `worker-panel.html?tabId=${tabId}`,
-          });
+        // don't await this - doing so will break sidePanel.open()
+        chrome.sidePanel.setOptions({
+          tabId,
+          path: `worker-panel.html?tabId=${tabId}`,
+        });
 
-          await chrome.sidePanel.open({ tabId });
+        await chrome.sidePanel.open({ tabId });
 
-          // If panel is ready, send init event immediately
-          if (this.readyPanels.get(tabId)) {
-            const worker = this.pendingWorkers.get(tabId);
-            if (worker) {
-              runtime.send('player/init', worker);
-              this.pendingWorkers.delete(tabId);
-            }
+        // If panel is ready, send init event immediately
+        if (this.readyPanels.get(tabId)) {
+          const worker = this.pendingWorkers.get(tabId);
+          if (worker) {
+            runtime.send('player/init', worker);
+            this.pendingWorkers.delete(tabId);
           }
-        } catch (error) {
-          console.error('[MindStudio][Background] Launch failed:', error);
         }
-      },
-    );
+      } catch (error) {
+        console.error('[MindStudio][Background] Launch failed:', error);
+      }
+    });
 
     // Handle sidepanel ready event
     runtime.listen('sidepanel/ready', (payload: { tabId: number }) => {
