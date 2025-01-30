@@ -5,8 +5,8 @@ import { storage } from '../shared/services/storage';
 
 class BackgroundService {
   private static instance: BackgroundService;
-  private isSidePanelReady = false;
-  private pendingWorker: WorkerLaunchPayload | null = null;
+  private readyPanels = new Map<number, boolean>();
+  private pendingWorkers = new Map<number, WorkerLaunchPayload>();
 
   private constructor() {
     this.setupHeaderRules();
@@ -44,25 +44,33 @@ class BackgroundService {
         }
 
         try {
-          this.pendingWorker = payload;
-
+          const tabId = sender.tab.id;
+          // Store pending worker for this tab
+          this.pendingWorkers.set(tabId, {
+            ...payload,
+            tabId,
+          });
           console.info('[MindStudio][Background] Launching worker:', {
+            tabId,
             appId: payload.appId,
             appName: payload.appName,
-            tabId: sender.tab.id,
           });
 
-          // Set tab-specific panel and open it
+          // don't await this - doing so will break sidePanel.open()
           chrome.sidePanel.setOptions({
-            tabId: sender.tab.id,
-            path: 'worker-panel.html?type=worker',
+            tabId,
+            path: `worker-panel.html?tabId=${tabId}`,
           });
-          await chrome.sidePanel.open({ tabId: sender.tab.id });
 
-          // If sidepanel is ready, send init event immediately
-          if (this.isSidePanelReady) {
-            runtime.send('player/init', this.pendingWorker);
-            this.pendingWorker = null;
+          await chrome.sidePanel.open({ tabId });
+
+          // If panel is ready, send init event immediately
+          if (this.readyPanels.get(tabId)) {
+            const worker = this.pendingWorkers.get(tabId);
+            if (worker) {
+              runtime.send('player/init', worker);
+              this.pendingWorkers.delete(tabId);
+            }
           }
         } catch (error) {
           console.error('[MindStudio][Background] Launch failed:', error);
@@ -71,15 +79,20 @@ class BackgroundService {
     );
 
     // Handle sidepanel ready event
-    runtime.listen('sidepanel/ready', () => {
-      this.isSidePanelReady = true;
-      if (this.pendingWorker) {
-        console.info('[MindStudio][Background] Initializing pending worker:', {
-          appId: this.pendingWorker.appId,
-          appName: this.pendingWorker.appName,
+    runtime.listen('sidepanel/ready', (payload: { tabId: number }) => {
+      const tabId = payload.tabId;
+      this.readyPanels.set(tabId, true);
+
+      // Check for pending worker for this tab
+      const pendingWorker = this.pendingWorkers.get(tabId);
+      if (pendingWorker) {
+        console.info('[MindStudio][Background] Initializing worker:', {
+          tabId,
+          appId: pendingWorker.appId,
+          appName: pendingWorker.appName,
         });
-        runtime.send('player/init', this.pendingWorker);
-        this.pendingWorker = null;
+        runtime.send('player/init', pendingWorker);
+        this.pendingWorkers.delete(tabId);
       }
     });
   }
@@ -116,13 +129,27 @@ class BackgroundService {
   }
 
   private setupSidePanelListeners(): void {
-    // Reset ready state when sidepanel is closed
+    // Track sidepanel lifecycle
     chrome.runtime.onConnect.addListener((port) => {
       if (port.name === 'sidepanel') {
-        // Reset state when sidepanel disconnects
-        port.onDisconnect.addListener(() => {
-          console.info('[MindStudio][Background] Sidepanel disconnected');
-          this.isSidePanelReady = false;
+        // Get current tab when port connects
+        chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+          const tabId = tab?.id;
+          if (!tabId) {
+            return;
+          }
+
+          // When this specific tab's panel disconnects
+          port.onDisconnect.addListener(async () => {
+            // Mark tab's panel as not ready
+            this.readyPanels.delete(tabId);
+
+            // Reset to global panel for this tab
+            await chrome.sidePanel.setOptions({
+              tabId,
+              path: 'sidepanel.html',
+            });
+          });
         });
       }
     });

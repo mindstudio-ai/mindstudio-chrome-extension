@@ -38,7 +38,7 @@ export interface Events {
   'settings/open': undefined;
 
   // Sidepanel events
-  'sidepanel/ready': undefined;
+  'sidepanel/ready': { tabId: number };
 }
 
 export interface LaunchVariables {
@@ -53,6 +53,7 @@ export interface WorkerLaunchPayload {
   appName: string;
   appIcon: string;
   launchVariables: LaunchVariables;
+  tabId: number;
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field

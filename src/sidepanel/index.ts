@@ -2,30 +2,24 @@ import { PlayerFrame } from './player-frame';
 
 class SidePanel {
   private player?: PlayerFrame;
+  private port?: chrome.runtime.Port;
 
   constructor() {
-    console.info('[MindStudio][Sidepanel] Initializing sidepanel');
+    const params = new URLSearchParams(window.location.search);
+    const tabId = params.get('tabId');
 
-    // Check if this is a worker panel via URL parameter
-    const isWorkerPanel =
-      new URLSearchParams(window.location.search).get('type') === 'worker';
+    if (tabId) {
+      // Connect to background service first
+      this.port = chrome.runtime.connect({ name: 'sidepanel' });
 
-    if (isWorkerPanel) {
       const container = document.getElementById('player-container');
       if (!container) {
         console.error('[MindStudio][Sidepanel] Player container not found');
         throw new Error('Player container not found');
       }
 
-      this.player = new PlayerFrame(container);
+      this.player = new PlayerFrame(container, parseInt(tabId, 10));
     }
-
-    this.setupConnection();
-  }
-
-  private setupConnection(): void {
-    // Connect to background service to enable messaging
-    chrome.runtime.connect({ name: 'sidepanel' });
   }
 }
 
