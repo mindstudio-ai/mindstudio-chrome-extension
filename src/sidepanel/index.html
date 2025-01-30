@@ -12,22 +12,48 @@
         height: 100vh;
         width: 100%;
         overflow: hidden;
-        position: fixed;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
       }
-      #player-container {
+      .container {
         width: 100%;
         height: 100vh;
-        overflow: hidden;
-        position: fixed;
-        top: 0;
-        left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        text-align: center;
+        background: #f8f9fa;
+      }
+      .logo {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 24px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 12px 0;
+        color: #1a1a1a;
+      }
+      p {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #666;
+        margin: 0;
+        max-width: 280px;
       }
     </style>
   </head>
   <body>
-    <div id="root">
-      <div id="player-container"></div>
+    <div class="container">
+      <img src="icons/icon128x128.png" alt="MindStudio Logo" class="logo" />
+      <h1>Welcome to MindStudio</h1>
+      <p>
+        Launch a worker from any webpage to start using MindStudio's AI
+        capabilities.
+      </p>
     </div>
-    <script src="sidepanel.js"></script>
   </body>
 </html>

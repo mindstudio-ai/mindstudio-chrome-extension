@@ -44,15 +44,19 @@ class BackgroundService {
         }
 
         try {
-          // Store worker details
           this.pendingWorker = payload;
+
           console.info('[MindStudio][Background] Launching worker:', {
             appId: payload.appId,
             appName: payload.appName,
             tabId: sender.tab.id,
           });
 
-          // Open side panel
+          // Set tab-specific panel and open it
+          chrome.sidePanel.setOptions({
+            tabId: sender.tab.id,
+            path: 'worker-panel.html?type=worker',
+          });
           await chrome.sidePanel.open({ tabId: sender.tab.id });
 
           // If sidepanel is ready, send init event immediately
