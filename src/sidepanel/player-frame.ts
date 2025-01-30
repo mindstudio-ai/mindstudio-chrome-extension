@@ -13,14 +13,16 @@ export class PlayerFrame extends Frame {
 
   private pendingWorker: WorkerLaunchPayload | null = null;
   private isFirstLoad = true;
-  private hasLoadedFirstWorker = false;
+  private tabId: number;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, tabId: number) {
     super({
       id: PlayerFrame.ElementId.FRAME,
       src: `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`,
       container,
     });
+
+    this.tabId = tabId;
 
     // Add frame styles
     this.element.style.cssText = `
@@ -43,7 +45,6 @@ export class PlayerFrame extends Frame {
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
 
       if (token && organizationId) {
-        console.info('[MindStudio][Player] Authenticating frame');
         frame.send(PlayerFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
@@ -52,12 +53,13 @@ export class PlayerFrame extends Frame {
 
       // Only send ready event on first load
       if (this.isFirstLoad) {
-        await runtime.send('sidepanel/ready', undefined);
+        await runtime.send('sidepanel/ready', { tabId: this.tabId });
       }
 
       // Send any pending worker
       if (this.pendingWorker) {
-        console.info('[MindStudio][Player] Loading pending worker:', {
+        console.info('[MindStudio][Player] Loading worker:', {
+          tabId: this.tabId,
           appId: this.pendingWorker.appId,
           appName: this.pendingWorker.appName,
         });
@@ -73,7 +75,6 @@ export class PlayerFrame extends Frame {
     storage.onChange('AUTH_TOKEN', async (token) => {
       const organizationId = await storage.get('SELECTED_ORGANIZATION');
       if (organizationId && token && this.isReady()) {
-        console.info('[MindStudio][Player] Updating auth token');
         frame.send(PlayerFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
           organizationId,
@@ -81,30 +82,15 @@ export class PlayerFrame extends Frame {
       }
     });
 
-    // Listen for worker launch requests
+    // Listen for worker init events
     runtime.listen('player/init', (payload: WorkerLaunchPayload) => {
-      if (!this.hasLoadedFirstWorker) {
-        // First ever worker, just store it
-        console.info('[MindStudio][Player] Initializing first worker:', {
-          appId: payload.appId,
-          appName: payload.appName,
-        });
-        this.pendingWorker = payload;
-        this.hasLoadedFirstWorker = true;
-
-        // Try to load it immediately if we're ready
+      // Only handle init events for our tab
+      if (payload.tabId === this.tabId) {
         if (this.isReady()) {
-          this.loadWorker(this.pendingWorker);
-          this.pendingWorker = null;
+          this.loadWorker(payload);
+        } else {
+          this.pendingWorker = payload;
         }
-      } else {
-        // Subsequent workers should reset frame
-        console.info('[MindStudio][Player] Switching to worker:', {
-          appId: payload.appId,
-          appName: payload.appName,
-        });
-        this.pendingWorker = payload;
-        this.reset();
       }
     });
   }

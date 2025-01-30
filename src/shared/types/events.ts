@@ -1,3 +1,4 @@
+import { AppData } from './app';
 import { OrganizationData } from './organization';
 
 // Consolidate all event types in one place
@@ -13,7 +14,7 @@ export interface Events {
 
   // Player events
   'player/loaded': void;
-  'player/launch_worker': WorkerLaunchPayload;
+  'player/launch_worker': BaseWorkerPayload;
   'player/init': WorkerLaunchPayload;
   'player/close_worker': void;
   'player/load_worker': {
@@ -26,19 +27,14 @@ export interface Events {
   // Launcher events
   'launcher/loaded': undefined;
   'launcher/apps_updated': {
-    apps: Array<{
-      id: string;
-      name: string;
-      iconUrl: string;
-      extensionSupportedSites: string[];
-    }>;
+    apps: Array<AppData>;
   };
 
   // Settings events
   'settings/open': undefined;
 
   // Sidepanel events
-  'sidepanel/ready': undefined;
+  'sidepanel/ready': { tabId: number };
 }
 
 export interface LaunchVariables {
@@ -48,11 +44,17 @@ export interface LaunchVariables {
   userSelection: string | null;
 }
 
-export interface WorkerLaunchPayload {
+// Base worker payload without tabId
+export interface BaseWorkerPayload {
   appId: string;
   appName: string;
   appIcon: string;
   launchVariables: LaunchVariables;
+}
+
+// Full worker payload with tabId (used internally)
+export interface WorkerLaunchPayload extends BaseWorkerPayload {
+  tabId: number;
 }
 
 // Make event type a discriminated union based on the _MindStudioEvent field
