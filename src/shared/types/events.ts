@@ -1,3 +1,4 @@
+import { AppData } from './app';
 import { OrganizationData } from './organization';
 
 // Consolidate all event types in one place
@@ -26,12 +27,7 @@ export interface Events {
   // Launcher events
   'launcher/loaded': undefined;
   'launcher/apps_updated': {
-    apps: Array<{
-      id: string;
-      name: string;
-      iconUrl: string;
-      extensionSupportedSites: string[];
-    }>;
+    apps: Array<AppData>;
   };
 
   // Settings events

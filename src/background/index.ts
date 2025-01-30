@@ -1,7 +1,7 @@
 import { THANK_YOU_PAGE } from '../shared/constants';
-import { WorkerLaunchPayload } from '../shared/types/events';
 import { runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import { WorkerLaunchPayload } from '../shared/types/events';
 
 class BackgroundService {
   private static instance: BackgroundService;
@@ -31,7 +31,8 @@ class BackgroundService {
 
     // Handle worker launch directly from content script click
     runtime.listen('player/launch_worker', async (payload, sender) => {
-      if (!sender?.tab?.id) {
+      const tabId = sender?.tab?.id;
+      if (!tabId) {
         console.info(
           '[MindStudio][Background] Worker launch failed: No tab ID',
         );
@@ -39,7 +40,6 @@ class BackgroundService {
       }
 
       try {
-        const tabId = sender.tab.id;
         // Store pending worker for this tab
         this.pendingWorkers.set(tabId, {
           ...payload,

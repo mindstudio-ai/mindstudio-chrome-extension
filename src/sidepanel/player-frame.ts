@@ -13,7 +13,6 @@ export class PlayerFrame extends Frame {
 
   private pendingWorker: WorkerLaunchPayload | null = null;
   private isFirstLoad = true;
-  private hasLoadedFirstWorker = false;
   private tabId: number;
 
   constructor(container: HTMLElement, tabId: number) {
