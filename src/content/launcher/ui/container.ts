@@ -26,8 +26,17 @@ export class LauncherContainer {
     this.getInnerElement().appendChild(this.appsContainer);
     this.element.appendChild(this.settingsTooltip.getElement());
 
+    // Load position before adding to DOM
+    this.loadSavedPosition().then(() => {
+      // Add element to DOM only after position is set
+      document.body.appendChild(this.element);
+      // Enable transitions after initial render
+      requestAnimationFrame(() => {
+        this.element.style.transition = 'top 0.2s ease-out';
+      });
+    });
+
     this.initializeDragHandling();
-    this.loadSavedPosition();
   }
 
   private async loadSavedPosition(): Promise<void> {
@@ -111,7 +120,6 @@ export class LauncherContainer {
       z-index: ${ZIndexes.LAUNCHER};
       background: transparent;
       pointer-events: none;
-      transition: top 0.2s ease-out;
     `;
 
     const inner = document.createElement('div');
