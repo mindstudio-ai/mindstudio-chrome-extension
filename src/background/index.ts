@@ -126,25 +126,31 @@ class BackgroundService {
     // Track sidepanel lifecycle
     chrome.runtime.onConnect.addListener((port) => {
       if (port.name === 'sidepanel') {
-        // Get current tab when port connects
-        chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
-          const tabId = tab?.id;
-          if (!tabId) {
-            return;
-          }
+        const url = new URL(port.sender?.url || '');
+        const isWorkerPanel = url.pathname.endsWith('worker-panel.html');
 
-          // When this specific tab's panel disconnects
-          port.onDisconnect.addListener(async () => {
-            // Mark tab's panel as not ready
-            this.readyPanels.delete(tabId);
+        // Only track readiness for worker panels
+        if (isWorkerPanel) {
+          // Get current tab when port connects
+          chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+            const tabId = tab?.id;
+            if (!tabId) {
+              return;
+            }
 
-            // Reset to global panel for this tab
-            await chrome.sidePanel.setOptions({
-              tabId,
-              path: 'sidepanel.html',
+            // When this specific tab's panel disconnects
+            port.onDisconnect.addListener(async () => {
+              // Mark tab's panel as not ready
+              this.readyPanels.delete(tabId);
+
+              // Reset to history panel for this tab
+              await chrome.sidePanel.setOptions({
+                tabId,
+                path: 'history-panel.html',
+              });
             });
           });
-        });
+        }
       }
     });
   }
