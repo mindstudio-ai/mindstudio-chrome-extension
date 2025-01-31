@@ -14,6 +14,7 @@ export class LauncherContainer {
   private static readonly DEFAULT_BOTTOM_POSITION = 128;
   private static readonly SCREEN_CENTER_THRESHOLD = 0.5; // 50% of screen height
   private static readonly MIN_EDGE_DISTANCE = 64; // Minimum distance from screen edges
+  private static readonly MIN_EXPANDED_HEIGHT = 96; // Minimum height when expanded
 
   private element: HTMLElement;
   private appsContainer: HTMLElement;
@@ -40,18 +41,27 @@ export class LauncherContainer {
   }
 
   private initializeResizeHandler(): void {
-    window.addEventListener('resize', () => {
-      if (!this.isDragging) {
-        this.updatePositionOnResize();
-      }
-    });
-  }
+    let resizeTimeout: number;
 
-  private async updatePositionOnResize(): Promise<void> {
-    const position = await storage.get('LAUNCHER_POSITION');
-    if (position) {
-      this.applyPosition(position);
-    }
+    window.addEventListener('resize', () => {
+      if (this.isDragging) {
+        return;
+      }
+
+      // Clear previous timeout
+      if (resizeTimeout) {
+        window.clearTimeout(resizeTimeout);
+      }
+
+      // Update height without transitions
+      this.element.style.transition = 'none';
+      this.updateExpandedHeight();
+
+      // Re-enable transitions after resize is complete
+      resizeTimeout = window.setTimeout(() => {
+        this.element.style.transition = 'all 0.2s ease-out';
+      }, 100);
+    });
   }
 
   private async initializePosition(): Promise<void> {
@@ -90,10 +100,12 @@ export class LauncherContainer {
     const { anchor, distance } = position;
     const minDistance = LauncherContainer.MIN_EDGE_DISTANCE;
     const maxDistance =
-      window.innerHeight - this.element.offsetHeight - minDistance;
+      window.innerHeight - LauncherContainer.MIN_EDGE_DISTANCE;
+
+    // For bottom anchor, we need to account for the collapsed height (40px)
     const constrainedDistance = Math.max(
       minDistance,
-      Math.min(distance, maxDistance),
+      Math.min(distance, maxDistance - (anchor === 'bottom' ? 40 : 0)),
     );
 
     if (anchor === 'top') {
@@ -271,8 +283,129 @@ export class LauncherContainer {
     this.appsContainer.style.transition = 'opacity 0.2s ease-in-out';
   }
 
+  private calculateMaxExpandedHeight(): number {
+    const isTopAnchored = this.element.style.top !== 'auto';
+    const inner = this.getInnerElement();
+
+    // Get current expanded height if we have one
+    const currentHeight =
+      inner.style.width === '48px'
+        ? 0 // If collapsed, we don't have a current height
+        : inner.offsetHeight;
+
+    if (isTopAnchored) {
+      // When anchored to top, we expand downward
+      const topPosition = parseInt(this.element.style.top);
+
+      // First try to maintain current height by moving up if needed
+      if (currentHeight > 0) {
+        const spaceNeeded = currentHeight + LauncherContainer.MIN_EDGE_DISTANCE;
+        if (topPosition + spaceNeeded > window.innerHeight) {
+          // Need to move up
+          const newTop = Math.max(
+            LauncherContainer.MIN_EDGE_DISTANCE,
+            window.innerHeight - spaceNeeded,
+          );
+          if (newTop !== topPosition) {
+            this.element.style.top = `${newTop}px`;
+          }
+          // If we still can't fit after moving, return available space
+          if (newTop + spaceNeeded > window.innerHeight) {
+            return Math.max(
+              LauncherContainer.MIN_EXPANDED_HEIGHT,
+              window.innerHeight - newTop - LauncherContainer.MIN_EDGE_DISTANCE,
+            );
+          }
+          return currentHeight;
+        }
+        return currentHeight;
+      }
+
+      // If no current height or we're expanding for the first time
+      const availableHeight =
+        window.innerHeight - topPosition - LauncherContainer.MIN_EDGE_DISTANCE;
+      return Math.max(LauncherContainer.MIN_EXPANDED_HEIGHT, availableHeight);
+    } else {
+      // When anchored to bottom, we expand upward
+      const bottomPosition = parseInt(this.element.style.bottom);
+
+      // First try to maintain current height by moving down if needed
+      if (currentHeight > 0) {
+        const spaceNeeded = currentHeight + LauncherContainer.MIN_EDGE_DISTANCE;
+        if (bottomPosition + spaceNeeded > window.innerHeight) {
+          // Need to move down
+          const newBottom = Math.max(
+            LauncherContainer.MIN_EDGE_DISTANCE,
+            window.innerHeight - spaceNeeded,
+          );
+          if (newBottom !== bottomPosition) {
+            this.element.style.bottom = `${newBottom}px`;
+          }
+          // If we still can't fit after moving, return available space
+          if (newBottom + spaceNeeded > window.innerHeight) {
+            return Math.max(
+              LauncherContainer.MIN_EXPANDED_HEIGHT,
+              window.innerHeight -
+                newBottom -
+                LauncherContainer.MIN_EDGE_DISTANCE,
+            );
+          }
+          return currentHeight;
+        }
+        return currentHeight;
+      }
+
+      // If no current height or we're expanding for the first time
+      const availableHeight =
+        window.innerHeight -
+        bottomPosition -
+        LauncherContainer.MIN_EDGE_DISTANCE;
+      return Math.max(LauncherContainer.MIN_EXPANDED_HEIGHT, availableHeight);
+    }
+  }
+
+  private updateExpandedHeight(): void {
+    const inner = this.getInnerElement();
+    if (inner.style.width === '48px') {
+      return;
+    } // Don't update if collapsed
+
+    // Temporarily disable transitions
+    const prevTransition = inner.style.transition;
+    inner.style.transition = 'none';
+    this.appsContainer.style.transition = 'none';
+
+    // Calculate maximum allowed height first
+    const maxHeight = this.calculateMaxExpandedHeight();
+
+    // Then set to auto to get natural height
+    inner.style.height = 'auto';
+    const naturalHeight = Math.max(
+      inner.offsetHeight,
+      LauncherContainer.MIN_EXPANDED_HEIGHT,
+    );
+
+    // Apply the constrained height
+    const finalHeight = Math.min(naturalHeight, maxHeight);
+    inner.style.height = `${finalHeight}px`;
+
+    // Ensure the apps container scrolls if needed
+    this.appsContainer.style.overflowY =
+      finalHeight < naturalHeight ? 'auto' : 'hidden';
+
+    // Re-enable transitions after a frame
+    requestAnimationFrame(() => {
+      inner.style.transition = prevTransition;
+      this.appsContainer.style.transition = 'opacity 0.2s ease-in-out';
+    });
+  }
+
   public setInitialState(collapsed: boolean): void {
     const inner = this.getInnerElement();
+
+    // Disable transitions initially
+    inner.style.transition = 'none';
+    this.appsContainer.style.transition = 'none';
 
     if (collapsed) {
       inner.style.height = '40px';
@@ -282,16 +415,23 @@ export class LauncherContainer {
     } else {
       inner.style.cursor = 'default';
       inner.style.width = '40px';
+
+      // Calculate maximum allowed height first
+      const maxHeight = this.calculateMaxExpandedHeight();
+
+      // Then get natural height
       inner.style.height = 'auto';
-      const targetHeight = Math.min(
+      const naturalHeight = Math.max(
         inner.offsetHeight,
-        window.innerHeight - 256,
+        LauncherContainer.MIN_EXPANDED_HEIGHT,
       );
-      inner.style.height = `${targetHeight}px`;
+
+      // Apply constrained height
+      inner.style.height = `${Math.min(naturalHeight, maxHeight)}px`;
       this.appsContainer.style.opacity = '1';
     }
 
-    // Enable transitions only after initial state is set
+    // Enable transitions after initial render
     requestAnimationFrame(() => this.enableTransitions());
   }
 
@@ -312,10 +452,9 @@ export class LauncherContainer {
 
       // First calculate the target height
       inner.style.height = 'auto';
-      const targetHeight = Math.min(
-        inner.offsetHeight,
-        window.innerHeight - 256,
-      );
+      const naturalHeight = inner.offsetHeight;
+      const maxHeight = this.calculateMaxExpandedHeight();
+      const targetHeight = Math.min(naturalHeight, maxHeight);
 
       // Reset to collapsed height
       inner.style.height = '40px';
