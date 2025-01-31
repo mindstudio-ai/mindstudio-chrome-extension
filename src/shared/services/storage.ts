@@ -13,6 +13,7 @@ type StorageValues = {
     }>
   > | null;
   LAUNCHER_COLLAPSED: boolean;
+  LAUNCHER_POSITION_Y: number | null;
   SELECTED_ORGANIZATION: string | null;
   ORGANIZATIONS: Array<{
     id: string;
@@ -28,6 +29,7 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   AUTH_TOKEN: createStorageKey('AuthToken'),
   LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
+  LAUNCHER_POSITION_Y: createStorageKey('LauncherPositionY'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
 } as const;

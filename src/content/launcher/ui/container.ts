@@ -1,5 +1,6 @@
 import { FrameDimensions, ZIndexes } from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
+import { storage } from '../../../shared/services/storage';
 import { Tooltip } from './tooltip';
 
 export class LauncherContainer {
@@ -12,6 +13,10 @@ export class LauncherContainer {
   private element: HTMLElement;
   private appsContainer: HTMLElement;
   private settingsTooltip: Tooltip;
+  private isDragging: boolean = false;
+  private dragStartY: number = 0;
+  private initialPositionY: number = 0;
+  private wasDragged: boolean = false; // Track if actual dragging occurred
 
   constructor() {
     this.element = this.createLauncherElement();
@@ -20,6 +25,79 @@ export class LauncherContainer {
 
     this.getInnerElement().appendChild(this.appsContainer);
     this.element.appendChild(this.settingsTooltip.getElement());
+
+    this.initializeDragHandling();
+    this.loadSavedPosition();
+  }
+
+  private async loadSavedPosition(): Promise<void> {
+    const savedPosition = await storage.get('LAUNCHER_POSITION_Y');
+    if (savedPosition !== null) {
+      this.setVerticalPosition(savedPosition);
+    }
+  }
+
+  private setVerticalPosition(y: number): void {
+    // Constrain the position to keep the launcher fully visible
+    const maxY = window.innerHeight - this.element.offsetHeight;
+    const constrainedY = Math.max(0, Math.min(y, maxY));
+    this.element.style.top = `${constrainedY}px`;
+    this.element.style.bottom = 'auto';
+  }
+
+  private initializeDragHandling(): void {
+    const inner = this.getInnerElement();
+
+    const handleDragStart = (e: MouseEvent) => {
+      if (inner.style.width !== '48px') {
+        return;
+      }
+
+      this.isDragging = true;
+      this.wasDragged = false; // Reset drag state
+      this.dragStartY = e.clientY;
+      this.initialPositionY = this.element.offsetTop;
+
+      // Prevent transitions during drag
+      this.element.style.transition = 'none';
+
+      // Prevent text selection during drag
+      e.preventDefault();
+    };
+
+    const handleDrag = (e: MouseEvent) => {
+      if (!this.isDragging) {
+        return;
+      }
+
+      const deltaY = e.clientY - this.dragStartY;
+      // Only consider it a drag if moved more than 5px
+      if (Math.abs(deltaY) > 5) {
+        this.wasDragged = true;
+      }
+
+      const newPosition = this.initialPositionY + deltaY;
+      this.setVerticalPosition(newPosition);
+    };
+
+    const handleDragEnd = async () => {
+      if (!this.isDragging) {
+        return;
+      }
+
+      this.isDragging = false;
+
+      // Re-enable transitions
+      this.element.style.transition = '';
+
+      // Save the new position
+      await storage.set('LAUNCHER_POSITION_Y', this.element.offsetTop);
+    };
+
+    // Add event listeners
+    inner.addEventListener('mousedown', handleDragStart);
+    document.addEventListener('mousemove', handleDrag);
+    document.addEventListener('mouseup', handleDragEnd);
   }
 
   private createLauncherElement(): HTMLElement {
@@ -27,12 +105,13 @@ export class LauncherContainer {
     launcher.id = LauncherContainer.ElementId.CONTAINER;
     launcher.style.cssText = `
       position: fixed;
-      bottom: 128px;
+      top: 128px;
       right: 0;
       width: ${FrameDimensions.LAUNCHER.TOTAL_WIDTH}px;
       z-index: ${ZIndexes.LAUNCHER};
       background: transparent;
       pointer-events: none;
+      transition: top 0.2s ease-out;
     `;
 
     const inner = document.createElement('div');
@@ -54,6 +133,7 @@ export class LauncherContainer {
       box-sizing: border-box;
       height: 40px;
       cursor: pointer;
+      user-select: none;
     `;
 
     launcher.appendChild(inner);
@@ -162,10 +242,11 @@ export class LauncherContainer {
 
     // Handle click on the entire inner element when collapsed
     inner.addEventListener('click', (e) => {
-      if (inner.style.width === '48px') {
+      if (inner.style.width === '48px' && !this.wasDragged) {
         e.stopPropagation();
         handler(e);
       }
+      this.wasDragged = false; // Reset for next interaction
     });
   }
 
