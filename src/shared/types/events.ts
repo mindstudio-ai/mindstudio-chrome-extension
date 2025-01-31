@@ -24,6 +24,9 @@ export interface Events {
     launchVariables: LaunchVariables;
   };
 
+  // History events
+  'history/loaded': void;
+
   // Launcher events
   'launcher/loaded': undefined;
   'launcher/apps_updated': {
