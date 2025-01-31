@@ -10,6 +10,8 @@ export class LauncherContainer {
     APPS_CONTAINER: createElementId('LauncherAppsContainer'),
   };
 
+  private static readonly DEFAULT_BOTTOM_POSITION = 128;
+
   private element: HTMLElement;
   private appsContainer: HTMLElement;
   private settingsTooltip: Tooltip;
@@ -26,17 +28,30 @@ export class LauncherContainer {
     this.getInnerElement().appendChild(this.appsContainer);
     this.element.appendChild(this.settingsTooltip.getElement());
 
-    // Load position before adding to DOM
-    this.loadSavedPosition().then(() => {
-      // Add element to DOM only after position is set
-      document.body.appendChild(this.element);
-      // Enable transitions after initial render
-      requestAnimationFrame(() => {
-        this.element.style.transition = 'top 0.2s ease-out';
-      });
-    });
+    // Initialize with visibility hidden to prevent flash
+    this.element.style.visibility = 'hidden';
 
     this.initializeDragHandling();
+    this.initializePosition();
+  }
+
+  private async initializePosition(): Promise<void> {
+    // Get saved position or convert default bottom position to top position
+    const savedPosition = await storage.get('LAUNCHER_POSITION_Y');
+    const defaultTopPosition =
+      window.innerHeight - (LauncherContainer.DEFAULT_BOTTOM_POSITION + 40); // 40 is collapsed height
+
+    // Set initial position
+    this.setVerticalPosition(savedPosition ?? defaultTopPosition);
+
+    // Now add to DOM and show
+    document.body.appendChild(this.element);
+    this.element.style.visibility = 'visible';
+
+    // Enable transitions after initial render
+    requestAnimationFrame(() => {
+      this.element.style.transition = 'bottom 0.2s ease-out';
+    });
   }
 
   private async loadSavedPosition(): Promise<void> {
@@ -47,11 +62,13 @@ export class LauncherContainer {
   }
 
   private setVerticalPosition(y: number): void {
+    // Convert top position to bottom position
+    const bottomPosition = window.innerHeight - y - this.element.offsetHeight;
     // Constrain the position to keep the launcher fully visible
-    const maxY = window.innerHeight - this.element.offsetHeight;
-    const constrainedY = Math.max(0, Math.min(y, maxY));
-    this.element.style.top = `${constrainedY}px`;
-    this.element.style.bottom = 'auto';
+    const maxBottom = window.innerHeight - this.element.offsetHeight;
+    const constrainedBottom = Math.max(0, Math.min(bottomPosition, maxBottom));
+    this.element.style.bottom = `${constrainedBottom}px`;
+    this.element.style.top = 'auto';
   }
 
   private initializeDragHandling(): void {
@@ -65,7 +82,10 @@ export class LauncherContainer {
       this.isDragging = true;
       this.wasDragged = false; // Reset drag state
       this.dragStartY = e.clientY;
-      this.initialPositionY = this.element.offsetTop;
+      // Convert bottom position to top position for dragging
+      this.initialPositionY =
+        window.innerHeight -
+        (parseInt(this.element.style.bottom) + this.element.offsetHeight);
 
       // Prevent transitions during drag
       this.element.style.transition = 'none';
@@ -99,8 +119,11 @@ export class LauncherContainer {
       // Re-enable transitions
       this.element.style.transition = '';
 
-      // Save the new position
-      await storage.set('LAUNCHER_POSITION_Y', this.element.offsetTop);
+      // Save the new position (convert from bottom to top position for storage)
+      const topPosition =
+        window.innerHeight -
+        (parseInt(this.element.style.bottom) + this.element.offsetHeight);
+      await storage.set('LAUNCHER_POSITION_Y', topPosition);
     };
 
     // Add event listeners
@@ -114,7 +137,6 @@ export class LauncherContainer {
     launcher.id = LauncherContainer.ElementId.CONTAINER;
     launcher.style.cssText = `
       position: fixed;
-      top: 128px;
       right: 0;
       width: ${FrameDimensions.LAUNCHER.TOTAL_WIDTH}px;
       z-index: ${ZIndexes.LAUNCHER};
