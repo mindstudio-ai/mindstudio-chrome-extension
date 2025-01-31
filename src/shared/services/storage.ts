@@ -1,7 +1,7 @@
 import { Environment } from '../constants';
 
 // Define the value types
-type StorageValues = {
+export type StorageValues = {
   AUTH_TOKEN: string | null;
   LAUNCHER_APPS: Record<
     string,
@@ -13,7 +13,10 @@ type StorageValues = {
     }>
   > | null;
   LAUNCHER_COLLAPSED: boolean;
-  LAUNCHER_POSITION_Y: number | null;
+  LAUNCHER_POSITION: {
+    anchor: 'top' | 'bottom';
+    distance: number;
+  } | null;
   SELECTED_ORGANIZATION: string | null;
   ORGANIZATIONS: Array<{
     id: string;
@@ -29,7 +32,7 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   AUTH_TOKEN: createStorageKey('AuthToken'),
   LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
-  LAUNCHER_POSITION_Y: createStorageKey('LauncherPositionY'),
+  LAUNCHER_POSITION: createStorageKey('LauncherPosition'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
 } as const;

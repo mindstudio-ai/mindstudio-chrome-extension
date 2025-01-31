@@ -1,6 +1,7 @@
 import { FrameDimensions, ZIndexes } from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
 import { storage } from '../../../shared/services/storage';
+import type { StorageValues } from '../../../shared/services/storage';
 import { Tooltip } from './tooltip';
 
 export class LauncherContainer {
@@ -11,6 +12,7 @@ export class LauncherContainer {
   };
 
   private static readonly DEFAULT_BOTTOM_POSITION = 128;
+  private static readonly SCREEN_CENTER_THRESHOLD = 0.5; // 50% of screen height
 
   private element: HTMLElement;
   private appsContainer: HTMLElement;
@@ -18,7 +20,7 @@ export class LauncherContainer {
   private isDragging: boolean = false;
   private dragStartY: number = 0;
   private initialPositionY: number = 0;
-  private wasDragged: boolean = false; // Track if actual dragging occurred
+  private wasDragged: boolean = false;
 
   constructor() {
     this.element = this.createLauncherElement();
@@ -33,42 +35,80 @@ export class LauncherContainer {
 
     this.initializeDragHandling();
     this.initializePosition();
+    this.initializeResizeHandler();
   }
 
-  private async initializePosition(): Promise<void> {
-    // Get saved position or convert default bottom position to top position
-    const savedPosition = await storage.get('LAUNCHER_POSITION_Y');
-    const defaultTopPosition =
-      window.innerHeight - (LauncherContainer.DEFAULT_BOTTOM_POSITION + 40); // 40 is collapsed height
-
-    // Set initial position
-    this.setVerticalPosition(savedPosition ?? defaultTopPosition);
-
-    // Now add to DOM and show
-    document.body.appendChild(this.element);
-    this.element.style.visibility = 'visible';
-
-    // Enable transitions after initial render
-    requestAnimationFrame(() => {
-      this.element.style.transition = 'bottom 0.2s ease-out';
+  private initializeResizeHandler(): void {
+    window.addEventListener('resize', () => {
+      if (!this.isDragging) {
+        this.updatePositionOnResize();
+      }
     });
   }
 
-  private async loadSavedPosition(): Promise<void> {
-    const savedPosition = await storage.get('LAUNCHER_POSITION_Y');
-    if (savedPosition !== null) {
-      this.setVerticalPosition(savedPosition);
+  private async updatePositionOnResize(): Promise<void> {
+    const position = await storage.get('LAUNCHER_POSITION');
+    if (position) {
+      this.applyPosition(position);
     }
   }
 
-  private setVerticalPosition(y: number): void {
-    // Convert top position to bottom position
-    const bottomPosition = window.innerHeight - y - this.element.offsetHeight;
-    // Constrain the position to keep the launcher fully visible
-    const maxBottom = window.innerHeight - this.element.offsetHeight;
-    const constrainedBottom = Math.max(0, Math.min(bottomPosition, maxBottom));
-    this.element.style.bottom = `${constrainedBottom}px`;
-    this.element.style.top = 'auto';
+  private async initializePosition(): Promise<void> {
+    const position = await storage.get('LAUNCHER_POSITION');
+    const defaultPosition = {
+      anchor: 'bottom' as const,
+      distance: LauncherContainer.DEFAULT_BOTTOM_POSITION,
+    };
+
+    // Set initial position
+    this.applyPosition(position ?? defaultPosition);
+
+    // Now add to DOM and show
+    document.body.appendChild(this.element);
+
+    // Make visible after a frame to ensure position is applied
+    requestAnimationFrame(() => {
+      this.element.style.visibility = 'visible';
+      // Enable transitions after initial render
+      requestAnimationFrame(() => {
+        this.element.style.transition = 'all 0.2s ease-out';
+      });
+    });
+  }
+
+  private applyPosition(
+    position: NonNullable<StorageValues['LAUNCHER_POSITION']> | null,
+  ): void {
+    if (!position) {
+      // Use default position
+      this.element.style.bottom = `${LauncherContainer.DEFAULT_BOTTOM_POSITION}px`;
+      this.element.style.top = 'auto';
+      return;
+    }
+
+    const { anchor, distance } = position;
+
+    if (anchor === 'top') {
+      this.element.style.top = `${distance}px`;
+      this.element.style.bottom = 'auto';
+    } else {
+      this.element.style.bottom = `${distance}px`;
+      this.element.style.top = 'auto';
+    }
+  }
+
+  private determineAnchor(y: number): 'top' | 'bottom' {
+    const screenCenter =
+      window.innerHeight * LauncherContainer.SCREEN_CENTER_THRESHOLD;
+    return y < screenCenter ? 'top' : 'bottom';
+  }
+
+  private calculateDistance(y: number, anchor: 'top' | 'bottom'): number {
+    if (anchor === 'top') {
+      return y;
+    } else {
+      return window.innerHeight - y - this.element.offsetHeight;
+    }
   }
 
   private initializeDragHandling(): void {
@@ -80,17 +120,19 @@ export class LauncherContainer {
       }
 
       this.isDragging = true;
-      this.wasDragged = false; // Reset drag state
+      this.wasDragged = false;
       this.dragStartY = e.clientY;
-      // Convert bottom position to top position for dragging
-      this.initialPositionY =
-        window.innerHeight -
-        (parseInt(this.element.style.bottom) + this.element.offsetHeight);
 
-      // Prevent transitions during drag
+      // Get current position for dragging
+      const currentTop =
+        this.element.style.top !== 'auto'
+          ? parseInt(this.element.style.top)
+          : window.innerHeight -
+            parseInt(this.element.style.bottom) -
+            this.element.offsetHeight;
+
+      this.initialPositionY = currentTop;
       this.element.style.transition = 'none';
-
-      // Prevent text selection during drag
       e.preventDefault();
     };
 
@@ -100,13 +142,15 @@ export class LauncherContainer {
       }
 
       const deltaY = e.clientY - this.dragStartY;
-      // Only consider it a drag if moved more than 5px
       if (Math.abs(deltaY) > 5) {
         this.wasDragged = true;
       }
 
-      const newPosition = this.initialPositionY + deltaY;
-      this.setVerticalPosition(newPosition);
+      const newY = this.initialPositionY + deltaY;
+      const anchor = this.determineAnchor(newY);
+      const distance = this.calculateDistance(newY, anchor);
+
+      this.applyPosition({ anchor, distance });
     };
 
     const handleDragEnd = async () => {
@@ -115,18 +159,22 @@ export class LauncherContainer {
       }
 
       this.isDragging = false;
-
-      // Re-enable transitions
       this.element.style.transition = '';
 
-      // Save the new position (convert from bottom to top position for storage)
-      const topPosition =
-        window.innerHeight -
-        (parseInt(this.element.style.bottom) + this.element.offsetHeight);
-      await storage.set('LAUNCHER_POSITION_Y', topPosition);
+      // Calculate and save final position
+      const currentTop =
+        this.element.style.top !== 'auto'
+          ? parseInt(this.element.style.top)
+          : window.innerHeight -
+            parseInt(this.element.style.bottom) -
+            this.element.offsetHeight;
+
+      const anchor = this.determineAnchor(currentTop);
+      const distance = this.calculateDistance(currentTop, anchor);
+
+      await storage.set('LAUNCHER_POSITION', { anchor, distance });
     };
 
-    // Add event listeners
     inner.addEventListener('mousedown', handleDragStart);
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('mouseup', handleDragEnd);
@@ -137,6 +185,7 @@ export class LauncherContainer {
     launcher.id = LauncherContainer.ElementId.CONTAINER;
     launcher.style.cssText = `
       position: fixed;
+      bottom: ${LauncherContainer.DEFAULT_BOTTOM_POSITION}px;
       right: 0;
       width: ${FrameDimensions.LAUNCHER.TOTAL_WIDTH}px;
       z-index: ${ZIndexes.LAUNCHER};
