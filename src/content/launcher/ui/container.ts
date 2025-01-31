@@ -13,6 +13,7 @@ export class LauncherContainer {
 
   private static readonly DEFAULT_BOTTOM_POSITION = 128;
   private static readonly SCREEN_CENTER_THRESHOLD = 0.5; // 50% of screen height
+  private static readonly MIN_EDGE_DISTANCE = 64; // Minimum distance from screen edges
 
   private element: HTMLElement;
   private appsContainer: HTMLElement;
@@ -87,12 +88,19 @@ export class LauncherContainer {
     }
 
     const { anchor, distance } = position;
+    const minDistance = LauncherContainer.MIN_EDGE_DISTANCE;
+    const maxDistance =
+      window.innerHeight - this.element.offsetHeight - minDistance;
+    const constrainedDistance = Math.max(
+      minDistance,
+      Math.min(distance, maxDistance),
+    );
 
     if (anchor === 'top') {
-      this.element.style.top = `${distance}px`;
+      this.element.style.top = `${constrainedDistance}px`;
       this.element.style.bottom = 'auto';
     } else {
-      this.element.style.bottom = `${distance}px`;
+      this.element.style.bottom = `${constrainedDistance}px`;
       this.element.style.top = 'auto';
     }
   }
@@ -104,10 +112,15 @@ export class LauncherContainer {
   }
 
   private calculateDistance(y: number, anchor: 'top' | 'bottom'): number {
+    const minDistance = LauncherContainer.MIN_EDGE_DISTANCE;
+    const maxDistance =
+      window.innerHeight - this.element.offsetHeight - minDistance;
+
     if (anchor === 'top') {
-      return y;
+      return Math.max(minDistance, Math.min(y, maxDistance));
     } else {
-      return window.innerHeight - y - this.element.offsetHeight;
+      const bottomDistance = window.innerHeight - y - this.element.offsetHeight;
+      return Math.max(minDistance, Math.min(bottomDistance, maxDistance));
     }
   }
 
