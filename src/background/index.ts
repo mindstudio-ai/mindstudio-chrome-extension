@@ -55,6 +55,7 @@ class BackgroundService {
         chrome.sidePanel.setOptions({
           tabId,
           path: `worker-panel.html?tabId=${tabId}`,
+          enabled: true,
         });
 
         await chrome.sidePanel.open({ tabId });
@@ -168,8 +169,12 @@ class BackgroundService {
     chrome.action.onClicked.addListener(async (tab) => {
       if (tab.id) {
         try {
-          const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
-          await storage.set('LAUNCHER_COLLAPSED', !isCollapsed);
+          chrome.sidePanel.setOptions({
+            tabId: tab.id,
+            path: 'history-panel.html',
+          });
+          await chrome.sidePanel.open({ windowId: tab.windowId });
+          await storage.set('LAUNCHER_COLLAPSED', false);
         } catch (error) {
           console.error('[MindStudio][Background] Toggle failed:', error);
         }
