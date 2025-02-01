@@ -44,6 +44,7 @@ export interface LaunchVariables {
   url: string;
   rawHtml: string;
   fullText: string;
+  metadata: string;
   userSelection: string | null;
 }
 
