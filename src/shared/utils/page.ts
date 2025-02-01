@@ -69,6 +69,60 @@ export const page = {
     cleanNode(clone);
     return clone.innerText;
   },
+
+  /**
+   * Get a metadata bundle for the page, including open graph tags, icons, etc.
+   */
+  getMetadataBundle(): string {
+    const getMetaContent = (property: string, attr: string = 'property') => {
+      const tag = [...document.getElementsByTagName('meta')].find(
+        (meta) => meta.getAttribute(attr) === property,
+      );
+      return tag ? tag.content : null;
+    };
+
+    const getAllOpenGraphTags = () => {
+      return [...document.getElementsByTagName('meta')]
+        .filter((meta) => meta.getAttribute('property')?.startsWith('og:'))
+        .reduce((acc: { [index: string]: string }, meta) => {
+          const property = meta.getAttribute('property');
+          if (property) {
+            acc[property] = meta.content;
+          }
+          return acc;
+        }, {});
+    };
+
+    const getBestFavicon = () => {
+      const favicons = [...document.getElementsByTagName('link')].filter(
+        (link) =>
+          link.getAttribute('rel') &&
+          link.getAttribute('rel')?.includes('icon'),
+      );
+
+      // Sort favicons by size (largest first)
+      favicons.sort((a, b) => {
+        const sizeA = parseInt(a.getAttribute('sizes')?.split('x')[0] || '0');
+        const sizeB = parseInt(b.getAttribute('sizes')?.split('x')[0] || '0');
+        return sizeB - sizeA;
+      });
+
+      return favicons.length > 0 ? favicons[0].href : null; // Fallback
+    };
+
+    const pageMetadata = {
+      title: getMetaContent('og:title') || document.title,
+      description:
+        getMetaContent('og:description') ||
+        getMetaContent('description', 'name') ||
+        '',
+      openGraphImage: getMetaContent('og:image') || '',
+      openGraphTags: getAllOpenGraphTags(),
+      favicon: getBestFavicon(),
+    };
+
+    return JSON.stringify(pageMetadata, null, 2);
+  },
 };
 
 // Private helper

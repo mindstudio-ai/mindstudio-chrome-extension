@@ -89,6 +89,7 @@ export class LauncherService {
       const userSelection = page.getSelectedContent();
       const rawHtml = page.cleanDOM();
       const fullText = page.getCleanTextContent();
+      const metadata = page.getMetadataBundle();
 
       await runtime.send('player/launch_worker', {
         appId: app.id,
@@ -96,6 +97,7 @@ export class LauncherService {
         appIcon: app.iconUrl,
         launchVariables: {
           url: window.location.href,
+          metadata,
           rawHtml,
           fullText,
           userSelection,
