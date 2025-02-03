@@ -200,8 +200,9 @@ class BackgroundService {
           chrome.sidePanel.setOptions({
             tabId: tab.id,
             path: 'history-panel.html',
+            enabled: true,
           });
-          await chrome.sidePanel.open({ windowId: tab.windowId });
+          await chrome.sidePanel.open({ tabId: tab.id });
           await storage.set('LAUNCHER_COLLAPSED', false);
         } catch (error) {
           console.error('[MindStudio][Background] Toggle failed:', error);
