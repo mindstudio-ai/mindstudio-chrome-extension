@@ -56,14 +56,23 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 24px;
+        padding: 8px 16px;
         border-bottom: 1px solid rgba(18, 18, 19, 0.1);
+        background-color: #f6f6f7;
+        border-radius: 8px;
       }
       .profile-info {
         display: flex;
         align-items: center;
         gap: 16px;
       }
+
+      .profile-info img {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+      }
+
       .user-details h2 {
         margin: 0;
         font-size: 14px;
@@ -75,6 +84,7 @@
         font-size: 14px;
         color: #29292a;
       }
+
       button {
         background: none;
         border: none;
@@ -142,6 +152,7 @@
       /* Workspace section styles */
       .workspace-section {
         padding: 24px;
+        padding-left: 0;
         border-bottom: 1px solid rgba(18, 18, 19, 0.1);
       }
       .workspace-section h2 {
@@ -154,7 +165,11 @@
         color: #333;
       }
 
-      .apps-section {
+      #apps-section {
+        display: none;
+      }
+
+      .apps-section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -280,7 +295,7 @@
         border-radius: 4px;
         padding-left: 8px;
         padding-right: 8px;
-        cursor: pointer;
+        cursor: grab;
         opacity: 0;
       }
 
@@ -338,6 +353,13 @@
       .toggle-button.off .toggle-button-inner {
         left: 2px;
       }
+
+      .apps-empty-state {
+        padding: 16px;
+        text-align: center;
+        font-size: 14px;
+        color: #6d6d6e;
+      }
     </style>
   </head>
   <body>
@@ -347,15 +369,22 @@
     <div class="container">
       <div class="profile-section">
         <div class="profile-info">
+          <img
+            id="user-avatar"
+            src="https://youai.imgix.net/images/fabdb1e7-f19a-4f09-944e-41f96f0c5dc3_1721242581945.png"
+          />
           <div class="user-details">
-            <h2>Authentication</h2>
-            <p id="authStatus">Checking authentication status...</p>
+            <h2 id="user-name" class="user-name">Authentication</h2>
+            <p id="user-email" class="user-email">You are not logged in</p>
           </div>
         </div>
         <button id="authButton" class="auth-button">Loading...</button>
       </div>
 
-      <div class="workspace-section">
+      <div
+        class="workspace-section"
+        style="margin-top: 24px; border-top: 1px solid #1212131a"
+      >
         <h2>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -386,39 +415,9 @@
         </div>
       </div>
 
-      <div class="workspace-section apps-section">
-        <h2 style="margin-bottom: 0">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="icon icon-tabler icons-tabler-outline icon-tabler-apps"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path
-              d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-            />
-            <path
-              d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-            />
-            <path
-              d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-            />
-            <path d="M14 7l6 0" />
-            <path d="M17 4l0 6" />
-          </svg>
-          Manage AI Workers
-        </h2>
-
-        <a href="https://app.mindstudio.ai/" target="_blank">
-          <button class="secondary-button">
-            <div>Browse all AI Workers</div>
+      <div id="apps-section">
+        <div class="workspace-section apps-section-header">
+          <h2 style="margin-bottom: 0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -429,25 +428,57 @@
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-right"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-apps"
             >
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M5 12l14 0" />
-              <path d="M13 18l6 -6" />
-              <path d="M13 6l6 6" />
+              <path
+                d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+              />
+              <path
+                d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+              />
+              <path
+                d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+              />
+              <path d="M14 7l6 0" />
+              <path d="M17 4l0 6" />
             </svg>
-          </button>
-        </a>
-      </div>
+            Manage AI Workers
+          </h2>
 
-      <div class="workspace-section">
-        <div class="apps-header">
-          <div>AI Worker</div>
-
-          <div>Hide/Show</div>
+          <a href="https://app.mindstudio.ai/" target="_blank">
+            <button class="secondary-button">
+              <div>Browse all AI Workers</div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-right"
+              >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 12l14 0" />
+                <path d="M13 18l6 -6" />
+                <path d="M13 6l6 6" />
+              </svg>
+            </button>
+          </a>
         </div>
 
-        <div id="apps-container"></div>
+        <div class="workspace-section">
+          <div id="apps-header" class="apps-header">
+            <div>AI Worker</div>
+
+            <div>Hide/Show</div>
+          </div>
+
+          <div id="apps-container"></div>
+        </div>
       </div>
 
       <div class="workspace-section">

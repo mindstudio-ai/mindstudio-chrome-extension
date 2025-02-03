@@ -1,4 +1,5 @@
 import { Environment } from '../constants';
+import { AppSettings } from '../types/app';
 
 // Define the value types
 type StorageValues = {
@@ -18,10 +19,7 @@ type StorageValues = {
     id: string;
     name: string;
   }> | null;
-  LAUNCHER_APPS_SETTINGS: Record<
-    string,
-    { sortOrder: number; isVisible: boolean }
-  > | null;
+  LAUNCHER_APPS_SETTINGS: Record<string, AppSettings> | null;
 };
 
 // Move key generation here
