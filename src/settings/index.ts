@@ -1,6 +1,9 @@
+import { SyncFrame } from '../content/launcher/sync-frame';
 import { DefaultIcons } from '../shared/constants';
 import { auth } from '../shared/services/auth';
+import { frame } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import { AppData } from '../shared/types/app';
 
 class SettingsManager {
   private static instance: SettingsManager;
@@ -84,6 +87,7 @@ class SettingsManager {
       // Set selected organization
       if (selectedOrg) {
         this.workspaceSelect.value = selectedOrg;
+        this.updateAppsList();
       }
     } catch (error) {
       this.showError('Failed to load workspaces');
@@ -103,10 +107,97 @@ class SettingsManager {
       });
       await storage.set('SELECTED_ORGANIZATION', selectedId);
       this.showSuccess('Workspace updated successfully');
+      this.updateAppsList();
     } catch (error) {
       this.showError('Failed to update workspace');
       console.error('[MindStudio][Settings] Workspace change failed:', error);
     }
+  }
+
+  private async updateAppsList(): Promise<void> {
+    const selectedOrg = (await storage.get('SELECTED_ORGANIZATION')) || '';
+    const apps = (await storage.get('LAUNCHER_APPS'))?.[selectedOrg] || [];
+    const appsContainer = document.getElementById('apps-container');
+    const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
+
+    if (appsContainer && apps) {
+      // Clear existing apps
+      appsContainer.innerHTML = '';
+
+      apps
+        .sort((a, b) => {
+          const aSettings = appsSettings[a.id] || {
+            sortOrder: 0,
+            isVisible: true,
+          };
+          const bSettings = appsSettings[b.id] || {
+            sortOrder: 0,
+            isVisible: true,
+          };
+
+          const aSortOrder = aSettings.sortOrder;
+          const bSortOrder = bSettings.sortOrder;
+
+          if (aSortOrder === 0 && bSortOrder === 0) {
+            return a.name.localeCompare(b.name);
+          }
+          return bSortOrder - aSortOrder;
+        })
+        .forEach((app: AppData) => {
+          const appElement = document.createElement('div');
+          appElement.className = 'app';
+          const appInner = document.createElement('div');
+          appInner.className = 'app-inner';
+          const appReorderButton = document.createElement('div');
+          appReorderButton.className = 'app-reorder-button';
+          appReorderButton.innerHTML = `<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-grip-vertical"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M9 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M9 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M15 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M15 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M15 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /></svg>`;
+
+          const appInfo = document.createElement('div');
+          appInfo.className = 'app-info';
+          const appIcon = document.createElement('img');
+          appIcon.src = `${app.iconUrl}?w=64`;
+          appIcon.className = 'app-icon';
+          appInfo.appendChild(appIcon);
+          appInfo.appendChild(document.createTextNode(app.name));
+          appInner.appendChild(appReorderButton);
+          appInner.appendChild(appInfo);
+          appElement.appendChild(appInner);
+
+          const appSettings = appsSettings[app.id] || {
+            sortOrder: 0,
+            isVisible: true,
+          };
+
+          appElement.appendChild(
+            this.generateToggleButton(app.id, appSettings.isVisible),
+          );
+          appsContainer.appendChild(appElement);
+        });
+    }
+  }
+
+  private async toggleAppVisibility(appId: string): Promise<void> {
+    const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
+    const newSettings = {
+      ...appsSettings,
+      [appId]: {
+        ...(appsSettings[appId] || { sortOrder: 0, isVisible: true }),
+        isVisible: !(appsSettings[appId]?.isVisible ?? true),
+      },
+    };
+    await storage.set('LAUNCHER_APPS_SETTINGS', newSettings);
+    this.updateAppsList();
+  }
+
+  private generateToggleButton(appId: string, isOn: boolean): HTMLElement {
+    const toggleButton = document.createElement('div');
+    toggleButton.className = 'toggle-button';
+    toggleButton.classList.add(isOn ? 'on' : 'off');
+    const toggleButtonInner = document.createElement('div');
+    toggleButtonInner.className = 'toggle-button-inner';
+    toggleButton.appendChild(toggleButtonInner);
+    toggleButton.onclick = () => this.toggleAppVisibility(appId);
+    return toggleButton;
   }
 
   private updateAuthUI(isAuthenticated: boolean): void {

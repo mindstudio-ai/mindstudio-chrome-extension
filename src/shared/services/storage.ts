@@ -18,6 +18,10 @@ type StorageValues = {
     id: string;
     name: string;
   }> | null;
+  LAUNCHER_APPS_SETTINGS: Record<
+    string,
+    { sortOrder: number; isVisible: boolean }
+  > | null;
 };
 
 // Move key generation here
@@ -30,6 +34,7 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
+  LAUNCHER_APPS_SETTINGS: createStorageKey('LauncherAppsSettings'),
 } as const;
 
 export const storage = {

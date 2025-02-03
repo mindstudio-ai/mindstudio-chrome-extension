@@ -3,25 +3,50 @@
   <head>
     <title>MindStudio Settings</title>
     <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          'Open Sans',
+          'Helvetica Neue',
+          sans-serif;
         margin: 0;
         padding: 0;
         background-color: #ffffff;
+        color: #121213;
+      }
+      a {
+        text-decoration: none;
       }
       .container {
         max-width: 800px;
         margin: 0 auto;
         padding: 24px;
       }
+      .header-container {
+        border-bottom: 1px solid #e5e5e5;
+      }
       h1 {
-        margin: 0;
         padding: 16px 24px;
         color: #333;
-        font-size: 1.2em;
-        border-bottom: 1px solid #e5e5e5;
+        font-size: 18px;
+        font-weight: 600;
+        max-width: 800px;
+        margin: 0 auto;
       }
       .section {
         margin-bottom: 32px;
@@ -32,9 +57,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 24px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        margin-bottom: 32px;
+        border-bottom: 1px solid rgba(18, 18, 19, 0.1);
       }
       .profile-info {
         display: flex;
@@ -43,13 +66,14 @@
       }
       .user-details h2 {
         margin: 0;
-        font-size: 1em;
-        color: #333;
+        font-size: 14px;
+        font-weight: 600;
+        color: #29292a;
       }
       .user-details p {
         margin: 4px 0 0;
-        font-size: 0.9em;
-        color: #666;
+        font-size: 14px;
+        color: #29292a;
       }
       button {
         background: none;
@@ -61,19 +85,39 @@
       }
       .auth-button {
         color: white;
-        font-size: 0.9em;
-        background-color: #1a73e8;
+        font-size: 14px;
+        background-color: #0069ff;
         border-radius: 4px;
+        font-weight: 600;
       }
       .auth-button:hover {
-        background-color: #1557b0;
+        background-color: #4c96ff;
       }
       .auth-button.logout {
         background: none;
-        color: #1a73e8;
+        color: #0069ff;
       }
       .auth-button.logout:hover {
         text-decoration: underline;
+      }
+      .secondary-button {
+        background: #fff;
+        color: #0069ff;
+        border: 1px solid #cccccd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .secondary-button svg {
+        width: 20px;
+        height: 20px;
+        color: #0069ff;
+        margin-top: 1px;
       }
       #status {
         position: fixed;
@@ -97,36 +141,49 @@
 
       /* Workspace section styles */
       .workspace-section {
-        margin-top: 32px;
         padding: 24px;
-        background: #f8f9fa;
-        border-radius: 8px;
+        border-bottom: 1px solid rgba(18, 18, 19, 0.1);
       }
       .workspace-section h2 {
         display: flex;
         align-items: center;
         gap: 8px;
         margin: 0 0 24px;
-        font-size: 1em;
+        font-size: 14px;
+        font-weight: 600;
         color: #333;
       }
+
+      .apps-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
       .workspace-section h2 svg {
-        width: 20px;
-        height: 20px;
-        color: #666;
+        width: 24px;
+        height: 24px;
+        color: #6d6d6e;
+      }
+      .workspace-select-container {
+        display: flex;
+        align-items: center;
+        gap: 16px;
       }
       .workspace-label {
-        font-size: 0.9em;
-        color: #666;
-        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #121213;
       }
       .workspace-select {
         width: 100%;
-        padding: 8px 12px 8px 36px;
+        height: 40px;
+        padding: 8px;
         border: 1px solid #e5e5e5;
         border-radius: 4px;
-        font-size: 0.9em;
-        color: #333;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: #29292a;
         background-color: white;
         background-repeat: no-repeat;
         background-position: 8px center;
@@ -162,10 +219,131 @@
         background-position: 8px center;
         background-size: 20px 20px;
       }
+
+      .apps-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-left: 32px;
+        padding-right: 8px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #6d6d6e;
+      }
+
+      .app {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+        font-weight: 400;
+        color: #29292a;
+        background: #fff;
+        padding: 14px 0;
+        padding-right: 30px;
+        border-bottom: 1px solid #eaeaea;
+      }
+
+      .app:last-child {
+        border-bottom: 0;
+      }
+
+      .app:hover {
+        background: #eaeaea;
+      }
+
+      .app-inner {
+        display: flex;
+        align-items: center;
+        width: 100%;
+      }
+
+      .app-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .app-info img {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+      }
+
+      .app-reorder-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        padding-left: 8px;
+        padding-right: 8px;
+        cursor: pointer;
+        opacity: 0;
+      }
+
+      .app:hover .app-reorder-button {
+        opacity: 1;
+      }
+
+      .app-reorder-button svg {
+        width: 16px;
+        height: 16px;
+        color: #6d6d6e;
+      }
+
+      .documentation-links a {
+        margin-top: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: underline;
+        color: #0069ff;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .documentation-links a svg {
+        width: 16px;
+        height: 16px;
+        color: #0069ff;
+      }
+
+      .toggle-button {
+        position: relative;
+        background: #0069ff;
+        border-radius: 9999px;
+        width: 32px;
+        height: 20px;
+        border: 1px solid transparent;
+      }
+
+      .toggle-button.off {
+        background: #eaeaea;
+        border-color: #cccccd;
+      }
+
+      .toggle-button-inner {
+        background: #fff;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        left: 14px;
+        top: 2px;
+      }
+
+      .toggle-button.off .toggle-button-inner {
+        left: 2px;
+      }
     </style>
   </head>
   <body>
-    <h1>MindStudio Settings</h1>
+    <div class="header-container">
+      <h1>MindStudio Extension Settings</h1>
+    </div>
     <div class="container">
       <div class="profile-section">
         <div class="profile-info">
@@ -181,23 +359,200 @@
         <h2>
           <svg
             xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-home"
           >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+            <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+            <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
           </svg>
           Workspace Settings
         </h2>
-        <div class="workspace-label">Workspace</div>
-        <div class="workspace-select-wrapper">
-          <select id="workspaceSelect" class="workspace-select" disabled>
-            <option value="">Loading workspaces...</option>
-          </select>
+        <div class="workspace-select-container">
+          <div class="workspace-label">Workspace</div>
+          <div class="workspace-select-wrapper">
+            <select id="workspaceSelect" class="workspace-select" disabled>
+              <option value="">Loading workspaces...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="workspace-section apps-section">
+        <h2 style="margin-bottom: 0">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-apps"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path
+              d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+            />
+            <path
+              d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+            />
+            <path
+              d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+            />
+            <path d="M14 7l6 0" />
+            <path d="M17 4l0 6" />
+          </svg>
+          Manage AI Workers
+        </h2>
+
+        <a href="https://app.mindstudio.ai/" target="_blank">
+          <button class="secondary-button">
+            <div>Browse all AI Workers</div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-right"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 12l14 0" />
+              <path d="M13 18l6 -6" />
+              <path d="M13 6l6 6" />
+            </svg>
+          </button>
+        </a>
+      </div>
+
+      <div class="workspace-section">
+        <div class="apps-header">
+          <div>AI Worker</div>
+
+          <div>Hide/Show</div>
+        </div>
+
+        <div id="apps-container"></div>
+      </div>
+
+      <div class="workspace-section">
+        <h2>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-book"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+            <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+            <path d="M3 6l0 13" />
+            <path d="M12 6l0 13" />
+            <path d="M21 6l0 13" />
+          </svg>
+          Documentation & Support
+        </h2>
+
+        <div class="documentation-links">
+          <a
+            href="https://help.mindstudio.ai/get-started/quickstart-guide"
+            target="_blank"
+            >Learn to Set Up AI Workers
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"
+              />
+              <path d="M11 13l9 -9" />
+              <path d="M15 4h5v5" />
+            </svg>
+          </a>
+
+          <a
+            href="https://help.mindstudio.ai/get-started/quickstart-guide"
+            target="_blank"
+          >
+            How to Customize (Remix) AI Workers
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"
+              />
+              <path d="M11 13l9 -9" />
+              <path d="M15 4h5v5" />
+            </svg>
+          </a>
+
+          <a
+            href="https://help.mindstudio.ai/get-started/quickstart-guide"
+            target="_blank"
+          >
+            Documentation
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"
+              />
+              <path d="M11 13l9 -9" />
+              <path d="M15 4h5v5" />
+            </svg>
+          </a>
         </div>
       </div>
 
