@@ -7,6 +7,7 @@ class BackgroundService {
   private static instance: BackgroundService;
   private readyPanels = new Map<number, boolean>();
   private pendingWorkers = new Map<number, WorkerLaunchPayload>();
+  private tabsWithOpenSidePanels = new Map<number, boolean>();
 
   private constructor() {
     this.setupHeaderRules();
@@ -38,6 +39,7 @@ class BackgroundService {
         );
         return;
       }
+      this.tabsWithOpenSidePanels.set(tabId, true);
 
       try {
         // Store pending worker for this tab
@@ -141,17 +143,43 @@ class BackgroundService {
 
             // When this specific tab's panel disconnects
             port.onDisconnect.addListener(async () => {
+              console.info(
+                '[MindStudio][Background] Closed side panel for tab',
+                { tabId },
+              );
+
               // Mark tab's panel as not ready
               this.readyPanels.delete(tabId);
+              this.tabsWithOpenSidePanels.delete(tabId);
 
-              // Reset to history panel for this tab
-              await chrome.sidePanel.setOptions({
-                tabId,
-                path: 'history-panel.html',
-              });
+              // Close the side panel
+              await chrome.sidePanel.setOptions({ enabled: false });
             });
           });
         }
+      }
+    });
+
+    // Listen for tab change and show/hide the side panel depending on whether
+    // or not we have an active worker
+    chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
+      if (!tab.url) {
+        return;
+      }
+
+      const shouldRestoreTab = this.tabsWithOpenSidePanels.get(tabId);
+      if (shouldRestoreTab) {
+        console.info(
+          '[MindStudio][Background] Switched to tab with active worker, restoring side panel',
+          { tabId },
+        );
+        await chrome.sidePanel.setOptions({ enabled: true });
+      } else {
+        console.info(
+          '[MindStudio][Background] Switched to tab with no active worker, closing side panel',
+          { tabId },
+        );
+        await chrome.sidePanel.setOptions({ enabled: false });
       }
     });
   }
@@ -172,8 +200,9 @@ class BackgroundService {
           chrome.sidePanel.setOptions({
             tabId: tab.id,
             path: 'history-panel.html',
+            enabled: true,
           });
-          await chrome.sidePanel.open({ windowId: tab.windowId });
+          await chrome.sidePanel.open({ tabId: tab.id });
           await storage.set('LAUNCHER_COLLAPSED', false);
         } catch (error) {
           console.error('[MindStudio][Background] Toggle failed:', error);
