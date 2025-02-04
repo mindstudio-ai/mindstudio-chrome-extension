@@ -51,12 +51,12 @@ module.exports = (env) => ({
           },
         },
         {
-          from: './src/sidepanel/index.html',
-          to: 'sidepanel.html',
-        },
-        {
           from: './src/sidepanel/worker-panel.html',
           to: 'worker-panel.html',
+        },
+        {
+          from: './src/sidepanel/history-panel.html',
+          to: 'history-panel.html',
         },
         {
           from: './src/settings/index.html',
