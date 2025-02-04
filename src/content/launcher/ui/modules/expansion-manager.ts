@@ -86,24 +86,35 @@ export class ExpansionManager {
     this.isCollapsed = collapsed;
     this.isTransitioning = true;
 
+    const containerElement = this.container.getElement();
+    const currentBottom = parseInt(containerElement.style.bottom || '0');
+    containerElement.style.transition =
+      'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
       this.inner.style.padding = '4px 0';
+
       // Get current height before collapsing
       const currentHeight = this.appsWrapper.offsetHeight;
       this.appsWrapper.style.height = `${currentHeight}px`;
+
       // Force a reflow
       this.appsWrapper.offsetHeight;
-      // Start transition to 0
+
+      // Start all transitions together
       requestAnimationFrame(() => {
+        containerElement.style.bottom = `${currentBottom + this.dimensions.COLLAPSED_HEIGHT}px`;
         this.appsWrapper.style.height = '0';
         this.appsWrapper.style.opacity = '0';
       });
+
       // Reset scroll position when collapsing
       this.appsContainer.scrollTop = 0;
     } else {
       this.inner.style.cursor = 'default';
       this.inner.style.padding = '0 0 4px';
+
       // First set opacity to make content visible for height calculation
       this.appsWrapper.style.opacity = '1';
       // Calculate target height
@@ -113,10 +124,13 @@ export class ExpansionManager {
       );
       // Set initial height
       this.appsWrapper.style.height = '0';
+
       // Force a reflow
       this.appsWrapper.offsetHeight;
-      // Start transition to target height
+
+      // Start all transitions together
       requestAnimationFrame(() => {
+        containerElement.style.bottom = `${currentBottom - this.dimensions.COLLAPSED_HEIGHT}px`;
         this.appsWrapper.style.height = `${targetHeight}px`;
       });
     }

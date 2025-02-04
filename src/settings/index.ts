@@ -59,6 +59,10 @@ class SettingsManager {
     storage.onChange('LAUNCHER_APPS_SETTINGS', () => {
       this.updateAppsList();
     });
+
+    storage.onChange('AUTH_TOKEN', () => {
+      this.checkAuthState();
+    });
   }
 
   private async checkAuthState(): Promise<void> {
@@ -66,6 +70,7 @@ class SettingsManager {
     this.updateAuthUI(isAuthenticated);
     if (isAuthenticated) {
       await this.loadWorkspaces();
+      this.updateAppsList();
     }
   }
 
@@ -391,7 +396,6 @@ class SettingsManager {
       if (isAuthenticated) {
         console.info('[MindStudio][Settings] Logging out');
         await auth.logout();
-        this.updateAuthUI(false);
         this.showSuccess('Successfully logged out');
       } else {
         console.info('[MindStudio][Settings] Initiating login');

@@ -79,4 +79,8 @@ export class SyncFrame extends Frame {
   protected onFrameLoad(): void {
     console.info('[MindStudio][Launcher] Sync frame loaded');
   }
+
+  reset(): void {
+    this.element.src = `${RootUrl}/_extension/launcher?__displayContext=extension`;
+  }
 }
