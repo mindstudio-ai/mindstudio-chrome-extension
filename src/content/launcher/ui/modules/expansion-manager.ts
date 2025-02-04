@@ -56,7 +56,7 @@ export class ExpansionManager {
 
   private async updateExpandedHeight(): Promise<void> {
     const inner = this.inner;
-    if (inner.style.width === `${this.dimensions.COLLAPSED_WIDTH}px`) {
+    if (this.isCollapsed) {
       return;
     }
 
@@ -101,12 +101,10 @@ export class ExpansionManager {
 
     if (collapsed) {
       inner.style.height = `${this.dimensions.COLLAPSED_HEIGHT}px`;
-      inner.style.width = `${this.dimensions.COLLAPSED_WIDTH}px`;
       inner.style.cursor = 'pointer';
       this.appsContainer.style.opacity = '0';
     } else {
       inner.style.cursor = 'default';
-      inner.style.width = `${this.dimensions.EXPANDED_WIDTH}px`;
 
       // Calculate maximum allowed height first
       const maxHeight = await this.calculateMaxExpandedHeight();
@@ -137,12 +135,10 @@ export class ExpansionManager {
 
     if (collapsed) {
       inner.style.height = `${this.dimensions.COLLAPSED_HEIGHT}px`;
-      inner.style.width = `${this.dimensions.COLLAPSED_WIDTH}px`;
       inner.style.cursor = 'pointer';
       this.appsContainer.style.opacity = '0';
     } else {
       inner.style.cursor = 'default';
-      inner.style.width = `${this.dimensions.EXPANDED_WIDTH}px`;
 
       // First calculate the target height
       inner.style.height = 'auto';

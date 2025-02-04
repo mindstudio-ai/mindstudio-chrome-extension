@@ -4,8 +4,8 @@ export interface Position {
 }
 
 export interface LauncherDimensions {
-  readonly COLLAPSED_WIDTH: number;
-  readonly EXPANDED_WIDTH: number;
+  readonly BASE_WIDTH: number;
+  readonly HOVER_WIDTH: number;
   readonly COLLAPSED_HEIGHT: number;
   readonly MIN_EXPANDED_HEIGHT: number;
   readonly MIN_EDGE_DISTANCE: number;
@@ -13,8 +13,8 @@ export interface LauncherDimensions {
 }
 
 export const DEFAULT_DIMENSIONS: LauncherDimensions = {
-  COLLAPSED_WIDTH: 48,
-  EXPANDED_WIDTH: 40,
+  BASE_WIDTH: 40,
+  HOVER_WIDTH: 48,
   COLLAPSED_HEIGHT: 40,
   MIN_EXPANDED_HEIGHT: 96,
   MIN_EDGE_DISTANCE: 64,

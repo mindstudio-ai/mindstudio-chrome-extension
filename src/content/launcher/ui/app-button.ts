@@ -2,6 +2,7 @@ import { FrameDimensions } from '../../../shared/constants';
 import { AppData } from '../../../shared/types/app';
 import { appendQueryParam } from '../../../shared/utils/url';
 import { Tooltip } from './tooltip';
+import { DEFAULT_DIMENSIONS } from './modules/types';
 
 export class AppButton {
   private container: HTMLElement;
@@ -25,8 +26,8 @@ export class AppButton {
       align-items: center;
       justify-content: center;
       position: relative;
-      width: 40px;
-      height: 40px;
+      width: ${DEFAULT_DIMENSIONS.BASE_WIDTH}px;
+      height: ${DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT}px;
       pointer-events: auto;
       flex-shrink: 0;
     `;

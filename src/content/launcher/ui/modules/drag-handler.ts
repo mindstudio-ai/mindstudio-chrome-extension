@@ -6,6 +6,7 @@ export class DragHandler {
   private dragStartY: number = 0;
   private initialPositionY: number = 0;
   private wasDragged: boolean = false;
+  private isDraggingEnabled: boolean = true;
 
   constructor(
     private readonly element: HTMLElement,
@@ -23,10 +24,14 @@ export class DragHandler {
     this.wasDragged = false;
   }
 
+  public setDraggingEnabled(enabled: boolean): void {
+    this.isDraggingEnabled = enabled;
+  }
+
   private initializeDragHandling(): void {
     const handleDragStart = (e: MouseEvent) => {
-      // Only allow dragging when collapsed
-      if (this.inner.style.width !== '48px') {
+      // Only allow dragging when enabled
+      if (!this.isDraggingEnabled) {
         return;
       }
 

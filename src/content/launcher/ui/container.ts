@@ -5,6 +5,7 @@ import { AppData } from '../../../shared/types/app';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
+import { DEFAULT_DIMENSIONS, EVENTS, ExpansionState } from './modules/types';
 
 export class LauncherContainer {
   private static readonly ElementId = {
@@ -23,7 +24,7 @@ export class LauncherContainer {
     `,
     inner: `
       margin-left: auto;
-      width: 48px;
+      width: ${DEFAULT_DIMENSIONS.BASE_WIDTH}px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -36,9 +37,10 @@ export class LauncherContainer {
       overflow: hidden;
       pointer-events: all;
       box-sizing: border-box;
-      height: 40px;
+      height: ${DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT}px;
       cursor: pointer;
       user-select: none;
+      transition: width 0.2s ease-out;
     `,
     appsContainer: `
       display: flex;
@@ -79,6 +81,19 @@ export class LauncherContainer {
     this.inner.appendChild(this.appsContainer);
     this.element.appendChild(this.inner);
 
+    // Add hover handler
+    this.inner.addEventListener('mouseenter', () => {
+      if (this.expansionManager?.getCollapsedState()) {
+        this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
+      }
+    });
+
+    this.inner.addEventListener('mouseleave', () => {
+      if (this.expansionManager?.getCollapsedState()) {
+        this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
+      }
+    });
+
     // Initialize with visibility hidden to prevent flash
     this.element.style.visibility = 'hidden';
 
@@ -95,6 +110,15 @@ export class LauncherContainer {
       this.appsContainer,
       this.positionManager,
     );
+
+    // Listen for expansion changes
+    this.element.addEventListener(EVENTS.EXPANSION_CHANGE, (e: Event) => {
+      const event = e as CustomEvent<ExpansionState>;
+      // Always reset to base width when expansion state changes
+      this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
+      // Only allow dragging when collapsed
+      this.dragHandler.setDraggingEnabled(event.detail.isCollapsed);
+    });
 
     // Initialize resize observer
     this.resizeObserver = this.createResizeObserver();
