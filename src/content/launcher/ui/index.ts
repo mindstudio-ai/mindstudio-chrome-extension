@@ -4,6 +4,8 @@ import { Logo } from './logo';
 import { IconButton } from './icon-button';
 import { AppData } from '../../../shared/types/app';
 import { runtime } from '../../../shared/services/messaging';
+import { storage } from '../../../shared/services/storage';
+import { sortApps } from '../../../shared/utils/sortApps';
 
 export class LauncherUI {
   private container: LauncherContainer;
@@ -65,12 +67,21 @@ export class LauncherUI {
     await this.container.initialize();
   }
 
-  updateApps(apps: AppData[]): void {
+  async updateApps(apps: AppData[]): Promise<void> {
     const appsContainer = this.container.getAppsContainer();
     const existingButtons = new Map(this.appButtons);
     this.appButtons.clear();
 
-    apps.forEach((app) => {
+    // Get app settings from storage
+    const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
+
+    // Filter out hidden apps and sort according to settings
+    const visibleApps = apps.filter(
+      (app) => appsSettings[app.id]?.isVisible !== false,
+    );
+    const sortedApps = sortApps(visibleApps, appsSettings);
+
+    sortedApps.forEach((app) => {
       const existingButton = existingButtons.get(app.id);
       if (existingButton) {
         existingButtons.delete(app.id);

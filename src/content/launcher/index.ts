@@ -51,6 +51,10 @@ export class LauncherService {
       await this.updateAppsFromStorage();
     });
 
+    storage.onChange('LAUNCHER_APPS_SETTINGS', async () => {
+      await this.updateAppsFromStorage();
+    });
+
     // Set initial states from storage
     this.ui.setCollapsed(
       (await storage.get('LAUNCHER_COLLAPSED')) ?? true,
@@ -65,12 +69,12 @@ export class LauncherService {
     const apps = await storage.get('LAUNCHER_APPS');
     const orgId = await storage.get('SELECTED_ORGANIZATION');
     if (!apps || !orgId) {
-      this.updateApps([]);
+      await this.updateApps([]);
       return;
     }
 
     const orgApps = apps[orgId] || [];
-    this.updateApps(orgApps);
+    await this.updateApps(orgApps);
   }
 
   private async setupComponents(): Promise<void> {
@@ -108,9 +112,9 @@ export class LauncherService {
     }
   }
 
-  updateApps(apps: AppData[]): void {
+  private async updateApps(apps: AppData[]): Promise<void> {
     this.apps = filterAppsByUrl(apps, this.currentHostUrl);
-    this.ui.updateApps(this.apps);
+    await this.ui.updateApps(this.apps);
   }
 
   private async handleExpand(): Promise<void> {
