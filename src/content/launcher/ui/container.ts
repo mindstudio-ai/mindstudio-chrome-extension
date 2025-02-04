@@ -287,6 +287,9 @@ export class LauncherContainer {
     if (collapsed) {
       this.showScrollFade('top', false);
       this.showScrollFade('bottom', false);
+      this.dragHandler.enable();
+    } else {
+      this.dragHandler.disable();
     }
 
     if (isInitial) {

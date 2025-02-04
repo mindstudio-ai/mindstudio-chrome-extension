@@ -7,6 +7,7 @@ export class DragHandler {
   private initialPositionY: number = 0;
   private wasDragged: boolean = false;
   private positionManager: PositionManager;
+  private enabled: boolean = true;
 
   constructor(
     private readonly containerElement: HTMLElement,
@@ -15,6 +16,18 @@ export class DragHandler {
   ) {
     this.positionManager = positionManager;
     this.initializeDragHandling();
+  }
+
+  public enable(): void {
+    this.enabled = true;
+  }
+
+  public disable(): void {
+    this.enabled = false;
+    if (this.isDragging) {
+      this.isDragging = false;
+      this.containerElement.style.transition = '';
+    }
   }
 
   public wasElementDragged(): boolean {
@@ -35,6 +48,10 @@ export class DragHandler {
 
   private initializeDragHandling(): void {
     const handleDragStart = (e: MouseEvent) => {
+      if (!this.enabled) {
+        return;
+      }
+
       this.isDragging = true;
       this.wasDragged = false;
       this.dragStartY = e.clientY;
