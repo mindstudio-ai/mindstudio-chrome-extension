@@ -1,7 +1,6 @@
 import { FrameDimensions, ZIndexes } from '../../../shared/constants';
 import { debounce } from '../../../shared/utils/debounce';
 import { createElementId } from '../../../shared/utils/dom';
-import { AppData } from '../../../shared/types/app';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
@@ -31,7 +30,6 @@ export class LauncherContainer {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-end;
       position: relative;
       background: rgba(18, 18, 19, 0.85);
       padding: 4px 0;
@@ -40,16 +38,17 @@ export class LauncherContainer {
       overflow: hidden;
       pointer-events: all;
       box-sizing: border-box;
-      height: ${DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT}px;
       cursor: pointer;
       user-select: none;
       transition: width 0.2s ease-out;
     `,
     appsWrapper: `
       position: relative;
-      flex: 1;
       width: 100%;
+      display: flex;
+      flex-direction: column;
       max-height: ${DEFAULT_DIMENSIONS.MAX_APPS_CONTAINER_HEIGHT}px;
+      overflow: hidden;
     `,
     appsContainer: `
       display: flex;
@@ -57,13 +56,8 @@ export class LauncherContainer {
       align-items: center;
       padding: 0;
       width: 100%;
-      height: 100%;
       overflow-y: auto;
-      opacity: 0;
       scrollbar-width: none;
-      &::-webkit-scrollbar {
-        display: none;
-      }
     `,
     scrollFade: `
       position: absolute;
@@ -97,12 +91,7 @@ export class LauncherContainer {
   private readonly dragHandler: DragHandler;
   private readonly expansionManager: ExpansionManager;
 
-  constructor(
-    private readonly callbacks: {
-      onLogoClick?: () => void;
-      onAppClick?: (app: AppData) => void;
-    } = {},
-  ) {
+  constructor() {
     this.element = this.createContainerElement();
     this.inner = this.createInnerElement();
     this.appsWrapper = this.createAppsWrapperElement();
@@ -116,6 +105,13 @@ export class LauncherContainer {
     this.appsWrapper.appendChild(this.bottomFade);
     this.inner.appendChild(this.appsWrapper);
     this.element.appendChild(this.inner);
+
+    // Set initial collapsed state
+    this.appsWrapper.style.height = '0';
+    this.appsWrapper.style.opacity = '0';
+    this.appsWrapper.style.transition =
+      'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+    this.appsContainer.style.scrollbarWidth = 'none';
 
     // Add hover handler
     this.inner.addEventListener('mouseenter', () => {
@@ -144,7 +140,7 @@ export class LauncherContainer {
       this,
       this.inner,
       this.appsContainer,
-      this.positionManager,
+      this.appsWrapper,
     );
 
     // Listen for expansion changes
