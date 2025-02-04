@@ -78,24 +78,68 @@ export class ExpansionManager {
   }
 
   public async setCollapsedState(collapsed: boolean): Promise<void> {
+    if (this.isTransitioning) {
+      return;
+    }
     this.isCollapsed = collapsed;
+    this.isTransitioning = true;
 
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
-      this.appsWrapper.style.height = '0';
-      this.appsWrapper.style.opacity = '0';
+      // Get current height before collapsing
+      const currentHeight = this.appsWrapper.offsetHeight;
+      this.appsWrapper.style.height = `${currentHeight}px`;
+      // Force a reflow
+      this.appsWrapper.offsetHeight;
+      // Start transition to 0
+      requestAnimationFrame(() => {
+        this.appsWrapper.style.height = '0';
+        this.appsWrapper.style.opacity = '0';
+      });
       // Reset scroll position when collapsing
       this.appsContainer.scrollTop = 0;
     } else {
       this.inner.style.cursor = 'default';
-      this.appsWrapper.style.height = 'auto';
+      // First set opacity to make content visible for height calculation
       this.appsWrapper.style.opacity = '1';
+      // Calculate target height
+      const targetHeight = Math.min(
+        this.appsContainer.scrollHeight,
+        this.dimensions.MAX_APPS_CONTAINER_HEIGHT,
+      );
+      // Set initial height
+      this.appsWrapper.style.height = '0';
+      // Force a reflow
+      this.appsWrapper.offsetHeight;
+      // Start transition to target height
+      requestAnimationFrame(() => {
+        this.appsWrapper.style.height = `${targetHeight}px`;
+      });
 
       // Update scroll state after expanding
       requestAnimationFrame(() => {
         this.updateScrollClasses();
       });
     }
+
+    // Wait for transition to complete
+    await new Promise((resolve) => {
+      const onTransitionEnd = (e: TransitionEvent) => {
+        if (e.propertyName === 'height') {
+          this.appsWrapper.removeEventListener(
+            'transitionend',
+            onTransitionEnd,
+          );
+          // If expanded, switch to auto height after animation
+          if (!collapsed) {
+            this.appsWrapper.style.height = 'auto';
+          }
+          this.isTransitioning = false;
+          resolve(undefined);
+        }
+      };
+      this.appsWrapper.addEventListener('transitionend', onTransitionEnd);
+    });
 
     this.dispatchExpansionChange();
   }
