@@ -3,7 +3,12 @@ import { createElementId } from '../../../shared/utils/dom';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
-import { DEFAULT_DIMENSIONS, EVENTS } from './modules/types';
+import { storage } from '../../../shared/services/storage';
+import {
+  DEFAULT_DIMENSIONS,
+  EVENTS,
+  PositionChangeEvent,
+} from './modules/types';
 
 export class LauncherContainer {
   private static readonly ElementId = {
@@ -31,7 +36,7 @@ export class LauncherContainer {
       align-items: center;
       position: relative;
       background: rgba(18, 18, 19, 0.85);
-      padding: 0 0 4px;
+      padding: 4px 0;
       border-radius: 8px 0 0 8px;
       box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 8px 16px 0px rgba(0, 0, 0, 0.15);
       overflow: hidden;
@@ -84,7 +89,7 @@ export class LauncherContainer {
   private readonly appsContainer: HTMLElement;
   private readonly topFade: HTMLElement;
   private readonly bottomFade: HTMLElement;
-  private readonly positionManager: PositionManager;
+  private positionManager!: PositionManager;
   private resizeObserver!: ResizeObserver;
   private dragHandler!: DragHandler;
   private expansionManager!: ExpansionManager;
@@ -124,11 +129,19 @@ export class LauncherContainer {
       }
     });
 
+    // Listen for position changes to update flex direction
+    this.element.addEventListener(EVENTS.POSITION_CHANGE, (e: Event) => {
+      const event = e as CustomEvent<PositionChangeEvent>;
+      this.updateFlexDirection(event.detail.position.anchor);
+    });
+
     // Initialize with visibility hidden to prevent flash
     this.element.style.visibility = 'hidden';
+  }
 
-    // Initialize managers
-    this.positionManager = new PositionManager(this.element);
+  private updateFlexDirection(anchor: 'top' | 'bottom'): void {
+    this.inner.style.flexDirection =
+      anchor === 'top' ? 'column-reverse' : 'column';
   }
 
   public setDragHandle(dragHandleElement: HTMLElement): void {
@@ -185,10 +198,11 @@ export class LauncherContainer {
   }
 
   private createResizeObserver(): ResizeObserver {
-    return new ResizeObserver(() => {
+    return new ResizeObserver(async () => {
       // Disable transitions only for position changes during resize
       this.element.style.transition = 'none';
-      this.positionManager.recalculatePosition();
+
+      await this.positionManager.recalculatePosition();
 
       // Keep transitions for height changes since they look better with animation
       this.expansionManager.recalculateHeight();
@@ -199,6 +213,13 @@ export class LauncherContainer {
     if (!this.dragHandler) {
       throw new Error('Drag handle must be set before initialization');
     }
+
+    // Initialize managers after all components are added
+    this.positionManager = new PositionManager(this.element);
+    await this.positionManager.initialize();
+
+    // Update existing drag handler with initialized position manager
+    this.dragHandler.updatePositionManager(this.positionManager);
 
     this.expansionManager = new ExpansionManager(
       this,
@@ -213,19 +234,41 @@ export class LauncherContainer {
       this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
     });
 
-    // Initialize position first
-    await this.positionManager.initialize();
-
-    // Add to DOM
+    // Add to DOM first so height calculations are accurate
     document.body.appendChild(this.element);
 
-    // Make visible after a frame to ensure position is applied
-    requestAnimationFrame(() => {
-      this.element.style.visibility = 'visible';
-    });
+    // Check if we're starting expanded
+    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+
+    // Initialize position first, with offset if expanded
+    const savedPosition = await storage.get('LAUNCHER_POSITION');
+    const defaultPosition = {
+      anchor: 'bottom' as const,
+      distance: DEFAULT_DIMENSIONS.MIN_EDGE_DISTANCE * 2,
+    };
+    const position = savedPosition ?? defaultPosition;
+
+    // If starting expanded, offset the initial position
+    if (isExpanded) {
+      const offsetPosition = {
+        ...position,
+        distance:
+          position.anchor === 'top'
+            ? position.distance - DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT
+            : position.distance - DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT,
+      };
+      this.positionManager.applyPosition(offsetPosition);
+    } else {
+      this.positionManager.applyPosition(position);
+    }
 
     // Initialize expansion state
     await this.expansionManager.initialize();
+
+    // Make visible after initialization
+    requestAnimationFrame(() => {
+      this.element.style.visibility = 'visible';
+    });
 
     // Start observing resize
     this.resizeObserver = this.createResizeObserver();
@@ -275,6 +318,10 @@ export class LauncherContainer {
 
   public getElement(): HTMLElement {
     return this.element;
+  }
+
+  public getPositionManager(): PositionManager {
+    return this.positionManager;
   }
 
   public showScrollFade(position: 'top' | 'bottom', show: boolean): void {

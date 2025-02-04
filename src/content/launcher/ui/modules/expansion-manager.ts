@@ -49,7 +49,7 @@ export class ExpansionManager {
     const maxScroll = container.scrollHeight - container.clientHeight;
 
     const canScrollUp = scrollTop > 2; // Add small threshold to avoid edge cases
-    const canScrollDown = maxScroll > 0 && scrollTop < maxScroll - 2;
+    const canScrollDown = maxScroll > 2 && scrollTop < maxScroll - 2; // Only show if meaningful scroll space exists
 
     this.container.showScrollFade('top', canScrollUp);
     this.container.showScrollFade('bottom', canScrollDown);
@@ -63,18 +63,46 @@ export class ExpansionManager {
   public async setInitialState(collapsed: boolean): Promise<void> {
     this.isCollapsed = collapsed;
 
+    // Disable all transitions temporarily
+    const containerElement = this.container.getElement();
+    containerElement.style.transition = 'none';
+    this.appsWrapper.style.transition = 'none';
+
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
-      this.inner.style.padding = '4px 0';
       this.appsWrapper.style.height = '0';
       this.appsWrapper.style.opacity = '0';
     } else {
       this.inner.style.cursor = 'default';
-      this.inner.style.padding = '0 0 4px';
       this.appsWrapper.style.height = 'auto';
       this.appsWrapper.style.opacity = '1';
+
+      // Get the logo's position (saved position is already normalized to collapsed state)
+      const currentPosition = this.container
+        .getPositionManager()
+        .getCurrentPosition();
+      const isTopAnchored = currentPosition?.anchor === 'top';
+
+      // Apply the offset from normalized position immediately
+      if (isTopAnchored) {
+        containerElement.style.top = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+      } else {
+        containerElement.style.bottom = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+      }
+
       this.updateScrollClasses();
     }
+
+    // Force a reflow to ensure styles are applied
+    containerElement.offsetHeight;
+
+    // Restore transitions for future animations
+    requestAnimationFrame(() => {
+      containerElement.style.transition =
+        'top 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      this.appsWrapper.style.transition =
+        'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+    });
 
     this.dispatchExpansionChange();
   }
@@ -86,24 +114,47 @@ export class ExpansionManager {
     this.isCollapsed = collapsed;
     this.isTransitioning = true;
 
+    const containerElement = this.container.getElement();
+    const positionManager = this.container.getPositionManager();
+    // Use saved position (normalized to collapsed state) when collapsing
+    // Use current position when expanding since we need to calculate offset from current position
+    const position = collapsed
+      ? positionManager.getSavedPosition()
+      : positionManager.getCurrentPosition();
+    const isTopAnchored = position?.anchor === 'top';
+
+    // Set specific transitions for visual properties only
+    containerElement.style.transition = isTopAnchored
+      ? 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      : 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
-      this.inner.style.padding = '4px 0';
+
       // Get current height before collapsing
       const currentHeight = this.appsWrapper.offsetHeight;
       this.appsWrapper.style.height = `${currentHeight}px`;
+
       // Force a reflow
       this.appsWrapper.offsetHeight;
-      // Start transition to 0
+
+      // Start all transitions together
       requestAnimationFrame(() => {
+        // Move to the normalized (collapsed) position
+        if (isTopAnchored) {
+          containerElement.style.top = `${position?.distance!}px`;
+        } else {
+          containerElement.style.bottom = `${position?.distance!}px`;
+        }
         this.appsWrapper.style.height = '0';
         this.appsWrapper.style.opacity = '0';
       });
+
       // Reset scroll position when collapsing
       this.appsContainer.scrollTop = 0;
     } else {
       this.inner.style.cursor = 'default';
-      this.inner.style.padding = '0 0 4px';
+
       // First set opacity to make content visible for height calculation
       this.appsWrapper.style.opacity = '1';
       // Calculate target height
@@ -113,16 +164,19 @@ export class ExpansionManager {
       );
       // Set initial height
       this.appsWrapper.style.height = '0';
+
       // Force a reflow
       this.appsWrapper.offsetHeight;
-      // Start transition to target height
-      requestAnimationFrame(() => {
-        this.appsWrapper.style.height = `${targetHeight}px`;
-      });
 
-      // Update scroll state after expanding
+      // Start all transitions together
       requestAnimationFrame(() => {
-        this.updateScrollClasses();
+        // Offset from the normalized position
+        if (isTopAnchored) {
+          containerElement.style.top = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+        } else {
+          containerElement.style.bottom = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+        }
+        this.appsWrapper.style.height = `${targetHeight}px`;
       });
     }
 
@@ -137,6 +191,10 @@ export class ExpansionManager {
           // If expanded, switch to auto height after animation
           if (!collapsed) {
             this.appsWrapper.style.height = 'auto';
+            // Update scroll state after height is set to auto
+            requestAnimationFrame(() => {
+              this.updateScrollClasses();
+            });
           }
           this.isTransitioning = false;
           resolve(undefined);

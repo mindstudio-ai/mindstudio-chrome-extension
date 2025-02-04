@@ -6,12 +6,14 @@ export class DragHandler {
   private dragStartY: number = 0;
   private initialPositionY: number = 0;
   private wasDragged: boolean = false;
+  private positionManager: PositionManager;
 
   constructor(
     private readonly containerElement: HTMLElement,
     private readonly dragHandleElement: HTMLElement,
-    private readonly positionManager: PositionManager,
+    positionManager: PositionManager,
   ) {
+    this.positionManager = positionManager;
     this.initializeDragHandling();
   }
 
@@ -21,6 +23,14 @@ export class DragHandler {
 
   public resetDragState(): void {
     this.wasDragged = false;
+  }
+
+  public getDragHandleElement(): HTMLElement {
+    return this.dragHandleElement;
+  }
+
+  public updatePositionManager(positionManager: PositionManager): void {
+    this.positionManager = positionManager;
   }
 
   private initializeDragHandling(): void {

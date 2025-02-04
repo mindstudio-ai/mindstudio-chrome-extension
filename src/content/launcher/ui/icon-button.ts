@@ -14,6 +14,13 @@ export class IconButton {
     this.element = document.createElement('button');
     this.element.className = 'icon-button';
     this.element.innerHTML = options.icon;
+    this.element.style.cssText = `
+      height: 0;
+      opacity: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    `;
 
     if (options.onClick) {
       this.element.addEventListener('click', (e) => {
@@ -44,20 +51,16 @@ export class IconButton {
       .icon-button {
         background: none;
         border: none;
-        padding: 8px;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
       }
 
       .icon-button svg {
         width: 20px;
         height: 20px;
-      }
-
-      .icon-button svg path {
-        transition: stroke 0.2s ease-in-out;
       }
 
       .icon-button:hover svg path {
@@ -75,7 +78,49 @@ export class IconButton {
     return this.tooltip.getElement();
   }
 
-  setVisibility(visible: boolean): void {
-    this.element.style.display = visible ? 'flex' : 'none';
+  private createContainer(): HTMLElement {
+    const container = document.createElement('div');
+    container.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 40px;
+      cursor: pointer;
+      opacity: 0;
+      overflow: hidden;
+    `;
+    container.innerHTML = this.element.innerHTML;
+    return container;
+  }
+
+  public setVisibility(visible: boolean, animate: boolean = true): void {
+    if (animate) {
+      this.element.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    } else {
+      this.element.style.transition = 'none';
+    }
+
+    requestAnimationFrame(() => {
+      if (visible) {
+        this.element.style.height = '40px';
+        this.element.style.opacity = '1';
+        this.element.style.padding = '8px';
+        this.element.style.margin = '0';
+      } else {
+        this.element.style.height = '0';
+        this.element.style.opacity = '0';
+        this.element.style.padding = '0';
+        this.element.style.margin = '0';
+      }
+
+      // If not animating, restore transitions after the next frame
+      if (!animate) {
+        requestAnimationFrame(() => {
+          this.element.style.transition =
+            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        });
+      }
+    });
   }
 }

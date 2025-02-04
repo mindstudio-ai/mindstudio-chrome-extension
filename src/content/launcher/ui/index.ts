@@ -76,9 +76,10 @@ export class LauncherUI {
     const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
 
     // Filter out hidden apps and sort according to settings
-    const visibleApps = apps.filter(
-      (app) => appsSettings[app.id]?.isVisible !== false,
-    );
+    const visibleApps = apps.filter((app) => {
+      const appSettings = appsSettings[app.id];
+      return !appSettings || appSettings.isVisible !== false;
+    });
     const sortedApps = sortApps(visibleApps, appsSettings);
 
     sortedApps.forEach((app) => {
@@ -108,7 +109,7 @@ export class LauncherUI {
 
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
     this.container.setCollapsedState(collapsed, isInitial);
-    this.menuButton.setVisibility(!collapsed);
+    this.menuButton.setVisibility(!collapsed, !isInitial);
   }
 
   private onSettingsClick(): void {
