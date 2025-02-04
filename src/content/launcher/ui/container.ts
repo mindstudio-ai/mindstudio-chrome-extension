@@ -4,7 +4,7 @@ import { createElementId } from '../../../shared/utils/dom';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
-import { DEFAULT_DIMENSIONS, EVENTS, ExpansionState } from './modules/types';
+import { DEFAULT_DIMENSIONS, EVENTS } from './modules/types';
 
 export class LauncherContainer {
   private static readonly ElementId = {
@@ -144,12 +144,10 @@ export class LauncherContainer {
     );
 
     // Listen for expansion changes
-    this.element.addEventListener(EVENTS.EXPANSION_CHANGE, (e: Event) => {
-      const event = e as CustomEvent<ExpansionState>;
+    this.element.addEventListener(EVENTS.EXPANSION_CHANGE, () => {
       // Always reset to base width when expansion state changes
       this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
-      // Only allow dragging when collapsed
-      this.dragHandler.setDraggingEnabled(event.detail.isCollapsed);
+      // Dragging is now always enabled
     });
 
     // Initialize resize observer
