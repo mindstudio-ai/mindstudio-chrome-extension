@@ -8,8 +8,8 @@ export class DragHandler {
   private wasDragged: boolean = false;
 
   constructor(
-    private readonly element: HTMLElement,
-    private readonly inner: HTMLElement,
+    private readonly containerElement: HTMLElement,
+    private readonly dragHandleElement: HTMLElement,
     private readonly positionManager: PositionManager,
   ) {
     this.initializeDragHandling();
@@ -31,18 +31,18 @@ export class DragHandler {
 
       // Get current position for dragging
       const currentTop =
-        this.element.style.top !== 'auto'
-          ? parseInt(this.element.style.top)
+        this.containerElement.style.top !== 'auto'
+          ? parseInt(this.containerElement.style.top)
           : window.innerHeight -
-            parseInt(this.element.style.bottom) -
-            this.element.offsetHeight;
+            parseInt(this.containerElement.style.bottom) -
+            this.containerElement.offsetHeight;
 
       this.initialPositionY = currentTop;
-      this.element.style.transition = 'none';
+      this.containerElement.style.transition = 'none';
 
       // Dispatch drag start event
       const event = new CustomEvent(EVENTS.DRAG_START);
-      this.element.dispatchEvent(event);
+      this.containerElement.dispatchEvent(event);
 
       e.preventDefault();
     };
@@ -70,15 +70,15 @@ export class DragHandler {
       }
 
       this.isDragging = false;
-      this.element.style.transition = '';
+      this.containerElement.style.transition = '';
 
       // Calculate and save final position
       const currentTop =
-        this.element.style.top !== 'auto'
-          ? parseInt(this.element.style.top)
+        this.containerElement.style.top !== 'auto'
+          ? parseInt(this.containerElement.style.top)
           : window.innerHeight -
-            parseInt(this.element.style.bottom) -
-            this.element.offsetHeight;
+            parseInt(this.containerElement.style.bottom) -
+            this.containerElement.offsetHeight;
 
       const anchor = this.positionManager.determineAnchor(currentTop);
       const distance = this.positionManager.calculateDistance(
@@ -90,10 +90,11 @@ export class DragHandler {
 
       // Dispatch drag end event
       const event = new CustomEvent(EVENTS.DRAG_END);
-      this.element.dispatchEvent(event);
+      this.containerElement.dispatchEvent(event);
     };
 
-    this.inner.addEventListener('mousedown', handleDragStart);
+    // Add event listeners to the drag handle element instead of the inner container
+    this.dragHandleElement.addEventListener('mousedown', handleDragStart);
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('mouseup', handleDragEnd);
   }

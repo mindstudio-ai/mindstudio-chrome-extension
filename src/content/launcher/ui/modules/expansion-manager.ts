@@ -65,10 +65,12 @@ export class ExpansionManager {
 
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
+      this.inner.style.padding = '4px 0';
       this.appsWrapper.style.height = '0';
       this.appsWrapper.style.opacity = '0';
     } else {
       this.inner.style.cursor = 'default';
+      this.inner.style.padding = '0 0 4px';
       this.appsWrapper.style.height = 'auto';
       this.appsWrapper.style.opacity = '1';
       this.updateScrollClasses();
@@ -86,6 +88,7 @@ export class ExpansionManager {
 
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
+      this.inner.style.padding = '4px 0';
       // Get current height before collapsing
       const currentHeight = this.appsWrapper.offsetHeight;
       this.appsWrapper.style.height = `${currentHeight}px`;
@@ -100,6 +103,7 @@ export class ExpansionManager {
       this.appsContainer.scrollTop = 0;
     } else {
       this.inner.style.cursor = 'default';
+      this.inner.style.padding = '0 0 4px';
       // First set opacity to make content visible for height calculation
       this.appsWrapper.style.opacity = '1';
       // Calculate target height
