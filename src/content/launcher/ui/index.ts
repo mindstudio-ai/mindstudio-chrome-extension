@@ -76,6 +76,23 @@ export class LauncherUI {
     });
     const sortedApps = sortApps(visibleApps, appsSettings);
 
+    // Quick equality check - if apps are the same, no need to update DOM
+    const currentAppIds = Array.from(this.appButtons.keys());
+    const newAppIds = sortedApps.map((app) => app.id);
+    if (
+      currentAppIds.length === newAppIds.length &&
+      currentAppIds.every((id, i) => id === newAppIds[i])
+    ) {
+      // Just update the app data in case it changed
+      sortedApps.forEach((app) => {
+        const button = this.appButtons.get(app.id);
+        if (button) {
+          button.updateApp(app);
+        }
+      });
+      return;
+    }
+
     // Create fragment for batched DOM updates
     const fragment = document.createDocumentFragment();
     const appsContainer = this.container.getAppsContainer();
