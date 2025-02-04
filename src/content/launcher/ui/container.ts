@@ -1,6 +1,7 @@
 import { FrameDimensions, ZIndexes } from '../../../shared/constants';
 import { debounce } from '../../../shared/utils/debounce';
 import { createElementId } from '../../../shared/utils/dom';
+import { AppData } from '../../../shared/types/app';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
@@ -64,8 +65,12 @@ export class LauncherContainer {
   private readonly dragHandler: DragHandler;
   private readonly expansionManager: ExpansionManager;
 
-  constructor() {
-    // Create UI elements
+  constructor(
+    private readonly callbacks: {
+      onLogoClick?: () => void;
+      onAppClick?: (app: AppData) => void;
+    } = {},
+  ) {
     this.element = this.createContainerElement();
     this.inner = this.createInnerElement();
     this.appsContainer = this.createAppsContainerElement();
@@ -93,9 +98,6 @@ export class LauncherContainer {
 
     // Initialize resize observer
     this.resizeObserver = this.createResizeObserver();
-
-    // Initialize position and show
-    this.initialize();
   }
 
   private createContainerElement(): HTMLElement {
@@ -133,7 +135,7 @@ export class LauncherContainer {
     );
   }
 
-  private async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     // Initialize position first
     await this.positionManager.initialize();
 
@@ -152,28 +154,31 @@ export class LauncherContainer {
     this.resizeObserver.observe(document.body);
   }
 
-  public getElement(): HTMLElement {
-    return this.element;
+  public isCollapsed(): boolean {
+    return this.expansionManager.getCollapsedState();
   }
 
-  public getInnerElement(): HTMLElement {
-    return this.inner;
+  public async setCollapsedState(
+    collapsed: boolean,
+    isInitial: boolean = false,
+  ): Promise<void> {
+    if (isInitial) {
+      await this.expansionManager.setInitialState(collapsed);
+    } else {
+      await this.expansionManager.setCollapsedState(collapsed);
+    }
   }
 
-  public getAppsContainer(): HTMLElement {
-    return this.appsContainer;
-  }
-
-  public async setInitialState(collapsed: boolean): Promise<void> {
-    await this.expansionManager.setInitialState(collapsed);
-  }
-
-  public async setCollapsedState(collapsed: boolean): Promise<void> {
-    await this.expansionManager.setCollapsedState(collapsed);
+  public addComponent(element: HTMLElement): void {
+    this.inner.appendChild(element);
   }
 
   public addTooltip(tooltip: HTMLElement): void {
     this.element.appendChild(tooltip);
+  }
+
+  public getAppsContainer(): HTMLElement {
+    return this.appsContainer;
   }
 
   public getDragHandler(): DragHandler {

@@ -9,7 +9,6 @@ export class LauncherUI {
   private logo: Logo;
   private appsButton: AppsButton;
   private appButtons: Map<string, AppButton> = new Map();
-  private isCollapsed: boolean = true;
 
   constructor(
     private onAppClick: (app: AppData) => void,
@@ -22,21 +21,20 @@ export class LauncherUI {
     this.setupUI();
   }
 
-  private setupUI(): void {
-    const inner = this.container.getInnerElement();
-    inner.appendChild(this.appsButton.getElement());
-    inner.appendChild(this.logo.getElement());
-    document.body.appendChild(this.container.getElement());
+  private async setupUI(): Promise<void> {
+    // Add components to container
+    this.container.addComponent(this.appsButton.getElement());
+    this.container.addComponent(this.logo.getElement());
+
+    // Add tooltips
     this.container.addTooltip(this.appsButton.getTooltip());
 
-    // Setup logo functionality
+    // Setup logo click handling
     const logoElement = this.logo.getElement();
-
     logoElement.addEventListener('click', (e) => {
       e.stopPropagation();
-      // Check if the element was dragged before triggering expand/collapse
       if (!this.container.getDragHandler().wasElementDragged()) {
-        if (this.isCollapsed) {
+        if (this.container.isCollapsed()) {
           this.onExpand();
         } else {
           this.onCollapse();
@@ -44,6 +42,9 @@ export class LauncherUI {
       }
       this.container.getDragHandler().resetDragState();
     });
+
+    // Initialize the container
+    await this.container.initialize();
   }
 
   updateApps(apps: AppData[]): void {
@@ -77,12 +78,7 @@ export class LauncherUI {
   }
 
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
-    this.isCollapsed = collapsed;
-    if (isInitial) {
-      this.container.setInitialState(collapsed);
-    } else {
-      this.container.setCollapsedState(collapsed);
-    }
+    this.container.setCollapsedState(collapsed, isInitial);
     this.appsButton.setVisibility(!collapsed);
   }
 }

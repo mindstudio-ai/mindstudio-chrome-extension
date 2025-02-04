@@ -182,4 +182,8 @@ export class ExpansionManager {
     });
     this.element.dispatchEvent(event);
   }
+
+  public getCollapsedState(): boolean {
+    return this.isCollapsed;
+  }
 }
