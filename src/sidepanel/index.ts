@@ -1,13 +1,21 @@
-import { PlayerFrame } from './player-frame';
 import { HistoryFrame } from './history-frame';
+import { PlayerFrame } from './player-frame';
+
+type PanelType = 'worker' | 'history';
 
 class SidePanel {
   private frame?: PlayerFrame | HistoryFrame;
   private port?: chrome.runtime.Port;
+  private type: PanelType;
 
   constructor() {
     const params = new URLSearchParams(window.location.search);
     const tabId = params.get('tabId');
+
+    // Determine panel type from URL
+    this.type = window.location.pathname.includes('worker-panel')
+      ? 'worker'
+      : 'history';
 
     // Connect to background service first
     this.port = chrome.runtime.connect({ name: 'sidepanel' });
@@ -18,14 +26,19 @@ class SidePanel {
       throw new Error('Container not found');
     }
 
-    // If we have a tabId, we're in worker mode, otherwise we're in history mode
-    if (tabId) {
+    // Initialize the appropriate frame based on type
+    if (this.type === 'worker' && tabId) {
       const parsedTabId = parseInt(tabId, 10);
       this.frame = new PlayerFrame(container, parsedTabId);
     } else {
       // In history mode, use a dummy tabId of -1 since it's not used
       this.frame = new HistoryFrame(container, -1);
     }
+
+    console.info('[MindStudio][Sidepanel] Initialized panel:', {
+      type: this.type,
+      tabId: tabId || -1,
+    });
   }
 }
 
