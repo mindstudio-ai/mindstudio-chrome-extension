@@ -1,4 +1,5 @@
 import { Environment } from '../constants';
+import { AppSettings } from '../types/app';
 
 // Define the value types
 export type StorageValues = {
@@ -22,6 +23,7 @@ export type StorageValues = {
     id: string;
     name: string;
   }> | null;
+  LAUNCHER_APPS_SETTINGS: Record<string, AppSettings> | null;
 };
 
 // Move key generation here
@@ -35,6 +37,7 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   LAUNCHER_POSITION: createStorageKey('LauncherPosition'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
+  LAUNCHER_APPS_SETTINGS: createStorageKey('LauncherAppsSettings'),
 } as const;
 
 export const storage = {

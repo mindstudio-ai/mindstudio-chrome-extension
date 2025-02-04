@@ -4,3 +4,8 @@ export interface AppData {
   iconUrl: string;
   extensionSupportedSites: string[];
 }
+
+export interface AppSettings {
+  sortOrder: number;
+  isVisible: boolean;
+}
