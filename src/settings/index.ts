@@ -1,16 +1,16 @@
-import { SyncFrame } from '../content/launcher/sync-frame';
 import { DefaultIcons } from '../shared/constants';
 import { auth } from '../shared/services/auth';
-import { frame } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
 import { AppData } from '../shared/types/app';
 import { sortApps } from '../shared/utils/sortApps';
+import { SyncFrame } from '../content/launcher/sync-frame';
 
 class SettingsManager {
   private static instance: SettingsManager;
   private status: HTMLElement | null;
   private authButton: HTMLElement | null;
   private workspaceSelect: HTMLSelectElement | null;
+  private syncFrame: SyncFrame;
 
   private constructor() {
     this.status = document.getElementById('status');
@@ -20,6 +20,7 @@ class SettingsManager {
     ) as HTMLSelectElement;
 
     console.info('[MindStudio][Settings] Initializing settings page');
+    this.syncFrame = new SyncFrame();
     this.setupEventListeners();
     this.checkAuthState();
   }
@@ -40,6 +41,24 @@ class SettingsManager {
         this.handleWorkspaceChange(),
       );
     }
+
+    // Listen for storage changes that affect the UI
+    storage.onChange('LAUNCHER_APPS', () => {
+      this.updateAppsList();
+    });
+
+    storage.onChange('ORGANIZATIONS', () => {
+      this.loadWorkspaces();
+    });
+
+    storage.onChange('SELECTED_ORGANIZATION', () => {
+      this.loadWorkspaces();
+      this.updateAppsList();
+    });
+
+    storage.onChange('LAUNCHER_APPS_SETTINGS', () => {
+      this.updateAppsList();
+    });
   }
 
   private async checkAuthState(): Promise<void> {
