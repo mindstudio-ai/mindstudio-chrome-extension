@@ -1,5 +1,4 @@
 import { FrameDimensions, ZIndexes } from '../../../shared/constants';
-import { debounce } from '../../../shared/utils/debounce';
 import { createElementId } from '../../../shared/utils/dom';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
@@ -200,15 +199,14 @@ export class LauncherContainer {
   }
 
   private createResizeObserver(): ResizeObserver {
-    return new ResizeObserver(
-      debounce(() => {
-        this.element.style.transition = 'none';
-        this.expansionManager.recalculateHeight();
-        requestAnimationFrame(() => {
-          this.element.style.transition = 'all 0.2s ease-out';
-        });
-      }, 100),
-    );
+    return new ResizeObserver(() => {
+      // Disable transitions only for position changes during resize
+      this.element.style.transition = 'none';
+      this.positionManager.recalculatePosition();
+
+      // Keep transitions for height changes since they look better with animation
+      this.expansionManager.recalculateHeight();
+    });
   }
 
   public async initialize(): Promise<void> {

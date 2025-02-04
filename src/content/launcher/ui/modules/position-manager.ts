@@ -9,6 +9,7 @@ import {
 export class PositionManager {
   private readonly dimensions: LauncherDimensions;
   private currentPosition: Position | null = null;
+  private savedPosition: Position | null = null;
 
   constructor(
     private readonly element: HTMLElement,
@@ -24,7 +25,8 @@ export class PositionManager {
       distance: this.dimensions.MIN_EDGE_DISTANCE * 2,
     };
 
-    this.applyPosition(position ?? defaultPosition);
+    this.savedPosition = position ?? defaultPosition;
+    this.applyPosition(this.savedPosition);
   }
 
   public applyPosition(position: Position | null): void {
@@ -34,30 +36,45 @@ export class PositionManager {
       return;
     }
 
-    const { anchor, distance } = position;
-    const minDistance = this.dimensions.MIN_EDGE_DISTANCE;
-    const maxDistance = window.innerHeight - this.dimensions.MIN_EDGE_DISTANCE;
-
-    // For bottom anchor, we need to account for the collapsed height
-    const constrainedDistance = Math.max(
-      minDistance,
-      Math.min(
-        distance,
-        maxDistance -
-          (anchor === 'bottom' ? this.dimensions.COLLAPSED_HEIGHT : 0),
-      ),
-    );
+    const constrainedPosition = this.getConstrainedPosition(position);
+    const { anchor, distance } = constrainedPosition;
 
     if (anchor === 'top') {
-      this.element.style.top = `${constrainedDistance}px`;
+      this.element.style.top = `${distance}px`;
       this.element.style.bottom = 'auto';
     } else {
-      this.element.style.bottom = `${constrainedDistance}px`;
+      this.element.style.bottom = `${distance}px`;
       this.element.style.top = 'auto';
     }
 
-    this.currentPosition = { anchor, distance: constrainedDistance };
+    this.currentPosition = constrainedPosition;
     this.dispatchPositionChange(false);
+  }
+
+  private getConstrainedPosition(position: Position): Position {
+    const { anchor, distance } = position;
+    const minDistance = this.dimensions.MIN_EDGE_DISTANCE;
+    const elementHeight =
+      this.element.offsetHeight || this.dimensions.COLLAPSED_HEIGHT;
+    const maxDistance = window.innerHeight - minDistance - elementHeight;
+
+    // If maxDistance is negative or very small, default to minDistance
+    if (maxDistance < minDistance) {
+      return {
+        anchor: 'top',
+        distance: minDistance,
+      };
+    }
+
+    const constrainedDistance = Math.max(
+      minDistance,
+      Math.min(distance, maxDistance),
+    );
+
+    return {
+      anchor,
+      distance: constrainedDistance,
+    };
   }
 
   public determineAnchor(y: number): 'top' | 'bottom' {
@@ -83,10 +100,21 @@ export class PositionManager {
     return this.currentPosition;
   }
 
+  public getSavedPosition(): Position | null {
+    return this.savedPosition;
+  }
+
   public async savePosition(position: Position): Promise<void> {
     await storage.set('LAUNCHER_POSITION', position);
+    this.savedPosition = position;
     this.currentPosition = position;
     this.dispatchPositionChange(true);
+  }
+
+  public recalculatePosition(): void {
+    if (this.savedPosition) {
+      this.applyPosition(this.savedPosition);
+    }
   }
 
   private dispatchPositionChange(isFromDrag: boolean): void {
