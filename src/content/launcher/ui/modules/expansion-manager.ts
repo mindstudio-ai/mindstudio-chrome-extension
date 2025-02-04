@@ -49,7 +49,7 @@ export class ExpansionManager {
     const maxScroll = container.scrollHeight - container.clientHeight;
 
     const canScrollUp = scrollTop > 2; // Add small threshold to avoid edge cases
-    const canScrollDown = maxScroll > 0 && scrollTop < maxScroll - 2;
+    const canScrollDown = maxScroll > 2 && scrollTop < maxScroll - 2; // Only show if meaningful scroll space exists
 
     this.container.showScrollFade('top', canScrollUp);
     this.container.showScrollFade('bottom', canScrollDown);
@@ -119,11 +119,6 @@ export class ExpansionManager {
       requestAnimationFrame(() => {
         this.appsWrapper.style.height = `${targetHeight}px`;
       });
-
-      // Update scroll state after expanding
-      requestAnimationFrame(() => {
-        this.updateScrollClasses();
-      });
     }
 
     // Wait for transition to complete
@@ -137,6 +132,10 @@ export class ExpansionManager {
           // If expanded, switch to auto height after animation
           if (!collapsed) {
             this.appsWrapper.style.height = 'auto';
+            // Update scroll state after height is set to auto
+            requestAnimationFrame(() => {
+              this.updateScrollClasses();
+            });
           }
           this.isTransitioning = false;
           resolve(undefined);
