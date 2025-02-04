@@ -76,9 +76,10 @@ export class LauncherUI {
     const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
 
     // Filter out hidden apps and sort according to settings
-    const visibleApps = apps.filter(
-      (app) => appsSettings[app.id]?.isVisible !== false,
-    );
+    const visibleApps = apps.filter((app) => {
+      const appSettings = appsSettings[app.id];
+      return !appSettings || appSettings.isVisible !== false;
+    });
     const sortedApps = sortApps(visibleApps, appsSettings);
 
     sortedApps.forEach((app) => {
