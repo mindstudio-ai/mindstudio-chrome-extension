@@ -1,10 +1,9 @@
 import { FrameDimensions, ZIndexes } from '../../../shared/constants';
-import { createElementId } from '../../../shared/utils/dom';
 import { debounce } from '../../../shared/utils/debounce';
+import { createElementId } from '../../../shared/utils/dom';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
-import { Tooltip } from './tooltip';
 
 export class LauncherContainer {
   private static readonly ElementId = {
@@ -44,7 +43,7 @@ export class LauncherContainer {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px 0 0;
+      padding: 0;
       flex: 1;
       width: 100%;
       overflow-y: auto;
@@ -59,7 +58,6 @@ export class LauncherContainer {
   private readonly element: HTMLElement;
   private readonly inner: HTMLElement;
   private readonly appsContainer: HTMLElement;
-  private readonly settingsTooltip: Tooltip;
   private readonly resizeObserver: ResizeObserver;
 
   private readonly positionManager: PositionManager;
@@ -75,10 +73,6 @@ export class LauncherContainer {
     // Setup DOM structure
     this.inner.appendChild(this.appsContainer);
     this.element.appendChild(this.inner);
-
-    // Create tooltip
-    this.settingsTooltip = new Tooltip({ text: 'Settings' });
-    this.element.appendChild(this.settingsTooltip.getElement());
 
     // Initialize with visibility hidden to prevent flash
     this.element.style.visibility = 'hidden';
@@ -178,25 +172,12 @@ export class LauncherContainer {
     await this.expansionManager.setCollapsedState(collapsed);
   }
 
-  public setExpandClickHandler(handler: (e: MouseEvent) => void): void {
-    this.inner.addEventListener('click', (e) => {
-      if (
-        this.inner.style.width === '48px' &&
-        !this.dragHandler.wasElementDragged()
-      ) {
-        e.stopPropagation();
-        handler(e);
-      }
-      this.dragHandler.resetDragState();
-    });
-  }
-
   public addTooltip(tooltip: HTMLElement): void {
     this.element.appendChild(tooltip);
   }
 
-  public getSettingsTooltip(): Tooltip {
-    return this.settingsTooltip;
+  public getDragHandler(): DragHandler {
+    return this.dragHandler;
   }
 
   public recalculateHeight(): void {

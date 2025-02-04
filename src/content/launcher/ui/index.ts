@@ -1,16 +1,15 @@
 import { AppButton } from './app-button';
 import { AppsButton } from './apps-button';
-import { CollapseButton } from './collapse';
 import { LauncherContainer } from './container';
 import { Logo } from './logo';
 import { AppData } from '../../../shared/types/app';
 
 export class LauncherUI {
   private container: LauncherContainer;
-  private collapseButton: CollapseButton;
   private logo: Logo;
   private appsButton: AppsButton;
   private appButtons: Map<string, AppButton> = new Map();
+  private isCollapsed: boolean = true;
 
   constructor(
     private onAppClick: (app: AppData) => void,
@@ -18,7 +17,6 @@ export class LauncherUI {
     private onExpand: () => void,
   ) {
     this.container = new LauncherContainer();
-    this.collapseButton = new CollapseButton(onCollapse);
     this.logo = new Logo();
     this.appsButton = new AppsButton();
     this.setupUI();
@@ -26,35 +24,26 @@ export class LauncherUI {
 
   private setupUI(): void {
     const inner = this.container.getInnerElement();
-    inner.appendChild(this.collapseButton.getElement());
     inner.appendChild(this.appsButton.getElement());
     inner.appendChild(this.logo.getElement());
     document.body.appendChild(this.container.getElement());
     this.container.addTooltip(this.appsButton.getTooltip());
 
-    // Setup logo settings functionality
+    // Setup logo functionality
     const logoElement = this.logo.getElement();
-    logoElement.addEventListener('mouseenter', () => {
-      if (inner.style.width !== '48px') {
-        this.container.getSettingsTooltip().show(logoElement);
-      }
-    });
-
-    logoElement.addEventListener('mouseleave', () => {
-      this.container.getSettingsTooltip().hide();
-    });
 
     logoElement.addEventListener('click', (e) => {
-      if (inner.style.width !== '48px') {
-        e.stopPropagation();
-        chrome.runtime.sendMessage({
-          _MindStudioEvent: '@@mindstudio/settings/open',
-          payload: undefined,
-        });
+      e.stopPropagation();
+      // Check if the element was dragged before triggering expand/collapse
+      if (!this.container.getDragHandler().wasElementDragged()) {
+        if (this.isCollapsed) {
+          this.onExpand();
+        } else {
+          this.onCollapse();
+        }
       }
+      this.container.getDragHandler().resetDragState();
     });
-
-    this.container.setExpandClickHandler(this.onExpand);
   }
 
   updateApps(apps: AppData[]): void {
@@ -88,12 +77,12 @@ export class LauncherUI {
   }
 
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
+    this.isCollapsed = collapsed;
     if (isInitial) {
       this.container.setInitialState(collapsed);
     } else {
       this.container.setCollapsedState(collapsed);
     }
-    this.collapseButton.setVisibility(!collapsed);
     this.appsButton.setVisibility(!collapsed);
   }
 }
