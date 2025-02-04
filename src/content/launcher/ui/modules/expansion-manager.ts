@@ -11,6 +11,8 @@ export class ExpansionManager {
   private readonly dimensions: LauncherDimensions;
   private isCollapsed: boolean = true;
   private isTransitioning: boolean = false;
+  private pendingState: boolean | null = null;
+  private currentTransitionCleanup: { (): void } | null = null;
   private scrollHandler: () => void;
 
   constructor(
@@ -61,29 +63,32 @@ export class ExpansionManager {
   }
 
   public async setInitialState(collapsed: boolean): Promise<void> {
+    // For initial state, just set everything immediately without transitions
     this.isCollapsed = collapsed;
 
-    // Disable all transitions temporarily
     const containerElement = this.container.getElement();
     containerElement.style.transition = 'none';
     this.appsWrapper.style.transition = 'none';
 
+    // Update handlers for initial state
     if (collapsed) {
+      this.container.getDragHandler().enable();
+      this.container.showScrollFade('top', false);
+      this.container.showScrollFade('bottom', false);
       this.inner.style.cursor = 'pointer';
       this.appsWrapper.style.height = '0';
       this.appsWrapper.style.opacity = '0';
     } else {
+      this.container.getDragHandler().disable();
       this.inner.style.cursor = 'default';
       this.appsWrapper.style.height = 'auto';
       this.appsWrapper.style.opacity = '1';
 
-      // Get the logo's position (saved position is already normalized to collapsed state)
       const currentPosition = this.container
         .getPositionManager()
         .getCurrentPosition();
       const isTopAnchored = currentPosition?.anchor === 'top';
 
-      // Apply the offset from normalized position immediately
       if (isTopAnchored) {
         containerElement.style.top = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
       } else {
@@ -93,10 +98,9 @@ export class ExpansionManager {
       this.updateScrollClasses();
     }
 
-    // Force a reflow to ensure styles are applied
-    containerElement.offsetHeight;
+    containerElement.offsetHeight; // Force reflow
 
-    // Restore transitions for future animations
+    // Restore transitions for future updates
     requestAnimationFrame(() => {
       containerElement.style.transition =
         'top 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -108,102 +112,145 @@ export class ExpansionManager {
   }
 
   public async setCollapsedState(collapsed: boolean): Promise<void> {
-    if (this.isTransitioning) {
+    // If we're already in that state and not transitioning, nothing to do
+    if (collapsed === this.isCollapsed && !this.isTransitioning) {
       return;
     }
+
+    // If we're transitioning, store this as the pending state
+    if (this.isTransitioning) {
+      this.pendingState = collapsed;
+      return;
+    }
+
+    // Start the transition to the new state
+    await this.transitionToState(collapsed);
+  }
+
+  private async transitionToState(collapsed: boolean): Promise<void> {
+    // Cancel any ongoing transition
+    if (this.currentTransitionCleanup) {
+      this.currentTransitionCleanup();
+      this.currentTransitionCleanup = null;
+    }
+
+    // Update state immediately
     this.isCollapsed = collapsed;
     this.isTransitioning = true;
 
     const containerElement = this.container.getElement();
     const positionManager = this.container.getPositionManager();
-    // Use saved position (normalized to collapsed state) when collapsing
-    // Use current position when expanding since we need to calculate offset from current position
     const position = collapsed
       ? positionManager.getSavedPosition()
       : positionManager.getCurrentPosition();
     const isTopAnchored = position?.anchor === 'top';
 
-    // Set specific transitions for visual properties only
+    // Update handlers immediately for new state
+    if (collapsed) {
+      this.container.getDragHandler().enable();
+      this.container.showScrollFade('top', false);
+      this.container.showScrollFade('bottom', false);
+      this.inner.style.cursor = 'pointer';
+    } else {
+      this.container.getDragHandler().disable();
+      this.inner.style.cursor = 'default';
+    }
+
+    // Set up transitions
     containerElement.style.transition = isTopAnchored
       ? 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       : 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    this.appsWrapper.style.transition =
+      'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
 
     if (collapsed) {
-      this.inner.style.cursor = 'pointer';
-
-      // Get current height before collapsing
+      // Capture current height before collapse
       const currentHeight = this.appsWrapper.offsetHeight;
       this.appsWrapper.style.height = `${currentHeight}px`;
+      this.appsWrapper.offsetHeight; // Force reflow
 
-      // Force a reflow
-      this.appsWrapper.offsetHeight;
-
-      // Start all transitions together
-      requestAnimationFrame(() => {
-        // Move to the normalized (collapsed) position
-        if (isTopAnchored) {
-          containerElement.style.top = `${position?.distance!}px`;
-        } else {
-          containerElement.style.bottom = `${position?.distance!}px`;
-        }
-        this.appsWrapper.style.height = '0';
-        this.appsWrapper.style.opacity = '0';
-      });
-
-      // Reset scroll position when collapsing
+      // Start collapse transition
+      if (isTopAnchored) {
+        containerElement.style.top = `${position?.distance!}px`;
+      } else {
+        containerElement.style.bottom = `${position?.distance!}px`;
+      }
+      this.appsWrapper.style.height = '0';
+      this.appsWrapper.style.opacity = '0';
       this.appsContainer.scrollTop = 0;
     } else {
-      this.inner.style.cursor = 'default';
-
-      // First set opacity to make content visible for height calculation
+      // Start expand transition
       this.appsWrapper.style.opacity = '1';
-      // Calculate target height
       const targetHeight = Math.min(
         this.appsContainer.scrollHeight,
         this.dimensions.MAX_APPS_CONTAINER_HEIGHT,
       );
-      // Set initial height
       this.appsWrapper.style.height = '0';
+      this.appsWrapper.offsetHeight; // Force reflow
 
-      // Force a reflow
-      this.appsWrapper.offsetHeight;
-
-      // Start all transitions together
-      requestAnimationFrame(() => {
-        // Offset from the normalized position
-        if (isTopAnchored) {
-          containerElement.style.top = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
-        } else {
-          containerElement.style.bottom = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
-        }
-        this.appsWrapper.style.height = `${targetHeight}px`;
-      });
+      if (isTopAnchored) {
+        containerElement.style.top = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+      } else {
+        containerElement.style.bottom = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+      }
+      this.appsWrapper.style.height = `${targetHeight}px`;
     }
 
-    // Wait for transition to complete
-    await new Promise((resolve) => {
-      const onTransitionEnd = (e: TransitionEvent) => {
+    try {
+      await this.waitForTransition();
+    } finally {
+      // Always clean up the current transition
+      if (this.currentTransitionCleanup) {
+        (this.currentTransitionCleanup as () => void)();
+        this.currentTransitionCleanup = null;
+      }
+
+      // Handle any pending state change
+      const nextState = this.pendingState;
+      this.pendingState = null;
+      this.isTransitioning = false;
+
+      // Set final state for current transition
+      if (!this.isCollapsed) {
+        this.appsWrapper.style.height = 'auto';
+        this.updateScrollClasses();
+      }
+
+      this.dispatchExpansionChange();
+
+      // If we have a pending state that's different from our current state,
+      // start a new transition
+      if (nextState !== null && nextState !== this.isCollapsed) {
+        await this.transitionToState(nextState);
+      }
+    }
+  }
+
+  private waitForTransition(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      let isDone = false;
+
+      const cleanup = (): void => {
+        if (isDone) {
+          return;
+        }
+        isDone = true;
+        this.appsWrapper.removeEventListener('transitionend', onTransitionEnd);
+        resolve();
+      };
+
+      const onTransitionEnd = (e: TransitionEvent): void => {
         if (e.propertyName === 'height') {
-          this.appsWrapper.removeEventListener(
-            'transitionend',
-            onTransitionEnd,
-          );
-          // If expanded, switch to auto height after animation
-          if (!collapsed) {
-            this.appsWrapper.style.height = 'auto';
-            // Update scroll state after height is set to auto
-            requestAnimationFrame(() => {
-              this.updateScrollClasses();
-            });
-          }
-          this.isTransitioning = false;
-          resolve(undefined);
+          cleanup();
         }
       };
-      this.appsWrapper.addEventListener('transitionend', onTransitionEnd);
-    });
 
-    this.dispatchExpansionChange();
+      this.appsWrapper.addEventListener('transitionend', onTransitionEnd);
+      this.currentTransitionCleanup = cleanup;
+
+      // Safety timeout in case transition doesn't complete
+      setTimeout(cleanup, 350);
+    });
   }
 
   public recalculateHeight(): void {
