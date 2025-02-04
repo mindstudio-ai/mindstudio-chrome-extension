@@ -1,6 +1,6 @@
 {
   "name": "mindstudio-chrome-extension",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "engines": {
     "node": ">= 14.0.0",
     "npm": ">= 6.0.0"
