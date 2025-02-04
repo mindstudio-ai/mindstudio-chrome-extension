@@ -44,6 +44,9 @@ export class LauncherUI {
     // Add tooltips
     this.container.addTooltip(this.menuButton.getTooltip());
 
+    // Set logo as drag handle
+    this.container.setDragHandle(this.logo.getElement());
+
     // Setup logo click handling
     const logoElement = this.logo.getElement();
     logoElement.addEventListener('click', (e) => {

@@ -31,7 +31,7 @@ export class LauncherContainer {
       align-items: center;
       position: relative;
       background: rgba(18, 18, 19, 0.85);
-      padding: 4px 0;
+      padding: 0 0 4px;
       border-radius: 8px 0 0 8px;
       box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 8px 16px 0px rgba(0, 0, 0, 0.15);
       overflow: hidden;
@@ -70,11 +70,11 @@ export class LauncherContainer {
     `,
     scrollFadeTop: `
       top: 0;
-      background: linear-gradient(180deg, rgba(18, 18, 19, 1) 0%, rgba(18, 18, 19, 0) 100%);
+      background: linear-gradient(180deg, rgba(18, 18, 19, 0.85) 0%, rgba(54, 54, 54, 0) 100%);
     `,
     scrollFadeBottom: `
       bottom: 0;
-      background: linear-gradient(0deg, rgba(18, 18, 19, 1) 0%, rgba(18, 18, 19, 0) 100%);
+      background: linear-gradient(0deg, rgba(18, 18, 19, 0.85) 0%, rgba(54, 54, 54, 0) 100%);
     `,
   };
 
@@ -84,11 +84,10 @@ export class LauncherContainer {
   private readonly appsContainer: HTMLElement;
   private readonly topFade: HTMLElement;
   private readonly bottomFade: HTMLElement;
-  private readonly resizeObserver: ResizeObserver;
-
   private readonly positionManager: PositionManager;
-  private readonly dragHandler: DragHandler;
-  private readonly expansionManager: ExpansionManager;
+  private resizeObserver!: ResizeObserver;
+  private dragHandler!: DragHandler;
+  private expansionManager!: ExpansionManager;
 
   constructor() {
     this.element = this.createContainerElement();
@@ -130,27 +129,14 @@ export class LauncherContainer {
 
     // Initialize managers
     this.positionManager = new PositionManager(this.element);
+  }
+
+  public setDragHandle(dragHandleElement: HTMLElement): void {
     this.dragHandler = new DragHandler(
       this.element,
-      this.inner,
+      dragHandleElement,
       this.positionManager,
     );
-    this.expansionManager = new ExpansionManager(
-      this,
-      this.inner,
-      this.appsContainer,
-      this.appsWrapper,
-    );
-
-    // Listen for expansion changes
-    this.element.addEventListener(EVENTS.EXPANSION_CHANGE, () => {
-      // Always reset to base width when expansion state changes
-      this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
-      // Dragging is now always enabled
-    });
-
-    // Initialize resize observer
-    this.resizeObserver = this.createResizeObserver();
   }
 
   private createContainerElement(): HTMLElement {
@@ -210,6 +196,23 @@ export class LauncherContainer {
   }
 
   public async initialize(): Promise<void> {
+    if (!this.dragHandler) {
+      throw new Error('Drag handle must be set before initialization');
+    }
+
+    this.expansionManager = new ExpansionManager(
+      this,
+      this.inner,
+      this.appsContainer,
+      this.appsWrapper,
+    );
+
+    // Listen for expansion changes
+    this.element.addEventListener(EVENTS.EXPANSION_CHANGE, () => {
+      // Always reset to base width when expansion state changes
+      this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
+    });
+
     // Initialize position first
     await this.positionManager.initialize();
 
@@ -225,6 +228,7 @@ export class LauncherContainer {
     await this.expansionManager.initialize();
 
     // Start observing resize
+    this.resizeObserver = this.createResizeObserver();
     this.resizeObserver.observe(document.body);
   }
 
