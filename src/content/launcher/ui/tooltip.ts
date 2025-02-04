@@ -26,7 +26,6 @@ export class Tooltip {
     tooltip.style.cssText = `
       opacity: 0;
       display: flex;
-      max-width: 200px;
       padding: 8px 12px;
       flex-direction: column;
       align-items: flex-end;
@@ -47,8 +46,6 @@ export class Tooltip {
       line-height: 120%;
       text-align: right;
       
-      word-wrap: break-word;
-      overflow-wrap: break-word;
       
       pointer-events: none;
       z-index: ${ZIndexes.LAUNCHER + 1};
