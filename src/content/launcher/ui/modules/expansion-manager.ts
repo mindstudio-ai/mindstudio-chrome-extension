@@ -63,18 +63,46 @@ export class ExpansionManager {
   public async setInitialState(collapsed: boolean): Promise<void> {
     this.isCollapsed = collapsed;
 
+    // Disable all transitions temporarily
+    const containerElement = this.container.getElement();
+    containerElement.style.transition = 'none';
+    this.appsWrapper.style.transition = 'none';
+
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
-      this.inner.style.padding = '4px 0';
       this.appsWrapper.style.height = '0';
       this.appsWrapper.style.opacity = '0';
     } else {
       this.inner.style.cursor = 'default';
-      this.inner.style.padding = '0 0 4px';
       this.appsWrapper.style.height = 'auto';
       this.appsWrapper.style.opacity = '1';
+
+      // Get the logo's position (saved position is already normalized to collapsed state)
+      const currentPosition = this.container
+        .getPositionManager()
+        .getCurrentPosition();
+      const isTopAnchored = currentPosition?.anchor === 'top';
+
+      // Apply the offset from normalized position immediately
+      if (isTopAnchored) {
+        containerElement.style.top = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+      } else {
+        containerElement.style.bottom = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+      }
+
       this.updateScrollClasses();
     }
+
+    // Force a reflow to ensure styles are applied
+    containerElement.offsetHeight;
+
+    // Restore transitions for future animations
+    requestAnimationFrame(() => {
+      containerElement.style.transition =
+        'top 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      this.appsWrapper.style.transition =
+        'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+    });
 
     this.dispatchExpansionChange();
   }
@@ -87,13 +115,21 @@ export class ExpansionManager {
     this.isTransitioning = true;
 
     const containerElement = this.container.getElement();
-    const currentBottom = parseInt(containerElement.style.bottom || '0');
-    containerElement.style.transition =
-      'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    const positionManager = this.container.getPositionManager();
+    // Use saved position (normalized to collapsed state) when collapsing
+    // Use current position when expanding since we need to calculate offset from current position
+    const position = collapsed
+      ? positionManager.getSavedPosition()
+      : positionManager.getCurrentPosition();
+    const isTopAnchored = position?.anchor === 'top';
+
+    // Set specific transitions for visual properties only
+    containerElement.style.transition = isTopAnchored
+      ? 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      : 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
     if (collapsed) {
       this.inner.style.cursor = 'pointer';
-      this.inner.style.padding = '4px 0';
 
       // Get current height before collapsing
       const currentHeight = this.appsWrapper.offsetHeight;
@@ -104,7 +140,12 @@ export class ExpansionManager {
 
       // Start all transitions together
       requestAnimationFrame(() => {
-        containerElement.style.bottom = `${currentBottom + this.dimensions.COLLAPSED_HEIGHT}px`;
+        // Move to the normalized (collapsed) position
+        if (isTopAnchored) {
+          containerElement.style.top = `${position?.distance!}px`;
+        } else {
+          containerElement.style.bottom = `${position?.distance!}px`;
+        }
         this.appsWrapper.style.height = '0';
         this.appsWrapper.style.opacity = '0';
       });
@@ -113,7 +154,6 @@ export class ExpansionManager {
       this.appsContainer.scrollTop = 0;
     } else {
       this.inner.style.cursor = 'default';
-      this.inner.style.padding = '0 0 4px';
 
       // First set opacity to make content visible for height calculation
       this.appsWrapper.style.opacity = '1';
@@ -130,7 +170,12 @@ export class ExpansionManager {
 
       // Start all transitions together
       requestAnimationFrame(() => {
-        containerElement.style.bottom = `${currentBottom - this.dimensions.COLLAPSED_HEIGHT}px`;
+        // Offset from the normalized position
+        if (isTopAnchored) {
+          containerElement.style.top = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+        } else {
+          containerElement.style.bottom = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
+        }
         this.appsWrapper.style.height = `${targetHeight}px`;
       });
     }

@@ -109,7 +109,7 @@ export class LauncherUI {
 
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
     this.container.setCollapsedState(collapsed, isInitial);
-    this.menuButton.setVisibility(!collapsed);
+    this.menuButton.setVisibility(!collapsed, !isInitial);
   }
 
   private onSettingsClick(): void {

@@ -105,14 +105,42 @@ export class PositionManager {
   }
 
   public async savePosition(position: Position): Promise<void> {
-    await storage.set('LAUNCHER_POSITION', position);
-    this.savedPosition = position;
-    this.currentPosition = position;
+    // If we're saving while expanded, the position we get already includes the offset
+    // So we need to subtract it to get the true logo position
+    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+    const normalizedPosition = {
+      ...position,
+      distance: isExpanded
+        ? position.anchor === 'top'
+          ? position.distance + this.dimensions.COLLAPSED_HEIGHT // Add for top since negative offset
+          : position.distance - this.dimensions.COLLAPSED_HEIGHT // Subtract for bottom since positive offset
+        : position.distance,
+    };
+
+    await storage.set('LAUNCHER_POSITION', normalizedPosition);
+    this.savedPosition = normalizedPosition;
+    this.currentPosition = normalizedPosition;
     this.dispatchPositionChange(true);
   }
 
-  public recalculatePosition(): void {
-    if (this.savedPosition) {
+  public async recalculatePosition(): Promise<void> {
+    if (!this.savedPosition) {
+      return;
+    }
+
+    // Check if we're expanded to apply the correct offset
+    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+
+    if (isExpanded) {
+      const offsetPosition = {
+        ...this.savedPosition,
+        distance:
+          this.savedPosition.anchor === 'top'
+            ? this.savedPosition.distance - this.dimensions.COLLAPSED_HEIGHT
+            : this.savedPosition.distance - this.dimensions.COLLAPSED_HEIGHT,
+      };
+      this.applyPosition(offsetPosition);
+    } else {
       this.applyPosition(this.savedPosition);
     }
   }

@@ -20,7 +20,6 @@ export class IconButton {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     `;
 
     if (options.onClick) {
@@ -64,10 +63,6 @@ export class IconButton {
         height: 20px;
       }
 
-      .icon-button svg path {
-        transition: stroke 0.2s ease-in-out;
-      }
-
       .icon-button:hover svg path {
         stroke: #FEFEFF;
       }
@@ -94,13 +89,18 @@ export class IconButton {
       cursor: pointer;
       opacity: 0;
       overflow: hidden;
-      transition: opacity 0.2s ease-in-out, height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     `;
     container.innerHTML = this.element.innerHTML;
     return container;
   }
 
-  public setVisibility(visible: boolean): void {
+  public setVisibility(visible: boolean, animate: boolean = true): void {
+    if (animate) {
+      this.element.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    } else {
+      this.element.style.transition = 'none';
+    }
+
     requestAnimationFrame(() => {
       if (visible) {
         this.element.style.height = '40px';
@@ -112,6 +112,14 @@ export class IconButton {
         this.element.style.opacity = '0';
         this.element.style.padding = '0';
         this.element.style.margin = '0';
+      }
+
+      // If not animating, restore transitions after the next frame
+      if (!animate) {
+        requestAnimationFrame(() => {
+          this.element.style.transition =
+            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        });
       }
     });
   }
