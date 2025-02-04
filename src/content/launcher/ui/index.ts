@@ -68,43 +68,56 @@ export class LauncherUI {
   }
 
   async updateApps(apps: AppData[]): Promise<void> {
-    const appsContainer = this.container.getAppsContainer();
-    const existingButtons = new Map(this.appButtons);
-    this.appButtons.clear();
-
-    // Get app settings from storage
+    // Always use latest apps data
     const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
-
-    // Filter out hidden apps and sort according to settings
     const visibleApps = apps.filter((app) => {
       const appSettings = appsSettings[app.id];
       return !appSettings || appSettings.isVisible !== false;
     });
     const sortedApps = sortApps(visibleApps, appsSettings);
 
+    // Create fragment for batched DOM updates
+    const fragment = document.createDocumentFragment();
+    const appsContainer = this.container.getAppsContainer();
+    const existingButtons = new Map(this.appButtons);
+    const buttonsToRemove = new Set(existingButtons.values());
+
+    // Clear map for new state
+    this.appButtons.clear();
+
+    // Update or create buttons
     sortedApps.forEach((app) => {
       const existingButton = existingButtons.get(app.id);
       if (existingButton) {
-        existingButtons.delete(app.id);
+        // Update existing button
+        buttonsToRemove.delete(existingButton);
         existingButton.updateApp(app);
         this.appButtons.set(app.id, existingButton);
+        fragment.appendChild(existingButton.getElement());
       } else {
+        // Create new button
         const newButton = new AppButton(app, this.onAppClick);
-        appsContainer.appendChild(newButton.getElement());
+        fragment.appendChild(newButton.getElement());
         this.container.addTooltip(newButton.getTooltip());
         this.appButtons.set(app.id, newButton);
       }
     });
 
-    existingButtons.forEach((button) => {
+    // Remove old buttons first
+    buttonsToRemove.forEach((button) => {
       button.getElement().remove();
       button.getTooltip().remove();
     });
 
-    // Recalculate container height after updating apps
-    requestAnimationFrame(() => {
-      this.container.recalculateHeight();
-    });
+    // Clear container and add new buttons
+    appsContainer.innerHTML = '';
+    appsContainer.appendChild(fragment);
+
+    // Wait for next frame to ensure DOM is updated
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    // Now recalculate height after DOM has settled
+    this.container.recalculateHeight();
   }
 
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
