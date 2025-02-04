@@ -10,6 +10,7 @@ export interface LauncherDimensions {
   readonly MIN_EXPANDED_HEIGHT: number;
   readonly MIN_EDGE_DISTANCE: number;
   readonly SCREEN_CENTER_THRESHOLD: number;
+  readonly MAX_APPS_CONTAINER_HEIGHT: number;
 }
 
 export const DEFAULT_DIMENSIONS: LauncherDimensions = {
@@ -19,6 +20,7 @@ export const DEFAULT_DIMENSIONS: LauncherDimensions = {
   MIN_EXPANDED_HEIGHT: 96,
   MIN_EDGE_DISTANCE: 64,
   SCREEN_CENTER_THRESHOLD: 0.5,
+  MAX_APPS_CONTAINER_HEIGHT: 220,
 };
 
 export interface LauncherElements {

@@ -11,7 +11,10 @@ export class LauncherContainer {
   private static readonly ElementId = {
     CONTAINER: createElementId('Launcher'),
     INNER: createElementId('LauncherInner'),
+    APPS_WRAPPER: createElementId('LauncherAppsWrapper'),
     APPS_CONTAINER: createElementId('LauncherAppsContainer'),
+    APPS_SCROLL_TOP_FADE: createElementId('LauncherAppsScrollTopFade'),
+    APPS_SCROLL_BOTTOM_FADE: createElementId('LauncherAppsScrollBottomFade'),
   };
 
   private static readonly Styles = {
@@ -42,13 +45,19 @@ export class LauncherContainer {
       user-select: none;
       transition: width 0.2s ease-out;
     `,
+    appsWrapper: `
+      position: relative;
+      flex: 1;
+      width: 100%;
+      max-height: ${DEFAULT_DIMENSIONS.MAX_APPS_CONTAINER_HEIGHT}px;
+    `,
     appsContainer: `
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 0;
-      flex: 1;
       width: 100%;
+      height: 100%;
       overflow-y: auto;
       opacity: 0;
       scrollbar-width: none;
@@ -56,11 +65,32 @@ export class LauncherContainer {
         display: none;
       }
     `,
+    scrollFade: `
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 32px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    `,
+    scrollFadeTop: `
+      top: 0;
+      background: linear-gradient(180deg, rgba(18, 18, 19, 1) 0%, rgba(18, 18, 19, 0) 100%);
+    `,
+    scrollFadeBottom: `
+      bottom: 0;
+      background: linear-gradient(0deg, rgba(18, 18, 19, 1) 0%, rgba(18, 18, 19, 0) 100%);
+    `,
   };
 
   private readonly element: HTMLElement;
   private readonly inner: HTMLElement;
+  private readonly appsWrapper: HTMLElement;
   private readonly appsContainer: HTMLElement;
+  private readonly topFade: HTMLElement;
+  private readonly bottomFade: HTMLElement;
   private readonly resizeObserver: ResizeObserver;
 
   private readonly positionManager: PositionManager;
@@ -75,10 +105,16 @@ export class LauncherContainer {
   ) {
     this.element = this.createContainerElement();
     this.inner = this.createInnerElement();
+    this.appsWrapper = this.createAppsWrapperElement();
     this.appsContainer = this.createAppsContainerElement();
+    this.topFade = this.createScrollFadeElement('top');
+    this.bottomFade = this.createScrollFadeElement('bottom');
 
     // Setup DOM structure
-    this.inner.appendChild(this.appsContainer);
+    this.appsWrapper.appendChild(this.appsContainer);
+    this.appsWrapper.appendChild(this.topFade);
+    this.appsWrapper.appendChild(this.bottomFade);
+    this.inner.appendChild(this.appsWrapper);
     this.element.appendChild(this.inner);
 
     // Add hover handler
@@ -105,7 +141,7 @@ export class LauncherContainer {
       this.positionManager,
     );
     this.expansionManager = new ExpansionManager(
-      this.element,
+      this,
       this.inner,
       this.appsContainer,
       this.positionManager,
@@ -140,11 +176,33 @@ export class LauncherContainer {
     return inner;
   }
 
+  private createAppsWrapperElement(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.id = LauncherContainer.ElementId.APPS_WRAPPER;
+    wrapper.style.cssText = LauncherContainer.Styles.appsWrapper;
+    return wrapper;
+  }
+
   private createAppsContainerElement(): HTMLElement {
     const container = document.createElement('div');
     container.id = LauncherContainer.ElementId.APPS_CONTAINER;
     container.style.cssText = LauncherContainer.Styles.appsContainer;
     return container;
+  }
+
+  private createScrollFadeElement(position: 'top' | 'bottom'): HTMLElement {
+    const fade = document.createElement('div');
+    fade.id =
+      position === 'top'
+        ? LauncherContainer.ElementId.APPS_SCROLL_TOP_FADE
+        : LauncherContainer.ElementId.APPS_SCROLL_BOTTOM_FADE;
+    fade.style.cssText = `
+      ${LauncherContainer.Styles.scrollFade}
+      ${position === 'top' ? LauncherContainer.Styles.scrollFadeTop : LauncherContainer.Styles.scrollFadeBottom}
+    `;
+    // Initially hide the fades
+    fade.style.opacity = '0';
+    return fade;
   }
 
   private createResizeObserver(): ResizeObserver {
@@ -186,6 +244,12 @@ export class LauncherContainer {
     collapsed: boolean,
     isInitial: boolean = false,
   ): Promise<void> {
+    // Hide fades immediately when collapsing
+    if (collapsed) {
+      this.showScrollFade('top', false);
+      this.showScrollFade('bottom', false);
+    }
+
     if (isInitial) {
       await this.expansionManager.setInitialState(collapsed);
     } else {
@@ -211,5 +275,14 @@ export class LauncherContainer {
 
   public recalculateHeight(): void {
     this.expansionManager.recalculateHeight();
+  }
+
+  public getElement(): HTMLElement {
+    return this.element;
+  }
+
+  public showScrollFade(position: 'top' | 'bottom', show: boolean): void {
+    const fade = position === 'top' ? this.topFade : this.bottomFade;
+    fade.style.opacity = show ? '1' : '0';
   }
 }
