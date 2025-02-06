@@ -20,12 +20,12 @@ class BackgroundService {
     chrome.sidePanel.setPanelBehavior({
       openPanelOnActionClick: false,
     });
-    this.setupHeaderRules();
     this.setupMessageListeners();
     this.setupSidePanelListeners();
     this.setupInstallationHandler();
     this.setupActionButtonListener();
     this.setupAuthListeners();
+    this.updateApps();
   }
 
   static getInstance(): BackgroundService {
@@ -115,37 +115,6 @@ class BackgroundService {
     });
   }
 
-  private setupHeaderRules(): void {
-    chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: [
-        {
-          id: 1,
-          priority: 1,
-          action: {
-            type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
-            responseHeaders: [
-              {
-                header: 'X-Frame-Options',
-                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
-              },
-              {
-                header: 'Content-Security-Policy',
-                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
-              },
-            ],
-          },
-          condition: {
-            urlFilter: '*',
-            resourceTypes: [
-              chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
-            ],
-          },
-        },
-      ],
-      removeRuleIds: [1],
-    });
-  }
-
   private setupSidePanelListeners(): void {
     // Track sidepanel lifecycle
     chrome.runtime.onConnect.addListener((port) => {
@@ -184,6 +153,9 @@ class BackgroundService {
       if (!tabId) {
         return;
       }
+
+      // Update apps on every tab switch
+      this.updateApps();
 
       const panelInfo = this.tabsWithOpenSidePanels.get(tabId);
       if (panelInfo) {
