@@ -266,13 +266,13 @@ class BackgroundService {
 
   private setupAuthListeners(): void {
     // Listen for auth token changes
-    storage.onChange('AUTH_TOKEN', this.handleAuthChange.bind(this));
+    storage.onChange('AUTH_TOKEN', this.updateApps.bind(this));
 
     // Listen for organization selection changes
-    storage.onChange('SELECTED_ORGANIZATION', this.handleAuthChange.bind(this));
+    storage.onChange('SELECTED_ORGANIZATION', this.updateApps.bind(this));
   }
 
-  private async handleAuthChange(): Promise<void> {
+  private async updateApps(): Promise<void> {
     const token = await storage.get('AUTH_TOKEN');
     const organizationId = await storage.get('SELECTED_ORGANIZATION');
 
