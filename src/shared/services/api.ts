@@ -54,12 +54,14 @@ class ApiClient {
       `/v1/organizations/${organizationId}/apps`,
     );
     if (response.organizationApps) {
-      return response.organizationApps.map((app) => ({
-        id: app.id,
-        name: app.name,
-        iconUrl: app.iconUrl || DefaultIcons.APP,
-        extensionSupportedSites: app.extensionSupportedSites || [],
-      }));
+      return response.organizationApps
+        .filter((app) => app.defaultLaunchMode === 'extension')
+        .map((app) => ({
+          id: app.id,
+          name: app.name,
+          iconUrl: app.iconUrl || DefaultIcons.APP,
+          extensionSupportedSites: app.extensionSupportedSites || [],
+        }));
     }
     return [];
   }
