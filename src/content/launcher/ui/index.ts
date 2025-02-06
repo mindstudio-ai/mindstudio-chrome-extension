@@ -193,6 +193,9 @@ export class LauncherUI {
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
     this.container.setCollapsedState(collapsed, isInitial);
     this.menuButton.setVisibility(!collapsed, !isInitial);
+    if (collapsed) {
+      this.contextMenu.hide();
+    }
   }
 
   private onSettingsClick(): void {
