@@ -1,6 +1,7 @@
 import { THANK_YOU_PAGE } from '../shared/constants';
 import { runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import { api } from '../shared/services/api';
 import { WorkerLaunchPayload } from '../shared/types/events';
 
 class BackgroundService {
@@ -24,6 +25,7 @@ class BackgroundService {
     this.setupSidePanelListeners();
     this.setupInstallationHandler();
     this.setupActionButtonListener();
+    this.setupAuthListeners();
   }
 
   static getInstance(): BackgroundService {
@@ -260,6 +262,37 @@ class BackgroundService {
         }
       }
     });
+  }
+
+  private setupAuthListeners(): void {
+    // Listen for auth token changes
+    storage.onChange('AUTH_TOKEN', this.handleAuthChange.bind(this));
+
+    // Listen for organization selection changes
+    storage.onChange('SELECTED_ORGANIZATION', this.handleAuthChange.bind(this));
+  }
+
+  private async handleAuthChange(): Promise<void> {
+    const token = await storage.get('AUTH_TOKEN');
+    const organizationId = await storage.get('SELECTED_ORGANIZATION');
+
+    if (token && organizationId) {
+      console.info('[MindStudio][Background] Fetching apps');
+      try {
+        const apps = await api.getApps(organizationId);
+        const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
+        await storage.set('LAUNCHER_APPS', {
+          ...existingApps,
+          [organizationId]: apps,
+        });
+        console.info('[MindStudio][Background] Updated apps list:', {
+          organizationId,
+          count: apps.length,
+        });
+      } catch (error) {
+        console.error('[MindStudio][Background] Failed to fetch apps:', error);
+      }
+    }
   }
 }
 
