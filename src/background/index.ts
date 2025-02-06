@@ -34,6 +34,17 @@ class BackgroundService {
     return BackgroundService.instance;
   }
 
+  private getPanelPath(
+    type: 'worker' | 'history',
+    tabId: number,
+    runId?: string,
+  ): string {
+    if (type === 'worker') {
+      return `worker-panel.html?tabId=${tabId}${runId ? `&runId=${runId}` : ''}`;
+    }
+    return 'history-panel.html';
+  }
+
   private setupMessageListeners(): void {
     // Handle settings/open event
     runtime.listen('settings/open', () => {
@@ -92,7 +103,7 @@ class BackgroundService {
         // Configure and open the panel with the run ID
         chrome.sidePanel.setOptions({
           tabId,
-          path: `worker-panel.html?tabId=${tabId}&runId=${runId}`,
+          path: this.getPanelPath('worker', tabId, runId),
           enabled: true,
         });
         await chrome.sidePanel.open({ tabId });
@@ -148,10 +159,7 @@ class BackgroundService {
         await chrome.sidePanel.setOptions({
           enabled: true,
           tabId,
-          path:
-            panelInfo.type === 'worker'
-              ? `worker-panel.html?tabId=${tabId}${panelInfo.runId ? `&runId=${panelInfo.runId}` : ''}`
-              : 'history-panel.html',
+          path: this.getPanelPath(panelInfo.type, tabId, panelInfo.runId),
         });
       } else {
         console.info(
@@ -179,10 +187,7 @@ class BackgroundService {
           await chrome.sidePanel.setOptions({
             enabled: true,
             tabId,
-            path:
-              panelInfo.type === 'worker'
-                ? `worker-panel.html?tabId=${tabId}`
-                : 'history-panel.html',
+            path: this.getPanelPath(panelInfo.type, tabId, panelInfo.runId),
           });
         }
       }
