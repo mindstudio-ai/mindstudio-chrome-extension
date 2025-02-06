@@ -1,10 +1,9 @@
-import { RootUrl, QueryParams } from '../shared/constants';
-import { WorkerLaunchPayload } from '../shared/types/events';
+import { RootUrl } from '../shared/constants';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import { WorkerLaunchPayload } from '../shared/types/events';
 import { createElementId } from '../shared/utils/dom';
-import { removeQueryParam } from '../shared/utils/url';
 
 export class PlayerFrame extends Frame {
   static readonly ElementId = {
@@ -12,11 +11,14 @@ export class PlayerFrame extends Frame {
   };
 
   private pendingWorker: WorkerLaunchPayload | null = null;
-  private isFirstLoad = true;
   private tabId: number;
-  private hasActiveWorker = false;
+  private runId: string | null;
 
-  constructor(container: HTMLElement, tabId: number) {
+  constructor(
+    container: HTMLElement,
+    tabId: number,
+    runId: string | null = null,
+  ) {
     super({
       id: PlayerFrame.ElementId.FRAME,
       src: `${RootUrl}/_extension/player?__displayContext=extension&__controlledAuth=1`,
@@ -24,6 +26,7 @@ export class PlayerFrame extends Frame {
     });
 
     this.tabId = tabId;
+    this.runId = runId;
 
     // Add frame styles
     this.element.style.cssText = `
@@ -52,7 +55,9 @@ export class PlayerFrame extends Frame {
         });
       }
 
-      await runtime.send('sidepanel/ready', { tabId: this.tabId });
+      await runtime.send('sidepanel/ready', {
+        tabId: this.tabId,
+      });
 
       // Send any pending worker
       if (this.pendingWorker) {
@@ -60,13 +65,11 @@ export class PlayerFrame extends Frame {
           tabId: this.tabId,
           appId: this.pendingWorker.appId,
           appName: this.pendingWorker.appName,
+          runId: this.runId,
         });
         this.loadWorker(this.pendingWorker);
         this.pendingWorker = null;
       }
-
-      // No longer first load
-      this.isFirstLoad = false;
     });
 
     // Listen for auth token changes
@@ -100,22 +103,11 @@ export class PlayerFrame extends Frame {
       return;
     }
 
-    if (this.hasActiveWorker) {
-      console.info(
-        '[MindStudio][Player] Resetting frame before loading new worker',
-      );
-      this.reset();
-      // Since reset() reloads the frame, we need to queue the worker to load after frame is ready
-      this.pendingWorker = payload;
-      return;
-    }
-
     console.info('[MindStudio][Player] Loading worker:', {
       appId: payload.appId,
       appName: payload.appName,
     });
 
-    this.hasActiveWorker = true;
     frame.send(PlayerFrame.ElementId.FRAME, 'player/load_worker', {
       id: payload.appId,
       name: payload.appName,
@@ -126,13 +118,5 @@ export class PlayerFrame extends Frame {
 
   protected onFrameLoad(): void {
     console.info('[MindStudio][Player] Frame loaded');
-  }
-
-  reset(): void {
-    console.info('[MindStudio][Player] Resetting frame');
-    this.setLoaded(false);
-    this.hasActiveWorker = false;
-    const cleanedUrl = removeQueryParam(this.element.src, QueryParams.VERSION);
-    this.element.src = this.appendVersionToUrl(cleanedUrl);
   }
 }

@@ -5,20 +5,17 @@ type PanelType = 'worker' | 'history';
 
 class SidePanel {
   private frame?: PlayerFrame | HistoryFrame;
-  private port?: chrome.runtime.Port;
   private type: PanelType;
 
   constructor() {
     const params = new URLSearchParams(window.location.search);
     const tabId = params.get('tabId');
+    const runId = params.get('runId');
 
     // Determine panel type from URL
     this.type = window.location.pathname.includes('worker-panel')
       ? 'worker'
       : 'history';
-
-    // Connect to background service first
-    this.port = chrome.runtime.connect({ name: 'sidepanel' });
 
     const container = document.getElementById('player-container');
     if (!container) {
@@ -29,7 +26,7 @@ class SidePanel {
     // Initialize the appropriate frame based on type
     if (this.type === 'worker' && tabId) {
       const parsedTabId = parseInt(tabId, 10);
-      this.frame = new PlayerFrame(container, parsedTabId);
+      this.frame = new PlayerFrame(container, parsedTabId, runId);
     } else {
       // In history mode, use a dummy tabId of -1 since it's not used
       this.frame = new HistoryFrame(container, -1);
@@ -38,6 +35,7 @@ class SidePanel {
     console.info('[MindStudio][Sidepanel] Initialized panel:', {
       type: this.type,
       tabId: tabId || -1,
+      runId,
     });
   }
 }
