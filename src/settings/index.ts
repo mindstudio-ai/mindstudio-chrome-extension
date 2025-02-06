@@ -3,14 +3,12 @@ import { auth } from '../shared/services/auth';
 import { storage } from '../shared/services/storage';
 import { AppData } from '../shared/types/app';
 import { sortApps } from '../shared/utils/sortApps';
-import { SyncFrame } from '../content/launcher/sync-frame';
 
 class SettingsManager {
   private static instance: SettingsManager;
   private status: HTMLElement | null;
   private authButton: HTMLElement | null;
   private workspaceSelect: HTMLSelectElement | null;
-  private syncFrame: SyncFrame;
 
   private constructor() {
     this.status = document.getElementById('status');
@@ -20,7 +18,6 @@ class SettingsManager {
     ) as HTMLSelectElement;
 
     console.info('[MindStudio][Settings] Initializing settings page');
-    this.syncFrame = new SyncFrame();
     this.setupEventListeners();
     this.checkAuthState();
   }
