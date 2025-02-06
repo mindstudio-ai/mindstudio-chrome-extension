@@ -4,7 +4,6 @@ import { runtime } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
-import { SyncFrame } from './sync-frame';
 import { filterAppsByUrl } from '../../shared/utils/url-filter';
 
 export class LauncherService {
@@ -13,7 +12,6 @@ export class LauncherService {
   private currentHostUrl: string = window.location.href;
 
   private ui!: LauncherUI;
-  private syncFrame!: SyncFrame;
   private isInitialized = false;
 
   private constructor() {}
@@ -84,8 +82,6 @@ export class LauncherService {
       async () => this.handleCollapse(),
       async () => this.handleExpand(),
     );
-
-    this.syncFrame = new SyncFrame();
   }
 
   private async handleAppClick(app: AppData): Promise<void> {

@@ -1,6 +1,7 @@
 import { THANK_YOU_PAGE } from '../shared/constants';
 import { runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import { api } from '../shared/services/api';
 import { WorkerLaunchPayload } from '../shared/types/events';
 
 class BackgroundService {
@@ -19,11 +20,12 @@ class BackgroundService {
     chrome.sidePanel.setPanelBehavior({
       openPanelOnActionClick: false,
     });
-    this.setupHeaderRules();
     this.setupMessageListeners();
     this.setupSidePanelListeners();
     this.setupInstallationHandler();
     this.setupActionButtonListener();
+    this.setupAuthListeners();
+    this.updateApps();
   }
 
   static getInstance(): BackgroundService {
@@ -113,37 +115,6 @@ class BackgroundService {
     });
   }
 
-  private setupHeaderRules(): void {
-    chrome.declarativeNetRequest.updateDynamicRules({
-      addRules: [
-        {
-          id: 1,
-          priority: 1,
-          action: {
-            type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
-            responseHeaders: [
-              {
-                header: 'X-Frame-Options',
-                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
-              },
-              {
-                header: 'Content-Security-Policy',
-                operation: chrome.declarativeNetRequest.HeaderOperation.REMOVE,
-              },
-            ],
-          },
-          condition: {
-            urlFilter: '*',
-            resourceTypes: [
-              chrome.declarativeNetRequest.ResourceType.MAIN_FRAME,
-            ],
-          },
-        },
-      ],
-      removeRuleIds: [1],
-    });
-  }
-
   private setupSidePanelListeners(): void {
     // Track sidepanel lifecycle
     chrome.runtime.onConnect.addListener((port) => {
@@ -182,6 +153,9 @@ class BackgroundService {
       if (!tabId) {
         return;
       }
+
+      // Update apps on every tab switch
+      this.updateApps();
 
       const panelInfo = this.tabsWithOpenSidePanels.get(tabId);
       if (panelInfo) {
@@ -260,6 +234,37 @@ class BackgroundService {
         }
       }
     });
+  }
+
+  private setupAuthListeners(): void {
+    // Listen for auth token changes
+    storage.onChange('AUTH_TOKEN', this.updateApps.bind(this));
+
+    // Listen for organization selection changes
+    storage.onChange('SELECTED_ORGANIZATION', this.updateApps.bind(this));
+  }
+
+  private async updateApps(): Promise<void> {
+    const token = await storage.get('AUTH_TOKEN');
+    const organizationId = await storage.get('SELECTED_ORGANIZATION');
+
+    if (token && organizationId) {
+      console.info('[MindStudio][Background] Fetching apps');
+      try {
+        const apps = await api.getApps(organizationId);
+        const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
+        await storage.set('LAUNCHER_APPS', {
+          ...existingApps,
+          [organizationId]: apps,
+        });
+        console.info('[MindStudio][Background] Updated apps list:', {
+          organizationId,
+          count: apps.length,
+        });
+      } catch (error) {
+        console.error('[MindStudio][Background] Failed to fetch apps:', error);
+      }
+    }
   }
 }
 
