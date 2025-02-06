@@ -2,13 +2,13 @@ import { Tooltip } from './tooltip';
 
 export interface IconButtonOptions {
   icon: string;
-  tooltipText: string;
+  tooltipText?: string;
   onClick?: () => void;
 }
 
 export class IconButton {
   private element: HTMLButtonElement;
-  private tooltip: Tooltip;
+  private tooltip?: Tooltip;
 
   constructor(options: IconButtonOptions) {
     this.element = document.createElement('button');
@@ -31,19 +31,21 @@ export class IconButton {
       });
     }
 
-    // Create tooltip
-    this.tooltip = new Tooltip({
-      text: options.tooltipText,
-    });
+    // Create tooltip only if text is provided
+    if (options.tooltipText) {
+      this.tooltip = new Tooltip({
+        text: options.tooltipText,
+      });
 
-    // Setup tooltip behavior
-    this.element.addEventListener('mouseenter', () => {
-      this.tooltip.show(this.element);
-    });
+      // Setup tooltip behavior
+      this.element.addEventListener('mouseenter', () => {
+        this.tooltip?.show(this.element);
+      });
 
-    this.element.addEventListener('mouseleave', () => {
-      this.tooltip.hide();
-    });
+      this.element.addEventListener('mouseleave', () => {
+        this.tooltip?.hide();
+      });
+    }
 
     // Add styles
     const style = document.createElement('style');
@@ -74,24 +76,8 @@ export class IconButton {
     return this.element;
   }
 
-  getTooltip(): HTMLElement {
-    return this.tooltip.getElement();
-  }
-
-  private createContainer(): HTMLElement {
-    const container = document.createElement('div');
-    container.style.cssText = `
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 40px;
-      cursor: pointer;
-      opacity: 0;
-      overflow: hidden;
-    `;
-    container.innerHTML = this.element.innerHTML;
-    return container;
+  getTooltip(): HTMLElement | undefined {
+    return this.tooltip?.getElement();
   }
 
   public setVisibility(visible: boolean, animate: boolean = true): void {

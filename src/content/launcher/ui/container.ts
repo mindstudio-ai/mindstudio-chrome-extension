@@ -93,6 +93,7 @@ export class LauncherContainer {
   private resizeObserver!: ResizeObserver;
   private dragHandler!: DragHandler;
   private expansionManager!: ExpansionManager;
+  private isHovered: boolean = false;
 
   constructor() {
     this.element = this.createContainerElement();
@@ -118,13 +119,31 @@ export class LauncherContainer {
 
     // Add hover handler
     this.inner.addEventListener('mouseenter', () => {
+      this.isHovered = true;
       if (this.expansionManager?.getCollapsedState()) {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
       }
     });
 
     this.inner.addEventListener('mouseleave', () => {
+      this.isHovered = false;
+      if (
+        this.expansionManager?.getCollapsedState() &&
+        !this.dragHandler?.wasElementDragged()
+      ) {
+        this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
+      }
+    });
+
+    // Listen for drag events to maintain hover state
+    this.element.addEventListener(EVENTS.DRAG_START, () => {
       if (this.expansionManager?.getCollapsedState()) {
+        this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
+      }
+    });
+
+    this.element.addEventListener(EVENTS.DRAG_END, () => {
+      if (this.expansionManager?.getCollapsedState() && !this.isHovered) {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
       }
     });
@@ -228,12 +247,6 @@ export class LauncherContainer {
       this.appsWrapper,
     );
 
-    // Listen for expansion changes
-    this.element.addEventListener(EVENTS.EXPANSION_CHANGE, () => {
-      // Always reset to base width when expansion state changes
-      this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
-    });
-
     // Add to DOM first so height calculations are accurate
     document.body.appendChild(this.element);
 
@@ -288,8 +301,16 @@ export class LauncherContainer {
       this.showScrollFade('top', false);
       this.showScrollFade('bottom', false);
       this.dragHandler.enable();
+      // Reset width when collapsing if not hovered/dragging
+      if (!this.isHovered) {
+        this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
+      } else {
+        this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
+      }
     } else {
       this.dragHandler.disable();
+      // Always reset width when expanding
+      this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
     }
 
     if (isInitial) {
