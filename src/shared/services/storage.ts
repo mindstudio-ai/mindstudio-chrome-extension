@@ -14,6 +14,7 @@ export type StorageValues = {
     }>
   > | null;
   LAUNCHER_COLLAPSED: boolean;
+  LAUNCHER_HIDDEN: boolean;
   LAUNCHER_POSITION: {
     anchor: 'top' | 'bottom';
     distance: number;
@@ -33,6 +34,7 @@ const createStorageKey = (key: string) => `${key}_${Environment}` as const;
 const StorageKeys: Record<keyof StorageValues, string> = {
   AUTH_TOKEN: createStorageKey('AuthToken'),
   LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
+  LAUNCHER_HIDDEN: createStorageKey('LauncherHidden'),
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
   LAUNCHER_POSITION: createStorageKey('LauncherPosition'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),

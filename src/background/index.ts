@@ -209,6 +209,7 @@ class BackgroundService {
             enabled: true,
           });
           await chrome.sidePanel.open({ tabId: tab.id });
+          await storage.set('LAUNCHER_HIDDEN', false);
           await storage.set('LAUNCHER_COLLAPSED', false);
         } catch (error) {
           console.error('[MindStudio][Background] Toggle failed:', error);
