@@ -50,20 +50,22 @@ class ApiClient {
   }
 
   async getApps(organizationId: string): Promise<AppData[]> {
-    const response = await this.request<{ organizationApps: any[] }>(
-      `/v1/organizations/${organizationId}/apps`,
-    );
-    if (response.organizationApps) {
-      return response.organizationApps
-        .filter((app) => app.defaultLaunchMode === 'extension')
-        .map((app) => ({
-          id: app.id,
-          name: app.name,
-          iconUrl: app.iconUrl || DefaultIcons.APP,
-          extensionSupportedSites: app.extensionSupportedSites || [],
-        }));
-    }
-    return [];
+    const response = await this.request<{
+      organizationApps: any[];
+      userInstalledApps: any[];
+    }>(`/v1/organizations/${organizationId}/apps`);
+    const apps = [
+      ...(response?.organizationApps || []),
+      ...(response?.userInstalledApps || []),
+    ];
+    return apps
+      .filter((app) => app.defaultLaunchMode === 'extension')
+      .map((app) => ({
+        id: app.id,
+        name: app.name,
+        iconUrl: app.iconUrl || DefaultIcons.APP,
+        extensionSupportedSites: app.extensionSupportedSites || [],
+      }));
   }
 }
 
