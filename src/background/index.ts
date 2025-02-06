@@ -41,6 +41,29 @@ class BackgroundService {
       chrome.runtime.openOptionsPage();
     });
 
+    // Handle open history event
+    runtime.listen('history/open', async (_, sender) => {
+      const tabId = sender?.tab?.id;
+      if (!tabId) {
+        console.info('[MindStudio][Background] History open failed: No tab ID');
+        return;
+      }
+
+      try {
+        chrome.sidePanel.setOptions({
+          tabId,
+          path: 'history-panel.html',
+          enabled: true,
+        });
+        if (!this.readyPanels.get(tabId)) {
+          await chrome.sidePanel.open({ tabId });
+        }
+        this.tabsWithOpenSidePanels.set(tabId, { type: 'history' });
+      } catch (error) {
+        console.error('[MindStudio][Background] History open failed:', error);
+      }
+    });
+
     // Handle worker launch directly from content script click
     runtime.listen('player/launch_worker', async (payload, sender) => {
       const tabId = sender?.tab?.id;

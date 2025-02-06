@@ -4,6 +4,7 @@ interface ContextMenuItem {
   icon: string;
   label: string;
   onClick: () => void;
+  useMouseDown?: boolean;
 }
 
 export class ContextMenu {
@@ -100,10 +101,18 @@ export class ContextMenu {
         ${item.icon}
         <span>${item.label}</span>
       `;
-      menuItem.addEventListener('click', () => {
+
+      const handleAction = () => {
         item.onClick();
         this.hide();
-      });
+      };
+
+      if (item.useMouseDown) {
+        menuItem.addEventListener('mousedown', handleAction);
+      } else {
+        menuItem.addEventListener('click', handleAction);
+      }
+
       this.element.appendChild(menuItem);
     });
   }

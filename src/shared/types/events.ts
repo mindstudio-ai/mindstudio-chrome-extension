@@ -26,6 +26,7 @@ export interface Events {
 
   // History events
   'history/loaded': void;
+  'history/open': undefined;
 
   // Launcher events
   'launcher/loaded': undefined;

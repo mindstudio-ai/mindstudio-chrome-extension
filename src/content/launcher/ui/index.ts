@@ -54,9 +54,9 @@ export class LauncherUI {
         </svg>`,
           label: 'Open History',
           onClick: () => {
-            // TODO: Implement open history functionality
-            // console.log('Open history clicked');
+            runtime.send('history/open', undefined);
           },
+          useMouseDown: true,
         },
         {
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none">
