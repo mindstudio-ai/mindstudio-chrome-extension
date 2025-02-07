@@ -8,6 +8,9 @@ import { runtime } from '../../../shared/services/messaging';
 import { storage } from '../../../shared/services/storage';
 import { sortApps } from '../../../shared/utils/sortApps';
 import { RootUrl } from '../../../shared/constants';
+import { AddNewAppButton } from './add-new-app-button';
+import { TooltipGuide } from './tooltip-guide';
+import { tooltipGuideStorage } from '../../../shared/services/tooltipGuideStorage';
 
 export class LauncherUI {
   private container: LauncherContainer;
@@ -128,6 +131,44 @@ export class LauncherUI {
       return !appSettings || appSettings.isVisible !== false;
     });
     const sortedApps = sortApps(visibleApps, appsSettings);
+
+    // Add Workers button
+    if (sortedApps.length === 0) {
+      const newButton = new AddNewAppButton(async () => {
+        window.open(`${RootUrl}/store`, '_blank');
+        await tooltipGuideStorage.set('ADD_WORKERS', true);
+      });
+      this.container.getAppsContainer().appendChild(newButton.getElement());
+      this.container.addTooltip(newButton.getTooltip());
+
+      const tooltipShown = await tooltipGuideStorage.get('ADD_WORKERS');
+
+      if (newButton && !tooltipShown) {
+        setTimeout(() => {
+          const newButtonTop = newButton
+            .getElement()
+            .getBoundingClientRect().top;
+
+          const testTooltip = new TooltipGuide({
+            title: 'Add Workers',
+            text: 'Go to Workers Store and add some of our featured AI Workers to start using them.',
+            triangleSide: 'right',
+            triangleOffset: 48,
+            rightOffset: 54,
+            topOffset: newButtonTop - 34,
+            onCloseAction: async () => {
+              await tooltipGuideStorage.set('ADD_WORKERS', true);
+            },
+          });
+
+          testTooltip.show();
+
+          this.container
+            .getAppsContainer()
+            .appendChild(testTooltip.getElement());
+        }, 100);
+      }
+    }
 
     // Quick equality check - if apps are the same, no need to update DOM
     const currentAppIds = Array.from(this.appButtons.keys());

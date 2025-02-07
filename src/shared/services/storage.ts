@@ -25,6 +25,7 @@ export type StorageValues = {
     name: string;
   }> | null;
   LAUNCHER_APPS_SETTINGS: Record<string, AppSettings> | null;
+  TOOLTIP_GUIDES_SHOWN: Record<string, boolean>;
 };
 
 // Move key generation here
@@ -40,6 +41,7 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
   LAUNCHER_APPS_SETTINGS: createStorageKey('LauncherAppsSettings'),
+  TOOLTIP_GUIDES_SHOWN: createStorageKey('TooltipGuidesShown'),
 } as const;
 
 export const storage = {

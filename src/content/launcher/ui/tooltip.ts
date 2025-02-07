@@ -48,7 +48,7 @@ export class Tooltip {
       
       
       pointer-events: none;
-      z-index: ${ZIndexes.LAUNCHER + 1};
+      z-index: ${ZIndexes.LAUNCHER + 2};
       transition: opacity 0.2s ease-in-out;
     `;
     tooltip.textContent = text;
