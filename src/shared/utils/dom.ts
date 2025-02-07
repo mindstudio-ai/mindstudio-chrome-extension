@@ -15,7 +15,7 @@ export function createElementId(id: string): string {
  * @returns True if the ID starts with the MindStudio prefix
  */
 export function isMindStudioElement(id: string | null): boolean {
-  if (!id) {
+  if (!id || typeof id !== 'string') {
     return false;
   }
   return id.startsWith(MINDSTUDIO_ID_PREFIX);
