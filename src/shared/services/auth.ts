@@ -36,7 +36,7 @@ function initializeStorageListener() {
 }
 
 // Setup frame listener immediately if we're in the login window
-if (window.location.pathname === '/_extension/login') {
+if (window.location.pathname === '/extension/thank-you') {
   frame.listen('auth/login_completed', async ({ token, organizations }) => {
     if (!token) {
       return;
@@ -68,9 +68,6 @@ if (window.location.pathname === '/_extension/login') {
       console.info('[MindStudio][Auth] Setting initial organization');
       await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
     }
-
-    // Close window after delay
-    setTimeout(() => window.close(), 3000);
   });
 }
 
@@ -88,10 +85,18 @@ export const auth = {
     // Only need storage listener for completion handlers
     initializeStorageListener();
     console.info('[MindStudio][Auth] Opening login window');
-    window.open(
-      `${RootUrl}/_extension/login?__displayContext=extension`,
-      '_blank',
-    );
+    // Try to focus existing tab first, otherwise open new one
+    try {
+      chrome.tabs.query({ url: `${RootUrl}/extension/thank-you` }, (tabs) => {
+        if (tabs.length > 0) {
+          chrome.tabs.update(tabs[0].id!, { active: true });
+        } else {
+          window.open(`${RootUrl}/extension/thank-you`, '_blank');
+        }
+      });
+    } catch (error) {
+      console.error('[MindStudio][Auth] Error opening login window:', error);
+    }
   },
 
   async logout(): Promise<void> {

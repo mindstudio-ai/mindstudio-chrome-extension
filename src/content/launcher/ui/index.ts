@@ -298,6 +298,10 @@ export class LauncherUI {
     setTimeout(() => {
       const top = targetButton.getBoundingClientRect().top;
 
+      if (top <= 0) {
+        return;
+      }
+
       const tooltip = new TooltipGuide({
         title: 'Add Workers',
         text: 'Go to Workers Store and add some of our featured AI Workers to start using them.',
