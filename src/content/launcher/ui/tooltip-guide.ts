@@ -11,6 +11,9 @@ export interface TooltipOptions {
   triangleSide?: TriangleSide;
   triangleOffset?: number;
   onCloseAction?: () => void;
+  onSkipAction?: () => void;
+  onNextAction?: () => void;
+  nextActionLabel?: string;
 }
 
 export class TooltipGuide {
@@ -20,6 +23,8 @@ export class TooltipGuide {
 
   private element: HTMLElement;
   private onCloseAction: (() => void) | undefined;
+  private onSkipAction: (() => void) | undefined;
+  private onNextAction: (() => void) | undefined;
 
   constructor(options: TooltipOptions) {
     this.element = this.createTooltip(options);
@@ -33,8 +38,13 @@ export class TooltipGuide {
     triangleOffset = 0,
     triangleSide,
     onCloseAction,
+    onSkipAction,
+    onNextAction,
+    nextActionLabel = 'Next',
   }: TooltipOptions): HTMLElement {
-    this.onCloseAction = onCloseAction ?? (() => {});
+    this.onCloseAction = onCloseAction;
+    this.onSkipAction = onSkipAction;
+    this.onNextAction = onNextAction;
 
     const tooltip = document.createElement('div');
     tooltip.id = TooltipGuide.ElementId.TOOLTIP_GUIDE;
@@ -59,14 +69,17 @@ export class TooltipGuide {
       line-height: 120%;
       text-align: left;
       
-      cursor: pointer;
       z-index: ${ZIndexes.LAUNCHER + 1};
       transition: opacity 0.2s ease-in-out;
+
+      ${this.onCloseAction && `cursor: pointer;`}
     `;
 
-    tooltip.addEventListener('click', () => {
-      this.hide();
-    });
+    if (this.onCloseAction) {
+      tooltip.addEventListener('click', () => {
+        this.hide();
+      });
+    }
 
     const titleDiv = document.createElement('div');
     titleDiv.textContent = title;
@@ -88,6 +101,71 @@ export class TooltipGuide {
 
     tooltip.appendChild(titleDiv);
     tooltip.appendChild(textDiv);
+
+    if (this.onSkipAction || this.onNextAction) {
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 12px;
+      `;
+      tooltip.appendChild(buttonsContainer);
+
+      if (this.onSkipAction) {
+        const skipButton = document.createElement('button');
+        skipButton.textContent = 'Skip';
+        skipButton.style.cssText = `
+          all:unset;
+          background: transparent;
+          font-size: 12px;
+          font-weight: 600;
+          line-height: 120%;
+          padding: 6px 2px;
+          color: #99999A;
+          cursor: pointer;
+        `;
+
+        skipButton.addEventListener('click', () => {
+          this.onSkipAction?.();
+
+          this.hide();
+        });
+
+        buttonsContainer.appendChild(skipButton);
+      }
+
+      if (this.onNextAction) {
+        const nextButton = document.createElement('button');
+        nextButton.textContent = nextActionLabel;
+        nextButton.style.cssText = `
+          all:unset;
+          background: #FEFEFF;
+          font-size: 12px;
+          font-weight: 600;
+          line-height: 120%;
+          height: 24px;
+          min-width: 64px;
+          color: #121213;
+          cursor: pointer;
+          border-radius: 4px;
+          text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        `;
+
+        nextButton.addEventListener('click', () => {
+          this.onNextAction?.();
+
+          this.hide();
+        });
+
+        buttonsContainer.appendChild(nextButton);
+      }
+
+      tooltip.appendChild(buttonsContainer);
+    }
 
     if (triangleSide) {
       const triangleDiv = document.createElement('div');
@@ -159,8 +237,6 @@ export class TooltipGuide {
   public hide(): void {
     this.element.style.opacity = '0';
     this.element.style.pointerEvents = 'none';
-
-    console.log('hey');
 
     if (this.onCloseAction) {
       this.onCloseAction();
