@@ -5,6 +5,7 @@ import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
 import { filterAppsByUrl } from '../../shared/utils/url-filter';
+import { LaunchVariables } from '../../shared/types/events';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -58,6 +59,36 @@ export class LauncherService {
     storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
       if (this.ui) {
         this.ui.setCollapsed(isCollapsed ?? true);
+      }
+    });
+
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === 'history/request_launch_variables') {
+        console.info(
+          '[MindStudio][Launcher] History side panel requested launch variables',
+        );
+        const userSelection = page.getSelectedContent();
+        const rawHtml = page.cleanDOM();
+        const fullText = page.getCleanTextContent();
+        const metadata = page.getMetadataBundle();
+
+        const launchVariables: LaunchVariables = {
+          url: window.location.href,
+          userSelection,
+          rawHtml,
+          fullText,
+          metadata,
+        };
+
+        console.info(
+          '[MindStudio][History] Sending launch variables to history side panel',
+          launchVariables,
+        );
+
+        chrome.runtime.sendMessage({
+          type: 'content/resolved_launch_variables',
+          launchVariables,
+        });
       }
     });
   }
