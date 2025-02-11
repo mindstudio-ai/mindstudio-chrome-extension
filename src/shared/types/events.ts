@@ -37,6 +37,9 @@ export interface Events {
   'launcher/apps_updated': {
     apps: Array<AppData>;
   };
+  'launcher/resolved_launch_variables': {
+    launchVariables: LaunchVariables;
+  };
 
   // Settings events
   'settings/open': undefined;

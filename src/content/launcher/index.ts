@@ -62,34 +62,29 @@ export class LauncherService {
       }
     });
 
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === 'history/request_launch_variables') {
-        console.info(
-          '[MindStudio][Launcher] History side panel requested launch variables',
-        );
-        const userSelection = page.getSelectedContent();
-        const rawHtml = page.cleanDOM();
-        const fullText = page.getCleanTextContent();
-        const metadata = page.getMetadataBundle();
+    runtime.listen('history/request_launch_variables', () => {
+      console.info(
+        '[MindStudio][Launcher] History side panel requested launch variables',
+      );
+      const userSelection = page.getSelectedContent();
+      const rawHtml = page.cleanDOM();
+      const fullText = page.getCleanTextContent();
+      const metadata = page.getMetadataBundle();
 
-        const launchVariables: LaunchVariables = {
-          url: window.location.href,
-          userSelection,
-          rawHtml,
-          fullText,
-          metadata,
-        };
+      const launchVariables: LaunchVariables = {
+        url: window.location.href,
+        userSelection,
+        rawHtml,
+        fullText,
+        metadata,
+      };
 
-        console.info(
-          '[MindStudio][History] Sending launch variables to history side panel',
-          launchVariables,
-        );
+      console.info(
+        '[MindStudio][History] Sending launch variables to history side panel',
+        launchVariables,
+      );
 
-        chrome.runtime.sendMessage({
-          type: 'content/resolved_launch_variables',
-          launchVariables,
-        });
-      }
+      runtime.send('launcher/resolved_launch_variables', { launchVariables });
     });
   }
 

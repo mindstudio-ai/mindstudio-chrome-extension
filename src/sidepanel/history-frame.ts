@@ -2,7 +2,10 @@ import { RootUrl } from '../shared/constants';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
-import { getEmptyLaunchVariables } from '../shared/types/events';
+import {
+  getEmptyLaunchVariables,
+  LaunchVariables,
+} from '../shared/types/events';
 import { createElementId } from '../shared/utils/dom';
 import { removeQueryParam } from '../shared/utils/url';
 
@@ -73,7 +76,8 @@ export class HistoryFrame extends Frame {
           );
           try {
             await chrome.tabs.sendMessage(tabs[0].id, {
-              type: 'history/request_launch_variables',
+              type: '@@mindstudio/history/request_launch_variables',
+              _MindStudioEvent: '@@mindstudio/history/request_launch_variables',
             });
           } catch (err) {
             console.info(
@@ -93,20 +97,18 @@ export class HistoryFrame extends Frame {
       });
     });
 
-    chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === 'content/resolved_launch_variables') {
-        console.info(
-          '[MindStudio][History] Received launch variables for current page, sending to history frame',
-        );
-        const { launchVariables } = message;
-        frame.send(
-          HistoryFrame.ElementId.FRAME,
-          'history/resolved_launch_variables',
-          {
-            launchVariables,
-          },
-        );
-      }
+    runtime.listen('launcher/resolved_launch_variables', (payload) => {
+      console.info(
+        '[MindStudio][History] Received launch variables for current page, sending to history frame',
+      );
+      const { launchVariables } = payload;
+      frame.send(
+        HistoryFrame.ElementId.FRAME,
+        'history/resolved_launch_variables',
+        {
+          launchVariables,
+        },
+      );
     });
 
     // Listen for auth token changes
