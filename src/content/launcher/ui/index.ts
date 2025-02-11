@@ -16,6 +16,8 @@ export class LauncherUI {
   private logo: Logo;
   private contextMenu: ContextMenu;
   private appButtons: Map<string, AppButton> = new Map();
+  private handleCollapse: () => void;
+  private handleExpand: () => void;
 
   constructor(
     private onAppClick: (app: AppData) => void,
@@ -33,6 +35,16 @@ export class LauncherUI {
     this.logo.addEventHandler('mousedown', () => {
       this.contextMenu.hide();
     });
+
+    this.handleCollapse = () => {
+      this.onCollapse();
+      this.logo.updateStyleBasedOnCollapsedState(true);
+    };
+
+    this.handleExpand = () => {
+      this.onExpand();
+      this.logo.updateStyleBasedOnCollapsedState(false);
+    };
 
     this.contextMenu = new ContextMenu(
       [
@@ -67,6 +79,9 @@ export class LauncherUI {
     // Add components to container in the desired order
     this.container.addComponent(this.logo.getElement());
 
+    const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
+    this.logo.updateStyleBasedOnCollapsedState(isCollapsed);
+
     // Set up context menu
     this.contextMenu.setContainer(this.container.getElement());
     document.body.appendChild(this.contextMenu.getElement());
@@ -80,9 +95,9 @@ export class LauncherUI {
       e.stopPropagation();
       if (!this.container.getDragHandler().wasElementDragged()) {
         if (this.container.isCollapsed()) {
-          this.onExpand();
+          this.handleExpand();
         } else {
-          this.onCollapse();
+          this.handleCollapse();
         }
       }
       this.container.getDragHandler().resetDragState();
@@ -380,7 +395,7 @@ export class LauncherUI {
           const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
 
           if (!hasSkipped) {
-            this.onCollapse();
+            this.handleCollapse();
             this.addTooltipGuideDrag();
           }
 
@@ -399,9 +414,7 @@ export class LauncherUI {
   }
 
   private async addTooltipGuideDrag(): Promise<void> {
-    this.onCollapse();
-    const isSidePanelClosed =
-      await tooltipGuideStorage.get('LAUNCHER_COLLAPSED');
+    this.handleCollapse();
 
     setTimeout(() => {
       const tooltip = new TooltipGuide({
@@ -413,23 +426,16 @@ export class LauncherUI {
         topOffset: -32,
         anchorElement: this.logo.getElement(),
         observeElement: this.container.getElement(),
-        onSkipAction: !isSidePanelClosed
-          ? undefined
-          : async () => {
-              await tooltipGuideStorage.set('SKIP_ALL', true);
-            },
+        onSkipAction: async () => {
+          await tooltipGuideStorage.set('SKIP_ALL', true);
+        },
         onNextAction: async () => {
           const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
 
           if (!hasSkipped) {
             this.addTooltipGuidePin();
           }
-
-          if (!isSidePanelClosed) {
-            await tooltipGuideStorage.set('SKIP_ALL', true);
-          }
         },
-        nextActionLabel: isSidePanelClosed ? undefined : 'Finish',
         onCloseAction: () => {
           this.container.getAppsContainer().removeChild(tooltip.getElement());
         },

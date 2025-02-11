@@ -26,7 +26,7 @@ export class Logo {
     logo.id = Logo.ElementId.LOGO;
     logo.innerHTML = this.createLogoSvg();
     logo.style.cssText = `
-      padding: 8px 0;
+      padding: 8px 4px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -34,6 +34,11 @@ export class Logo {
       color: #FEFEFE;
       pointer-events: auto;
       cursor: pointer;
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+
+      transition: background-color 0.2s ease;
     `;
     return logo;
   }
@@ -44,5 +49,13 @@ export class Logo {
 
   public addEventHandler(type: string, handler: (e: Event) => void): void {
     this.element.addEventListener(type, handler);
+  }
+
+  public updateStyleBasedOnCollapsedState(collapsed: boolean): void {
+    if (collapsed) {
+      this.element.style.background = 'transparent';
+    } else {
+      this.element.style.background = '#121213';
+    }
   }
 }
