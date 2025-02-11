@@ -14,6 +14,8 @@ export interface TooltipOptions {
   onSkipAction?: () => void;
   onNextAction?: () => void;
   nextActionLabel?: string;
+  anchorElement?: HTMLElement;
+  observeElement?: HTMLElement;
 }
 
 export class TooltipGuide {
@@ -25,16 +27,66 @@ export class TooltipGuide {
   private onCloseAction: (() => void) | undefined;
   private onSkipAction: (() => void) | undefined;
   private onNextAction: (() => void) | undefined;
+  private anchorElement: HTMLElement | undefined;
+  private topOffset: number = 0;
+  private resizeObserver: ResizeObserver | undefined;
+  private mutationObserver: MutationObserver | undefined;
+  private observeElement: HTMLElement | undefined;
 
   constructor(options: TooltipOptions) {
+    this.anchorElement = options.anchorElement;
+    this.observeElement = options.observeElement || options.anchorElement;
+    this.topOffset = options.topOffset ?? 0;
     this.element = this.createTooltip(options);
+
+    if (this.anchorElement) {
+      this.setupPositionObservers();
+    }
+  }
+
+  private setupPositionObservers(): void {
+    if (!this.observeElement) {
+      return;
+    }
+
+    // Watch for size changes
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updatePosition();
+    });
+    this.resizeObserver.observe(this.observeElement);
+
+    // Watch for DOM changes that might affect position
+    this.mutationObserver = new MutationObserver(() => {
+      this.updatePosition();
+    });
+    this.mutationObserver.observe(this.observeElement, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+
+    // Also update on scroll and resize
+    window.addEventListener('resize', this.updatePosition.bind(this));
+  }
+
+  private updatePosition(): void {
+    const y = this.getAnchorElementY();
+
+    this.element.style.top = `${y}px`;
+  }
+
+  private getAnchorElementY(): number {
+    if (!this.anchorElement) {
+      return this.topOffset;
+    }
+
+    return this.anchorElement.getBoundingClientRect().top + this.topOffset;
   }
 
   private createTooltip({
     title = '',
     text = '',
     rightOffset = 48,
-    topOffset = 0,
     triangleOffset = 0,
     triangleSide,
     onCloseAction,
@@ -47,17 +99,17 @@ export class TooltipGuide {
     this.onNextAction = onNextAction;
 
     const tooltip = document.createElement('div');
-    tooltip.id = TooltipGuide.ElementId.TOOLTIP_GUIDE;
     tooltip.style.cssText = `
       opacity: 0;
       padding: 8px 12px;
       gap: 8px;
       max-width: 310px;
+      min-width: 310px;
       
       position: fixed;
       right: ${rightOffset}px;
-      top: ${topOffset}px;
-      
+      top: ${this.getAnchorElementY()}px;
+
       border-radius: 8px;
       background: #121213;
       box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
@@ -241,6 +293,12 @@ export class TooltipGuide {
     if (this.onCloseAction) {
       this.onCloseAction();
     }
+
+    // Cleanup observers
+    this.resizeObserver?.disconnect();
+    this.mutationObserver?.disconnect();
+    window.removeEventListener('scroll', this.updatePosition.bind(this));
+    window.removeEventListener('resize', this.updatePosition.bind(this));
   }
 
   public getElement(): HTMLElement {
@@ -249,5 +307,14 @@ export class TooltipGuide {
 
   public setText(text: string): void {
     this.element.textContent = text;
+  }
+
+  public getNextAction(): () => void {
+    return () => {
+      if (this.onNextAction) {
+        this.onNextAction();
+        this.hide();
+      }
+    };
   }
 }
