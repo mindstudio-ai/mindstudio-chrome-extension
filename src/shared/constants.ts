@@ -7,7 +7,7 @@ export const RootUrl =
 export const ApiUrl =
   Environment === 'dev' ? 'http://localhost:3129' : 'https://api.mindstudio.ai';
 
-export const THANK_YOU_PAGE = 'https://app.mindstudio.ai/extension/thank-you';
+export const THANK_YOU_PAGE = `${RootUrl}/extension/thank-you`;
 
 export const QueryParams = {
   VERSION: '__ext_version',

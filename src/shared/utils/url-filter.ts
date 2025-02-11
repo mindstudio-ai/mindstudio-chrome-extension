@@ -9,7 +9,7 @@ export function filterAppsByUrl(
       return true;
     }
 
-    return extensionSupportedSites.every((pattern) => {
+    return extensionSupportedSites.some((pattern) => {
       const escapedPattern = pattern.replace(/[-/\\^$+?.()|[\]{}]/g, '\\$&');
       const regexPattern = new RegExp(
         `^${escapedPattern.replace(/\*/g, '.*')}$`,
