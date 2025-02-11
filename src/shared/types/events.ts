@@ -27,11 +27,18 @@ export interface Events {
   // History events
   'history/loaded': void;
   'history/open': undefined;
+  'history/request_launch_variables': undefined;
+  'history/resolved_launch_variables': {
+    launchVariables: LaunchVariables;
+  };
 
   // Launcher events
   'launcher/loaded': undefined;
   'launcher/apps_updated': {
     apps: Array<AppData>;
+  };
+  'launcher/resolved_launch_variables': {
+    launchVariables: LaunchVariables;
   };
 
   // Settings events
@@ -48,6 +55,14 @@ export interface LaunchVariables {
   metadata: string;
   userSelection: string | null;
 }
+
+export const getEmptyLaunchVariables = (): LaunchVariables => ({
+  url: '',
+  rawHtml: '',
+  fullText: '',
+  metadata: '',
+  userSelection: null,
+});
 
 // Base worker payload without tabId
 export interface BaseWorkerPayload {

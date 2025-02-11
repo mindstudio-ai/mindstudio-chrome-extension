@@ -5,6 +5,7 @@ import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
 import { filterAppsByUrl } from '../../shared/utils/url-filter';
+import { LaunchVariables } from '../../shared/types/events';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -59,6 +60,31 @@ export class LauncherService {
       if (this.ui) {
         this.ui.setCollapsed(isCollapsed ?? true);
       }
+    });
+
+    runtime.listen('history/request_launch_variables', () => {
+      console.info(
+        '[MindStudio][Launcher] History side panel requested launch variables',
+      );
+      const userSelection = page.getSelectedContent();
+      const rawHtml = page.cleanDOM();
+      const fullText = page.getCleanTextContent();
+      const metadata = page.getMetadataBundle();
+
+      const launchVariables: LaunchVariables = {
+        url: window.location.href,
+        userSelection,
+        rawHtml,
+        fullText,
+        metadata,
+      };
+
+      console.info(
+        '[MindStudio][History] Sending launch variables to history side panel',
+        launchVariables,
+      );
+
+      runtime.send('launcher/resolved_launch_variables', { launchVariables });
     });
   }
 

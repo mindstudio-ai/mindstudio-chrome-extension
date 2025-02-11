@@ -2,6 +2,10 @@ import { RootUrl } from '../shared/constants';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
+import {
+  getEmptyLaunchVariables,
+  LaunchVariables,
+} from '../shared/types/events';
 import { createElementId } from '../shared/utils/dom';
 import { removeQueryParam } from '../shared/utils/url';
 
@@ -16,7 +20,7 @@ export class HistoryFrame extends Frame {
   constructor(container: HTMLElement, tabId: number) {
     super({
       id: HistoryFrame.ElementId.FRAME,
-      src: `${RootUrl}/_extension/history?__displayContext=extension&__controlledAuth=1`,
+      src: `${RootUrl}/_extension/dashboard?__displayContext=extension&__controlledAuth=1`,
       container,
     });
 
@@ -56,6 +60,55 @@ export class HistoryFrame extends Frame {
 
       // No longer first load
       this.isFirstLoad = false;
+    });
+
+    frame.listen('history/request_launch_variables', async () => {
+      // Because we need to get the launch variables from the page, we need to
+      // ask the content script to get them for us and then send them back
+      console.info(
+        '[MindStudio][History] History frame requested launch variables for current page',
+      );
+
+      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+        if (tabs.length > 0 && tabs[0].id) {
+          console.info(
+            `[MindStudio][History] Sending launch variable request to content script on tab: ${tabs[0].id}`,
+          );
+          try {
+            await chrome.tabs.sendMessage(tabs[0].id, {
+              type: '@@mindstudio/history/request_launch_variables',
+              _MindStudioEvent: '@@mindstudio/history/request_launch_variables',
+            });
+          } catch (err) {
+            console.info(
+              '[MindStudio][History] Failed to get launch variables from tab, sending default',
+              err,
+            );
+
+            frame.send(
+              HistoryFrame.ElementId.FRAME,
+              'history/resolved_launch_variables',
+              {
+                launchVariables: getEmptyLaunchVariables(),
+              },
+            );
+          }
+        }
+      });
+    });
+
+    runtime.listen('launcher/resolved_launch_variables', (payload) => {
+      console.info(
+        '[MindStudio][History] Received launch variables for current page, sending to history frame',
+      );
+      const { launchVariables } = payload;
+      frame.send(
+        HistoryFrame.ElementId.FRAME,
+        'history/resolved_launch_variables',
+        {
+          launchVariables,
+        },
+      );
     });
 
     // Listen for auth token changes
