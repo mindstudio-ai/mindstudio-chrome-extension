@@ -87,13 +87,12 @@ export const auth = {
     console.info('[MindStudio][Auth] Opening login window');
     // Try to focus existing tab first, otherwise open new one
     try {
-      chrome.tabs.query({ url: `${RootUrl}/extension/thank-you` }, (tabs) => {
-        if (tabs.length > 0) {
-          chrome.tabs.update(tabs[0].id!, { active: true });
-        } else {
-          window.open(`${RootUrl}/extension/thank-you`, '_blank');
-        }
-      });
+      const currentTab = window.location.href;
+      if (currentTab === `${RootUrl}/extension/thank-you`) {
+        window.focus();
+      } else {
+        window.open(`${RootUrl}/extension/thank-you`, '_blank');
+      }
     } catch (error) {
       console.error('[MindStudio][Auth] Error opening login window:', error);
     }
