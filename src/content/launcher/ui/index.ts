@@ -46,7 +46,7 @@ export class LauncherUI {
         this.tooltipGuides.get('OPEN_SIDE_PANEL')?.hide();
       }
 
-      this.addTooltipGuideUseWorkers();
+      //this.addTooltipGuideUseWorkers();
     });
 
     this.handleCollapse = () => {
@@ -290,6 +290,9 @@ export class LauncherUI {
         triangleOffset: 42,
         rightOffset: 16,
         topOffset: 100,
+        onCloseAction: async () => {
+          await tooltipGuideStorage.set('USE_WORKERS', true);
+        },
       });
 
       tooltip.show();
