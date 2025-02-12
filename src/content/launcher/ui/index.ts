@@ -1,30 +1,35 @@
 import { AppButton } from './app-button';
 import { LauncherContainer } from './container';
 import { Logo } from './logo';
+import { CollapseCaret } from './collapse-caret';
 import { ContextMenu } from './context-menu';
 import { AppData } from '../../../shared/types/app';
 import { runtime } from '../../../shared/services/messaging';
 import { storage } from '../../../shared/services/storage';
 import { sortApps } from '../../../shared/utils/sortApps';
-import { RootUrl } from '../../../shared/constants';
-import { AddNewAppButton } from './add-new-app-button';
 import { TooltipGuide } from './tooltip-guide';
 import { tooltipGuideStorage } from '../../../shared/services/tooltipGuideStorage';
+import { DragHandle } from './drag-handle';
 
 export class LauncherUI {
   private container: LauncherContainer;
   private logo: Logo;
+  private collapseCaret: CollapseCaret;
+  private dragHandle: DragHandle | undefined;
   private contextMenu: ContextMenu;
   private appButtons: Map<string, AppButton> = new Map();
   private handleCollapse: () => void;
   private handleExpand: () => void;
+  private tooltipGuides: Map<string, TooltipGuide> = new Map();
 
   constructor(
     private onAppClick: (app: AppData) => void,
     private onCollapse: () => void,
     private onExpand: () => void,
   ) {
-    this.container = new LauncherContainer();
+    this.collapseCaret = new CollapseCaret();
+
+    this.container = new LauncherContainer(this.collapseCaret);
     this.logo = new Logo();
 
     this.logo.addEventHandler('contextmenu', (e) => {
@@ -34,17 +39,37 @@ export class LauncherUI {
 
     this.logo.addEventHandler('mousedown', () => {
       this.contextMenu.hide();
+      runtime.send('history/open', undefined);
+      tooltipGuideStorage.set('OPEN_SIDE_PANEL', true);
+
+      if (this.tooltipGuides.get('OPEN_SIDE_PANEL')) {
+        this.tooltipGuides.get('OPEN_SIDE_PANEL')?.hide();
+      }
+
+      this.addTooltipGuideUseWorkers();
     });
 
     this.handleCollapse = () => {
       this.onCollapse();
       this.logo.updateStyleBasedOnCollapsedState(true);
+      this.collapseCaret.updateStyleBasedOnCollapsedState(true);
+      // this.dragHandle?.updateVisibility(true);
     };
 
     this.handleExpand = () => {
       this.onExpand();
       this.logo.updateStyleBasedOnCollapsedState(false);
+      this.collapseCaret.updateStyleBasedOnCollapsedState(false);
+      // this.dragHandle?.updateVisibility(false);
     };
+
+    this.collapseCaret.addEventHandler('mousedown', () => {
+      if (this.container.isCollapsed()) {
+        this.handleExpand();
+      } else {
+        this.handleCollapse();
+      }
+    });
 
     this.contextMenu = new ContextMenu(
       [
@@ -77,34 +102,37 @@ export class LauncherUI {
 
   private async setupUI(): Promise<void> {
     // Add components to container in the desired order
-    this.container.addComponent(this.logo.getElement());
 
-    const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
-    this.logo.updateStyleBasedOnCollapsedState(isCollapsed);
+    this.container.addComponent(this.logo.getElement());
 
     // Set up context menu
     this.contextMenu.setContainer(this.container.getElement());
     document.body.appendChild(this.contextMenu.getElement());
 
-    // Set logo as drag handle
-    this.container.setDragHandle(this.logo.getElement());
+    this.dragHandle = new DragHandle();
+    this.container.setDragHandle(this.dragHandle);
+    this.container.setDragHandleElement(this.dragHandle.getElement());
+    this.container.addComponent(this.dragHandle.getElement());
 
     // Setup logo click handling
     const logoElement = this.logo.getElement();
     logoElement.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!this.container.getDragHandler().wasElementDragged()) {
-        if (this.container.isCollapsed()) {
-          this.handleExpand();
-        } else {
-          this.handleCollapse();
-        }
-      }
       this.container.getDragHandler().resetDragState();
     });
 
     // Initialize the container
     await this.container.initialize();
+
+    this.resolveLeftoverTooltipGuides();
+
+    //this.container.addComponent(this.collapseCaret.getElement());
+
+    setTimeout(async () => {
+      const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
+      this.logo.updateStyleBasedOnCollapsedState(isCollapsed);
+      this.collapseCaret.updateStyleBasedOnCollapsedState(isCollapsed);
+    }, 100);
   }
 
   async updateApps(apps: AppData[]): Promise<void> {
@@ -116,22 +144,10 @@ export class LauncherUI {
     });
     const sortedApps = sortApps(visibleApps, appsSettings);
 
-    // Add Workers button
     if (sortedApps.length === 0) {
-      const newButton = new AddNewAppButton(async () => {
-        window.open(`${RootUrl}/store`, '_blank');
-        await tooltipGuideStorage.set('ADD_WORKERS', true);
-      });
-      this.container.getAppsContainer().appendChild(newButton.getElement());
-      this.container.addTooltip(newButton.getTooltip());
-
-      const hasShownTooltipAddWorkers =
-        await tooltipGuideStorage.get('ADD_WORKERS');
-
-      if (newButton && !hasShownTooltipAddWorkers) {
-        this.onExpand();
-        this.addTooltipGuideAddWorkers(newButton.getElement());
-      }
+      this.collapseCaret.updateVisibility(false);
+    } else {
+      this.collapseCaret.updateVisibility(true);
     }
 
     // Quick equality check - if apps are the same, no need to update DOM
@@ -161,7 +177,7 @@ export class LauncherUI {
     this.appButtons.clear();
 
     // Update or create buttons
-    sortedApps.forEach(async (app, index) => {
+    sortedApps.forEach(async (app) => {
       const existingButton = existingButtons.get(app.id);
       if (existingButton) {
         // Update existing button
@@ -175,19 +191,6 @@ export class LauncherUI {
         fragment.appendChild(newButton.getElement());
         this.container.addTooltip(newButton.getTooltip());
         this.appButtons.set(app.id, newButton);
-
-        const hasShownTooltipFirstWorker =
-          (await tooltipGuideStorage.get('FIRST_WORKER')) ||
-          (await tooltipGuideStorage.get('SKIP_ALL'));
-
-        if (newButton && !hasShownTooltipFirstWorker && index === 0) {
-          this.onExpand();
-          this.addTooltipGuideFirstWorker(newButton.getElement());
-        }
-
-        if (index === 0 && hasShownTooltipFirstWorker) {
-          this.resolveLeftoverTooltipGuides();
-        }
       }
     });
 
@@ -236,234 +239,64 @@ export class LauncherUI {
       return;
     }
 
-    const hasShownTooltipContextMenuExpanded = await tooltipGuideStorage.get(
-      'CONTEXT_MENU_EXPANDED',
-    );
+    const hasShownOpenSidePanel =
+      await tooltipGuideStorage.get('OPEN_SIDE_PANEL');
 
-    if (!hasShownTooltipContextMenuExpanded) {
-      this.addTooltipGuideContextMenuExpanded();
-      return;
-    }
-
-    const hasShownTooltipMinimize = await tooltipGuideStorage.get('MINIMIZE');
-
-    if (!hasShownTooltipMinimize) {
-      this.addTooltipGuideMinimize();
-      return;
-    }
-
-    const hasShownTooltipDrag = await tooltipGuideStorage.get('DRAG');
-
-    if (!hasShownTooltipDrag) {
-      this.addTooltipGuideDrag();
-      return;
-    }
-
-    const hasShownTooltipPin = await tooltipGuideStorage.get('PIN');
-
-    if (!hasShownTooltipPin) {
-      this.addTooltipGuidePin();
+    if (!hasShownOpenSidePanel) {
+      this.addTooltipGuideOpenSidePanel(this.logo.getElement());
       return;
     }
   }
 
-  private async addTooltipGuideAddWorkers(
-    targetButton: HTMLElement,
+  private async addTooltipGuideOpenSidePanel(
+    targetElement: HTMLElement,
   ): Promise<void> {
     setTimeout(() => {
-      const top = targetButton.getBoundingClientRect().top;
-
-      if (top <= 0) {
-        return;
-      }
-
       const tooltip = new TooltipGuide({
-        title: 'Add Workers',
-        text: 'Go to Workers Store and add some of our featured AI Workers to start using them.',
+        title: 'Run AI Worker on the Web',
+        text: 'Open the side panel to get started.',
         triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: top - 34,
+        triangleOffset: 42,
+        rightOffset: 60,
+        topOffset: -34,
+        anchorElement: targetElement,
+        observeElement: this.container.getElement(),
         onCloseAction: async () => {
-          await tooltipGuideStorage.set('ADD_WORKERS', true);
-          this.container.getAppsContainer().removeChild(tooltip.getElement());
-        },
-      });
+          await tooltipGuideStorage.set('OPEN_SIDE_PANEL', true);
 
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideFirstWorker(
-    targetButton: HTMLElement,
-  ): Promise<void> {
-    setTimeout(() => {
-      const tooltip = new TooltipGuide({
-        title: 'Try AI Workers anywhere',
-        text: 'Just open the dock on any page and click a Worker to run it.',
-        triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: -34,
-        anchorElement: targetButton,
-        observeElement: this.container.getElement(),
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-          if (!hasSkipped) {
-            this.addTooltipGuideContextMenuExpanded();
-          }
-          await tooltipGuideStorage.set('FIRST_WORKER', true);
-        },
-        onCloseAction: () => {
-          this.container.getAppsContainer().removeChild(tooltip.getElement());
-        },
-      });
-
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideContextMenuExpanded(): Promise<void> {
-    this.contextMenu.show(this.logo.getElement());
-    setTimeout(() => {
-      const tooltip = new TooltipGuide({
-        title: 'More options menu',
-        text: 'Right click the MindStudio logo to access additional features and settings.',
-        triangleSide: 'right',
-        triangleOffset: 36,
-        rightOffset: 224,
-        topOffset: -48,
-        anchorElement: this.logo.getElement(),
-        observeElement: this.container.getElement(),
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-
-          if (!hasSkipped) {
-            this.addTooltipGuideDrag();
-            this.contextMenu.hide();
-          }
-
-          await tooltipGuideStorage.set('CONTEXT_MENU_EXPANDED', true);
-        },
-        onCloseAction: () => {
-          this.container.getAppsContainer().removeChild(tooltip.getElement());
-        },
-      });
-
-      this.contextMenu.setOnHideCallback(async () => {
-        const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-        if (!hasSkipped) {
-          this.addTooltipGuideMinimize();
-        }
-
-        await tooltipGuideStorage.set('CONTEXT_MENU_EXPANDED', true);
-
-        tooltip.hide();
-      });
-
-      tooltip.show();
-
-      document.body.appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideMinimize(): Promise<void> {
-    setTimeout(() => {
-      const tooltip = new TooltipGuide({
-        title: 'Minimize your dock',
-        text: 'Click the MindStudio icon to toggle between expanded and collapsed view.',
-        triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: -34,
-        anchorElement: this.logo.getElement(),
-        observeElement: this.container.getElement(),
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-
-          if (!hasSkipped) {
-            this.handleCollapse();
-            this.addTooltipGuideDrag();
-          }
-
-          this.contextMenu.hide();
-          await tooltipGuideStorage.set('MINIMIZE', true);
-        },
-        onCloseAction: () => {
-          this.container.getAppsContainer().removeChild(tooltip.getElement());
-        },
-      });
-
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 200);
-  }
-
-  private async addTooltipGuideDrag(): Promise<void> {
-    this.handleCollapse();
-
-    setTimeout(() => {
-      const tooltip = new TooltipGuide({
-        title: 'Reposition your dock',
-        text: 'Drag the dock up or down to find the perfect spot on your screen.',
-        triangleSide: 'right',
-        triangleOffset: 44,
-        rightOffset: 62,
-        topOffset: -32,
-        anchorElement: this.logo.getElement(),
-        observeElement: this.container.getElement(),
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-
-          if (!hasSkipped) {
-            this.addTooltipGuidePin();
-          }
-        },
-        onCloseAction: () => {
-          this.container.getAppsContainer().removeChild(tooltip.getElement());
+          this.addTooltipGuideUseWorkers();
         },
       });
 
       tooltip.show();
 
       document.body.appendChild(tooltip.getElement());
-    }, 200);
+      this.tooltipGuides.set('OPEN_SIDE_PANEL', tooltip);
+    }, 100);
   }
 
-  private async addTooltipGuidePin(): Promise<void> {
+  private async addTooltipGuideUseWorkers(): Promise<void> {
+    const hasShown = await tooltipGuideStorage.get('USE_WORKERS');
+
+    if (hasShown) {
+      return;
+    }
+
     setTimeout(() => {
       const tooltip = new TooltipGuide({
-        title: 'Pin to Chrome toolbar',
-        text: 'Pin MindStudio to your toolbar for quick access to the side panel.',
-        rightOffset: 54,
-        topOffset: 16,
-        nextActionLabel: 'Finish',
-        onNextAction: async () => {
-          await tooltipGuideStorage.set('PIN', true);
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
+        title: 'Click on any AI Worker icon to use it',
+        text: 'Or find out more information about the Worker by navigating to the details page.',
+        triangleSide: 'right',
+        triangleOffset: 42,
+        rightOffset: 16,
+        topOffset: 100,
       });
 
       tooltip.show();
 
       document.body.appendChild(tooltip.getElement());
-    }, 200);
+      this.tooltipGuides.set('USE_WORKERS', tooltip);
+      tooltipGuideStorage.set('USE_WORKERS', true);
+    }, 100);
   }
 }

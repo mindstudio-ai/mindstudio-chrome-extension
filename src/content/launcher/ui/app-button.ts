@@ -27,7 +27,7 @@ export class AppButton {
       justify-content: center;
       position: relative;
       width: ${DEFAULT_DIMENSIONS.BASE_WIDTH}px;
-      height: ${DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT}px;
+      height: ${DEFAULT_DIMENSIONS.APP_ICON_HEIGHT}px;
       pointer-events: auto;
       flex-shrink: 0;
     `;

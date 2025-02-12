@@ -79,7 +79,7 @@ export class ExpansionManager {
       this.appsWrapper.style.height = '0';
       this.appsWrapper.style.opacity = '0';
     } else {
-      this.container.getDragHandler().disable();
+      // this.container.getDragHandler().disable();
       this.inner.style.cursor = 'default';
       this.appsWrapper.style.height = 'auto';
       this.appsWrapper.style.opacity = '1';
@@ -152,7 +152,7 @@ export class ExpansionManager {
       this.container.showScrollFade('bottom', false);
       this.inner.style.cursor = 'pointer';
     } else {
-      this.container.getDragHandler().disable();
+      // this.container.getDragHandler().disable();
       this.inner.style.cursor = 'default';
     }
 

@@ -55,7 +55,7 @@ export class PositionManager {
     const { anchor, distance } = position;
     const minDistance = this.dimensions.MIN_EDGE_DISTANCE;
     const elementHeight =
-      this.element.offsetHeight || this.dimensions.COLLAPSED_HEIGHT;
+      this.element.offsetHeight || this.dimensions.APP_ICON_HEIGHT;
     const maxDistance = window.innerHeight - minDistance - elementHeight;
 
     // If maxDistance is negative or very small, default to minDistance
@@ -151,11 +151,13 @@ export class PositionManager {
     }
 
     const event = new CustomEvent(EVENTS.POSITION_CHANGE, {
+      bubbles: true,
       detail: {
         position: this.currentPosition,
         isFromDrag,
       },
     });
+
     this.element.dispatchEvent(event);
   }
 }
