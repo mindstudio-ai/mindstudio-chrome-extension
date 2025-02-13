@@ -48,6 +48,20 @@ export class SidepanelFrame extends Frame {
           organizationId,
         });
       }
+
+      // Request the current URL from the page
+      chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+        if (tabs.length > 0 && tabs[0].id) {
+          try {
+            await chrome.tabs.sendMessage(tabs[0].id, {
+              type: '@@mindstudio/remote/request_current_url',
+              _MindStudioEvent: '@@mindstudio/remote/request_current_url',
+            });
+          } catch {
+            //
+          }
+        }
+      });
     });
 
     // Because we need to get the launch variables from the page, we need to
@@ -124,6 +138,22 @@ export class SidepanelFrame extends Frame {
         '[MindStudio][Sidepanel] Already-open side panel received open event, forwarding to remote',
       );
       frame.send(SidepanelFrame.ElementId.FRAME, 'remote/navigate/root');
+    });
+
+    runtime.listen('launcher/current_url_updated', (payload, sender) => {
+      if (sender?.tab?.id !== this.tabId) {
+        return;
+      }
+
+      const { url, faviconUrl } = payload;
+      frame.send(
+        SidepanelFrame.ElementId.FRAME,
+        'remote/resolved_current_url',
+        {
+          url,
+          faviconUrl,
+        },
+      );
     });
 
     // Listen for organization ID changes from the remote frame (the user

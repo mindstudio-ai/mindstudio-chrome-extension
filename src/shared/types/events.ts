@@ -28,6 +28,11 @@ export interface Events {
   'remote/resolved_launch_variables': {
     launchVariables: LaunchVariables;
   };
+  'remote/request_current_url': undefined;
+  'remote/resolved_current_url': {
+    url: string;
+    faviconUrl: string;
+  };
 
   // Launcher events
   'launcher/loaded': undefined;
@@ -36,6 +41,10 @@ export interface Events {
   };
   'launcher/resolved_launch_variables': {
     launchVariables: LaunchVariables;
+  };
+  'launcher/current_url_updated': {
+    url: string;
+    faviconUrl: string;
   };
 
   // Settings events
