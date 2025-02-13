@@ -1,5 +1,4 @@
 export interface Position {
-  anchor: 'top' | 'bottom';
   distance: number;
 }
 
@@ -16,7 +15,7 @@ export interface LauncherDimensions {
 
 export const DEFAULT_DIMENSIONS: LauncherDimensions = {
   BASE_WIDTH: 40,
-  HOVER_WIDTH: 48,
+  HOVER_WIDTH: 40,
   COLLAPSED_HEIGHT: 40,
   APP_ICON_HEIGHT: 40,
   MIN_EXPANDED_HEIGHT: 96,

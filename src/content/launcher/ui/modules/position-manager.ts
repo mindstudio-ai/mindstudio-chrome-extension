@@ -21,7 +21,6 @@ export class PositionManager {
   public async initialize(): Promise<void> {
     const position = await storage.get('LAUNCHER_POSITION');
     const defaultPosition = {
-      anchor: 'bottom' as const,
       distance: this.dimensions.MIN_EDGE_DISTANCE * 2,
     };
 
@@ -37,31 +36,31 @@ export class PositionManager {
     }
 
     const constrainedPosition = this.getConstrainedPosition(position);
-    const { anchor, distance } = constrainedPosition;
+    const { distance } = constrainedPosition;
 
-    if (anchor === 'top') {
-      this.element.style.top = `${distance}px`;
-      this.element.style.bottom = 'auto';
-    } else {
-      this.element.style.bottom = `${distance}px`;
-      this.element.style.top = 'auto';
-    }
+    this.element.style.bottom = `${distance}px`;
+    this.element.style.top = 'auto';
 
     this.currentPosition = constrainedPosition;
     this.dispatchPositionChange(false);
   }
 
-  private getConstrainedPosition(position: Position): Position {
-    const { anchor, distance } = position;
+  public getConstrainedPosition(
+    position: Position,
+    targetHeight?: number,
+  ): Position {
+    const { distance } = position;
     const minDistance = this.dimensions.MIN_EDGE_DISTANCE;
     const elementHeight =
-      this.element.offsetHeight || this.dimensions.APP_ICON_HEIGHT;
+      targetHeight ||
+      this.element.offsetHeight ||
+      this.dimensions.COLLAPSED_HEIGHT;
+
     const maxDistance = window.innerHeight - minDistance - elementHeight;
 
     // If maxDistance is negative or very small, default to minDistance
     if (maxDistance < minDistance) {
       return {
-        anchor: 'top',
         distance: minDistance,
       };
     }
@@ -72,28 +71,17 @@ export class PositionManager {
     );
 
     return {
-      anchor,
       distance: constrainedDistance,
     };
   }
 
-  public determineAnchor(y: number): 'top' | 'bottom' {
-    const screenCenter =
-      window.innerHeight * this.dimensions.SCREEN_CENTER_THRESHOLD;
-    return y < screenCenter ? 'top' : 'bottom';
-  }
-
-  public calculateDistance(y: number, anchor: 'top' | 'bottom'): number {
+  public calculateDistance(y: number): number {
     const minDistance = this.dimensions.MIN_EDGE_DISTANCE;
     const maxDistance =
       window.innerHeight - this.element.offsetHeight - minDistance;
 
-    if (anchor === 'top') {
-      return Math.max(minDistance, Math.min(y, maxDistance));
-    } else {
-      const bottomDistance = window.innerHeight - y - this.element.offsetHeight;
-      return Math.max(minDistance, Math.min(bottomDistance, maxDistance));
-    }
+    const bottomDistance = window.innerHeight - y - this.element.offsetHeight;
+    return Math.max(minDistance, Math.min(bottomDistance, maxDistance));
   }
 
   public getCurrentPosition(): Position | null {
@@ -110,16 +98,13 @@ export class PositionManager {
     const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
     const normalizedPosition = {
       ...position,
-      distance: isExpanded
-        ? position.anchor === 'top'
-          ? position.distance + this.dimensions.COLLAPSED_HEIGHT // Add for top since negative offset
-          : position.distance - this.dimensions.COLLAPSED_HEIGHT // Subtract for bottom since positive offset
-        : position.distance,
+      distance: position.distance,
     };
 
     await storage.set('LAUNCHER_POSITION', normalizedPosition);
     this.savedPosition = normalizedPosition;
     this.currentPosition = normalizedPosition;
+
     this.dispatchPositionChange(true);
   }
 
@@ -134,10 +119,7 @@ export class PositionManager {
     if (isExpanded) {
       const offsetPosition = {
         ...this.savedPosition,
-        distance:
-          this.savedPosition.anchor === 'top'
-            ? this.savedPosition.distance - this.dimensions.COLLAPSED_HEIGHT
-            : this.savedPosition.distance - this.dimensions.COLLAPSED_HEIGHT,
+        distance: this.savedPosition.distance,
       };
       this.applyPosition(offsetPosition);
     } else {

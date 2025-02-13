@@ -85,10 +85,9 @@ export class DragHandler {
       }
 
       const newY = this.initialPositionY + deltaY;
-      const anchor = this.positionManager.determineAnchor(newY);
-      const distance = this.positionManager.calculateDistance(newY, anchor);
+      const distance = this.positionManager.calculateDistance(newY);
 
-      this.positionManager.applyPosition({ anchor, distance });
+      this.positionManager.applyPosition({ distance });
     };
 
     const handleDragEnd = async () => {
@@ -107,13 +106,9 @@ export class DragHandler {
             parseInt(this.containerElement.style.bottom) -
             this.containerElement.offsetHeight;
 
-      const anchor = this.positionManager.determineAnchor(currentTop);
-      const distance = this.positionManager.calculateDistance(
-        currentTop,
-        anchor,
-      );
+      const distance = this.positionManager.calculateDistance(currentTop);
 
-      await this.positionManager.savePosition({ anchor, distance });
+      await this.positionManager.savePosition({ distance });
 
       // Dispatch drag end event
       const event = new CustomEvent(EVENTS.DRAG_END);

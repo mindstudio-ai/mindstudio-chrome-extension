@@ -4,11 +4,7 @@ import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
 import { PositionManager } from './modules/position-manager';
 import { storage } from '../../../shared/services/storage';
-import {
-  DEFAULT_DIMENSIONS,
-  EVENTS,
-  PositionChangeEvent,
-} from './modules/types';
+import { DEFAULT_DIMENSIONS, EVENTS } from './modules/types';
 import { CollapseCaret } from './collapse-caret';
 import { DragHandle } from './drag-handle';
 
@@ -98,6 +94,7 @@ export class LauncherContainer {
   private isHovered: boolean = false;
   private collapseCaret!: CollapseCaret;
   private dragHandle!: DragHandle;
+  private isDragging: boolean = false;
 
   constructor(collapseCaret: CollapseCaret) {
     this.collapseCaret = collapseCaret;
@@ -129,22 +126,25 @@ export class LauncherContainer {
       this.isHovered = true;
       if (this.expansionManager?.getCollapsedState()) {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
-        // this.dragHandle.updateVisibility(true);
+        this.dragHandle.updateVisibility(true);
+        this.collapseCaret.updateVisibility(true);
       }
-
-      // this.collapseCaret.updateVisibility(true);
     });
 
     this.inner.addEventListener('mouseleave', () => {
       this.isHovered = false;
-      if (
-        this.expansionManager?.getCollapsedState() &&
-        !this.dragHandler?.wasElementDragged()
-      ) {
+      const isCollapsed = this.expansionManager?.getCollapsedState();
+      if (isCollapsed && !this.dragHandler?.wasElementDragged()) {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
       }
-      // this.collapseCaret.updateVisibility(false);
-      // this.dragHandle.updateVisibility(false);
+
+      if (isCollapsed && !this.isDragging) {
+        this.collapseCaret.updateVisibility(false);
+        this.dragHandle.updateVisibility(false);
+      } else {
+        this.dragHandle.updateVisibility(true);
+        this.collapseCaret.updateVisibility(true);
+      }
     });
 
     // Listen for drag events to maintain hover state
@@ -152,31 +152,20 @@ export class LauncherContainer {
       if (this.expansionManager?.getCollapsedState()) {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
       }
+      this.isDragging = true;
     });
 
     this.element.addEventListener(EVENTS.DRAG_END, () => {
       if (this.expansionManager?.getCollapsedState() && !this.isHovered) {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
+        this.collapseCaret.updateVisibility(false);
+        this.dragHandle.updateVisibility(false);
       }
-    });
-
-    // Listen for position changes to update flex direction
-    this.element.addEventListener(EVENTS.POSITION_CHANGE, (e: Event) => {
-      const event = e as CustomEvent<PositionChangeEvent>;
-      this.updateFlexDirection(event.detail.position.anchor);
-
-      if (this.collapseCaret) {
-        this.collapseCaret.updateDirection(event.detail.position.anchor);
-      }
+      this.isDragging = false;
     });
 
     // Initialize with visibility hidden to prevent flash
     this.element.style.visibility = 'hidden';
-  }
-
-  private updateFlexDirection(anchor: 'top' | 'bottom'): void {
-    this.inner.style.flexDirection =
-      anchor === 'top' ? 'column-reverse' : 'column';
   }
 
   public setDragHandle(dragHandle: DragHandle): void {
@@ -275,8 +264,10 @@ export class LauncherContainer {
 
     // Initialize position first, with offset if expanded
     const savedPosition = await storage.get('LAUNCHER_POSITION');
+
+    console.log('INIT SAVED POSITION', savedPosition);
+
     const defaultPosition = {
-      anchor: 'bottom' as const,
       distance: DEFAULT_DIMENSIONS.MIN_EDGE_DISTANCE * 2,
     };
     const position = savedPosition ?? defaultPosition;
@@ -285,10 +276,7 @@ export class LauncherContainer {
     if (isExpanded) {
       const offsetPosition = {
         ...position,
-        distance:
-          position.anchor === 'top'
-            ? position.distance - DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT
-            : position.distance - DEFAULT_DIMENSIONS.COLLAPSED_HEIGHT,
+        distance: position.distance,
       };
       this.positionManager.applyPosition(offsetPosition);
     } else {
@@ -296,7 +284,6 @@ export class LauncherContainer {
     }
 
     setTimeout(() => {
-      this.collapseCaret.updateDirection(position.anchor);
       this.collapseCaret.updateStyleBasedOnCollapsedState(!isExpanded);
     }, 100);
 

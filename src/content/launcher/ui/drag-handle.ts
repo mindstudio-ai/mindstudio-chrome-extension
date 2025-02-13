@@ -28,10 +28,8 @@ export class DragHandle {
   private createElement(): HTMLElement {
     const element = document.createElement('div');
     element.id = DragHandle.ElementId.CARET;
-    this.transformDiv = document.createElement('div');
-    this.transformDiv.innerHTML = this.iconSvg();
     element.style.cssText = `
-      padding: 0;
+      padding: 3px 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -43,10 +41,10 @@ export class DragHandle {
       height: 16px;
       overflow: hidden;
 
-      transition: height 0.2s ease;
+      transition: height 0.2s ease, padding 0.2s ease;
     `;
 
-    element.appendChild(this.transformDiv);
+    element.innerHTML = this.iconSvg();
 
     return element;
   }
@@ -57,7 +55,9 @@ export class DragHandle {
 
   public updateVisibility(visible: boolean): void {
     const resolvedHeight = visible ? '16px' : '0px';
+    const resolvedPadding = visible ? '3px 0' : '0px';
     this.element.style.height = resolvedHeight;
     this.element.style.maxHeight = resolvedHeight;
+    this.element.style.padding = resolvedPadding;
   }
 }

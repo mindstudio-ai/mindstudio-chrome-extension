@@ -124,12 +124,11 @@ export class LauncherUI {
 
     this.resolveLeftoverTooltipGuides();
 
-    //this.container.addComponent(this.collapseCaret.getElement());
-
     setTimeout(async () => {
       const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
       this.logo.updateStyleBasedOnCollapsedState(isCollapsed);
       this.collapseCaret.updateStyleBasedOnCollapsedState(isCollapsed);
+      this.collapseCaret.updateVisibility(true);
     }, 100);
   }
 

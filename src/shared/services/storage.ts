@@ -15,7 +15,6 @@ export type StorageValues = {
   LAUNCHER_COLLAPSED: boolean;
   LAUNCHER_HIDDEN: boolean;
   LAUNCHER_POSITION: {
-    anchor: 'top' | 'bottom';
     distance: number;
   } | null;
   SELECTED_ORGANIZATION: string | null;
