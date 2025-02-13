@@ -2,15 +2,10 @@ import { THANK_YOU_PAGE } from '../shared/constants';
 import { runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
 import { api } from '../shared/services/api';
-import { WorkerLaunchPayload } from '../shared/types/events';
 
 class BackgroundService {
   private static instance: BackgroundService;
-  private pendingWorkers = new Map<number, WorkerLaunchPayload>();
-  private tabsWithOpenSidePanels = new Map<
-    number,
-    { type: 'worker' | 'history'; runId?: string }
-  >();
+  private tabsWithOpenSidePanels = new Map<number, string>();
 
   private constructor() {
     chrome.sidePanel.setOptions({
@@ -34,15 +29,8 @@ class BackgroundService {
     return BackgroundService.instance;
   }
 
-  private getPanelPath(
-    type: 'worker' | 'history',
-    tabId: number,
-    runId?: string,
-  ): string {
-    if (type === 'worker') {
-      return `worker-panel.html?tabId=${tabId}${runId ? `&runId=${runId}` : ''}`;
-    }
-    return 'history-panel.html';
+  private getPanelPath(tabId: number, appId?: string): string {
+    return `panel.html?tabId=${tabId}#${appId ? `/agents/${appId}/run` : '/'}`;
   }
 
   private setupMessageListeners(): void {
@@ -52,7 +40,7 @@ class BackgroundService {
     });
 
     // Handle open history event
-    runtime.listen('history/open', async (_, sender) => {
+    runtime.listen('sidepanel/open', async (_, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
         console.info('[MindStudio][Background] History open failed: No tab ID');
@@ -60,10 +48,11 @@ class BackgroundService {
       }
 
       try {
-        this.tabsWithOpenSidePanels.set(tabId, { type: 'history' });
+        const path = this.getPanelPath(tabId);
+        this.tabsWithOpenSidePanels.set(tabId, path);
         chrome.sidePanel.setOptions({
           tabId,
-          path: 'history-panel.html',
+          path,
           enabled: true,
         });
         await chrome.sidePanel.open({ tabId });
@@ -84,26 +73,18 @@ class BackgroundService {
 
       try {
         // Generate a new run ID for this worker instance
-        const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-        // Store pending worker and update panel state
-        this.pendingWorkers.set(tabId, {
-          ...payload,
-          tabId,
-        });
-        this.tabsWithOpenSidePanels.set(tabId, { type: 'worker', runId });
+        const path = this.getPanelPath(tabId, payload.appId);
+        this.tabsWithOpenSidePanels.set(tabId, path);
 
         console.info('[MindStudio][Background] Launching worker:', {
           tabId,
           appId: payload.appId,
-          appName: payload.appName,
-          runId,
         });
 
         // Configure and open the panel with the run ID
         chrome.sidePanel.setOptions({
           tabId,
-          path: this.getPanelPath('worker', tabId, runId),
+          path,
           enabled: true,
         });
         await chrome.sidePanel.open({ tabId });
@@ -111,31 +92,6 @@ class BackgroundService {
         console.error('[MindStudio][Background] Launch failed:', error);
       }
     });
-
-    // Handle sidepanel ready event
-    runtime.listen(
-      'sidepanel/ready',
-      (payload: { tabId: number; runId?: string }) => {
-        const tabId = payload.tabId;
-        const pendingWorker = this.pendingWorkers.get(tabId);
-        const panelInfo = this.tabsWithOpenSidePanels.get(tabId);
-
-        // Only initialize if runIds match (or it's a history panel)
-        if (
-          pendingWorker &&
-          (!payload.runId || payload.runId === panelInfo?.runId)
-        ) {
-          console.info('[MindStudio][Background] Initializing worker:', {
-            tabId,
-            appId: pendingWorker.appId,
-            appName: pendingWorker.appName,
-            runId: payload.runId,
-          });
-          runtime.send('player/init', pendingWorker);
-          this.pendingWorkers.delete(tabId);
-        }
-      },
-    );
   }
 
   private setupSidePanelListeners(): void {
@@ -150,16 +106,16 @@ class BackgroundService {
       // Update apps on every tab switch
       this.updateApps();
 
-      const panelInfo = this.tabsWithOpenSidePanels.get(tabId);
-      if (panelInfo) {
+      const path = this.tabsWithOpenSidePanels.get(tabId);
+      if (path) {
         console.info(
           '[MindStudio][Background] Switched to tab with active panel, restoring side panel',
-          { tabId, type: panelInfo.type, runId: panelInfo.runId },
+          { tabId, path },
         );
         await chrome.sidePanel.setOptions({
           enabled: true,
           tabId,
-          path: this.getPanelPath(panelInfo.type, tabId, panelInfo.runId),
+          path,
         });
       } else {
         console.info(
@@ -175,19 +131,18 @@ class BackgroundService {
 
     // Handle tab removal
     chrome.tabs.onRemoved.addListener((tabId) => {
-      this.pendingWorkers.delete(tabId);
       this.tabsWithOpenSidePanels.delete(tabId);
     });
 
     // Handle tab updates (e.g. navigation)
     chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
       if (changeInfo.status === 'loading') {
-        const panelInfo = this.tabsWithOpenSidePanels.get(tabId);
-        if (panelInfo) {
+        const path = this.tabsWithOpenSidePanels.get(tabId);
+        if (path) {
           await chrome.sidePanel.setOptions({
             enabled: true,
             tabId,
-            path: this.getPanelPath(panelInfo.type, tabId, panelInfo.runId),
+            path,
           });
         }
       }
@@ -207,10 +162,11 @@ class BackgroundService {
     chrome.action.onClicked.addListener(async (tab) => {
       if (tab.id) {
         try {
-          this.tabsWithOpenSidePanels.set(tab.id, { type: 'history' });
+          const path = this.getPanelPath(tab.id);
+          this.tabsWithOpenSidePanels.set(tab.id, path);
           chrome.sidePanel.setOptions({
             tabId: tab.id,
-            path: 'history-panel.html',
+            path,
             enabled: true,
           });
           await chrome.sidePanel.open({ tabId: tab.id });

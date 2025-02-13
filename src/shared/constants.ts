@@ -32,6 +32,6 @@ export const FrameDimensions = {
 
 export const DefaultIcons = {
   WORKSPACE:
-    'https://images.mindstudio-cdn.com/images/a47f3f3a-a1fa-41ca-8de3-e415452b4611_1731693706328.png?w=120&fm=auto',
-  APP: 'https://images.mindstudio-cdn.com/images/a47f3f3a-a1fa-41ca-8de3-e415452b4611_1731686870175.png',
+    'https://images.mindstudio-cdn.com/images/a47f3f3a-a1fa-41ca-8de3-e415452b4611_1739379616073.png?w=120&fm=auto',
+  APP: 'https://images.mindstudio-cdn.com/images/a47f3f3a-a1fa-41ca-8de3-e415452b4611_1739379254036.png',
 } as const;

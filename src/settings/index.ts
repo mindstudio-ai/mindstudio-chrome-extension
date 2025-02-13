@@ -214,7 +214,7 @@ class SettingsManager {
     }
 
     appsContainer.innerHTML =
-      '<div class="apps-empty-state">No AI Workers found for this workspace.</div>';
+      '<div class="apps-empty-state">No AI Agents found for this workspace.</div>';
 
     const appsHeader = document.getElementById('apps-header');
     if (appsHeader) {

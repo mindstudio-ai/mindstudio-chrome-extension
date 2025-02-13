@@ -39,7 +39,7 @@ export const frame = {
   send<K extends keyof Events>(
     frameId: string,
     type: K,
-    payload: Events[K],
+    payload?: Events[K],
   ): void {
     const frame = document.getElementById(frameId) as HTMLIFrameElement;
     if (!frame?.contentWindow) {

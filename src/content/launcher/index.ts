@@ -4,13 +4,14 @@ import { runtime } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
-import { filterAppsByUrl } from '../../shared/utils/url-filter';
 import { LaunchVariables } from '../../shared/types/events';
 
 export class LauncherService {
   private static instance: LauncherService;
   private apps: AppData[] = [];
-  private currentHostUrl: string = window.location.href;
+
+  private urlChangeInterval?: any;
+  private currentHostUrl?: string;
 
   private ui: LauncherUI | null = null;
   private isInitialized = false;
@@ -32,6 +33,7 @@ export class LauncherService {
     this.isInitialized = true;
     await this.setupListeners();
     await this.initializeState();
+    this.startUrlChangeWatcher();
   }
 
   private async setupListeners(): Promise<void> {
@@ -62,9 +64,9 @@ export class LauncherService {
       }
     });
 
-    runtime.listen('history/request_launch_variables', () => {
+    runtime.listen('remote/request_launch_variables', () => {
       console.info(
-        '[MindStudio][Launcher] History side panel requested launch variables',
+        '[MindStudio][Launcher] Side panel requested launch variables',
       );
       const userSelection = page.getSelectedContent();
       const rawHtml = page.cleanDOM();
@@ -80,11 +82,15 @@ export class LauncherService {
       };
 
       console.info(
-        '[MindStudio][History] Sending launch variables to history side panel',
+        '[MindStudio][Launcher] Sending launch variables to side panel',
         launchVariables,
       );
 
       runtime.send('launcher/resolved_launch_variables', { launchVariables });
+    });
+
+    runtime.listen('remote/request_current_url', () => {
+      this.sendCurrentUrl();
     });
   }
 
@@ -121,10 +127,24 @@ export class LauncherService {
     await this.updateUI();
   }
 
+  private startUrlChangeWatcher() {
+    const interval = 1e3; // every second
+    this.urlChangeInterval = setInterval(() => {
+      if (window.location.href !== this.currentHostUrl) {
+        this.currentHostUrl = window.location.href;
+        this.sendCurrentUrl();
+      }
+    }, interval);
+  }
+
   private async destroyUI(): Promise<void> {
     if (this.ui) {
       this.ui.destroy();
       this.ui = null;
+    }
+
+    if (this.urlChangeInterval) {
+      clearTimeout(this.urlChangeInterval);
     }
   }
 
@@ -134,8 +154,7 @@ export class LauncherService {
     if (!apps || !orgId) {
       this.apps = [];
     } else {
-      const orgApps = apps[orgId] || [];
-      this.apps = filterAppsByUrl(orgApps, this.currentHostUrl);
+      this.apps = apps[orgId] || [];
     }
 
     // Only update UI if it exists
@@ -150,22 +169,8 @@ export class LauncherService {
 
   private async handleAppClick(app: AppData): Promise<void> {
     try {
-      const userSelection = page.getSelectedContent();
-      const rawHtml = page.cleanDOM();
-      const fullText = page.getCleanTextContent();
-      const metadata = page.getMetadataBundle();
-
       await runtime.send('player/launch_worker', {
         appId: app.id,
-        appName: app.name,
-        appIcon: app.iconUrl,
-        launchVariables: {
-          url: window.location.href,
-          metadata,
-          rawHtml,
-          fullText,
-          userSelection,
-        },
       });
     } catch (error) {
       console.error('Failed to launch worker:', error);
@@ -179,5 +184,18 @@ export class LauncherService {
 
   private async handleCollapse(): Promise<void> {
     await storage.set('LAUNCHER_COLLAPSED', true);
+  }
+
+  private sendCurrentUrl() {
+    if (!this.currentHostUrl) {
+      return;
+    }
+
+    const { favicon } = JSON.parse(page.getMetadataBundle());
+
+    runtime.send('launcher/current_url_updated', {
+      url: this.currentHostUrl,
+      faviconUrl: favicon,
+    });
   }
 }

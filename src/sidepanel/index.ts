@@ -1,22 +1,9 @@
-import { HistoryFrame } from './history-frame';
-import { PlayerFrame } from './player-frame';
-
-type PanelType = 'worker' | 'history';
+import { SidepanelFrame } from './frame';
 
 class SidePanel {
-  private frame?: PlayerFrame | HistoryFrame;
-  private type: PanelType;
+  private frame?: SidepanelFrame;
 
   constructor() {
-    const params = new URLSearchParams(window.location.search);
-    const tabId = params.get('tabId');
-    const runId = params.get('runId');
-
-    // Determine panel type from URL
-    this.type = window.location.pathname.includes('worker-panel')
-      ? 'worker'
-      : 'history';
-
     const container = document.getElementById('player-container');
     if (!container) {
       console.error('[MindStudio][Sidepanel] Container not found');
@@ -24,18 +11,17 @@ class SidePanel {
     }
 
     // Initialize the appropriate frame based on type
-    if (this.type === 'worker' && tabId) {
-      const parsedTabId = parseInt(tabId, 10);
-      this.frame = new PlayerFrame(container, parsedTabId, runId);
-    } else {
-      // In history mode, use a dummy tabId of -1 since it's not used
-      this.frame = new HistoryFrame(container, -1);
+    const searchParams = new URLSearchParams(window.location.search);
+    const tabId = searchParams.get('tabId');
+    if (!tabId) {
+      throw new Error('Invalid tab ID');
     }
 
+    const initialPath = window.location.hash.replace('#', '');
+    this.frame = new SidepanelFrame(container, Number(tabId), initialPath);
+
     console.info('[MindStudio][Sidepanel] Initialized panel:', {
-      type: this.type,
-      tabId: tabId || -1,
-      runId,
+      initialPath,
     });
   }
 }
