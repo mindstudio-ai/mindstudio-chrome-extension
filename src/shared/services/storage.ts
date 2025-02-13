@@ -10,7 +10,6 @@ export type StorageValues = {
       id: string;
       name: string;
       iconUrl: string;
-      extensionSupportedSites: string[];
     }>
   > | null;
   LAUNCHER_COLLAPSED: boolean;

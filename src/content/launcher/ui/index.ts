@@ -39,7 +39,7 @@ export class LauncherUI {
 
     this.logo.addEventHandler('mousedown', () => {
       this.contextMenu.hide();
-      runtime.send('history/open', undefined);
+      runtime.send('sidepanel/open', undefined);
       tooltipGuideStorage.set('OPEN_SIDE_PANEL', true);
 
       if (this.tooltipGuides.get('OPEN_SIDE_PANEL')) {

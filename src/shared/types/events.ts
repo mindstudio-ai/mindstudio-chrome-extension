@@ -11,24 +11,21 @@ export interface Events {
     token: string;
     organizations: Array<OrganizationData>;
   };
-
-  // Player events
-  'player/loaded': void;
-  'player/launch_worker': BaseWorkerPayload;
-  'player/init': WorkerLaunchPayload;
-  'player/close_worker': void;
-  'player/load_worker': {
-    id: string;
-    name: string;
-    iconUrl: string;
-    launchVariables: LaunchVariables;
+  'auth/organization_id_changed': {
+    organizationId: string;
   };
 
+  // Player events
+  'player/launch_worker': BaseWorkerPayload;
+
   // History events
-  'history/loaded': void;
-  'history/open': undefined;
-  'history/request_launch_variables': undefined;
-  'history/resolved_launch_variables': {
+  'remote/loaded': void;
+  'remote/navigate/app': {
+    appId: string;
+  };
+  'remote/navigate/root': undefined;
+  'remote/request_launch_variables': undefined;
+  'remote/resolved_launch_variables': {
     launchVariables: LaunchVariables;
   };
 
@@ -45,7 +42,7 @@ export interface Events {
   'settings/open': undefined;
 
   // Sidepanel events
-  'sidepanel/ready': { tabId: number };
+  'sidepanel/open': undefined;
 }
 
 export interface LaunchVariables {
@@ -67,9 +64,6 @@ export const getEmptyLaunchVariables = (): LaunchVariables => ({
 // Base worker payload without tabId
 export interface BaseWorkerPayload {
   appId: string;
-  appName: string;
-  appIcon: string;
-  launchVariables: LaunchVariables;
 }
 
 // Full worker payload with tabId (used internally)

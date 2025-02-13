@@ -4,7 +4,6 @@ import { runtime } from '../../shared/services/messaging';
 import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
-import { filterAppsByUrl } from '../../shared/utils/url-filter';
 import { LaunchVariables } from '../../shared/types/events';
 
 export class LauncherService {
@@ -62,9 +61,9 @@ export class LauncherService {
       }
     });
 
-    runtime.listen('history/request_launch_variables', () => {
+    runtime.listen('remote/request_launch_variables', () => {
       console.info(
-        '[MindStudio][Launcher] History side panel requested launch variables',
+        '[MindStudio][Launcher] Side panel requested launch variables',
       );
       const userSelection = page.getSelectedContent();
       const rawHtml = page.cleanDOM();
@@ -80,7 +79,7 @@ export class LauncherService {
       };
 
       console.info(
-        '[MindStudio][History] Sending launch variables to history side panel',
+        '[MindStudio][Launcher] Sending launch variables to side panel',
         launchVariables,
       );
 
@@ -134,8 +133,7 @@ export class LauncherService {
     if (!apps || !orgId) {
       this.apps = [];
     } else {
-      const orgApps = apps[orgId] || [];
-      this.apps = filterAppsByUrl(orgApps, this.currentHostUrl);
+      this.apps = apps[orgId] || [];
     }
 
     // Only update UI if it exists
@@ -150,22 +148,8 @@ export class LauncherService {
 
   private async handleAppClick(app: AppData): Promise<void> {
     try {
-      const userSelection = page.getSelectedContent();
-      const rawHtml = page.cleanDOM();
-      const fullText = page.getCleanTextContent();
-      const metadata = page.getMetadataBundle();
-
       await runtime.send('player/launch_worker', {
         appId: app.id,
-        appName: app.name,
-        appIcon: app.iconUrl,
-        launchVariables: {
-          url: window.location.href,
-          metadata,
-          rawHtml,
-          fullText,
-          userSelection,
-        },
       });
     } catch (error) {
       console.error('Failed to launch worker:', error);
