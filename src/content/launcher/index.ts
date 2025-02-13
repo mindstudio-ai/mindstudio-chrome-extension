@@ -60,7 +60,8 @@ export class LauncherService {
 
     storage.onChange('LAUNCHER_COLLAPSED', (isCollapsed) => {
       if (this.ui) {
-        this.ui.setCollapsed(isCollapsed ?? true);
+        //this.ui.setCollapsed(isCollapsed ?? true);
+        this.ui.setCollapsed(true);
       }
     });
 
@@ -118,10 +119,11 @@ export class LauncherService {
     );
 
     // Set initial collapsed state
-    this.ui.setCollapsed(
-      (await storage.get('LAUNCHER_COLLAPSED')) ?? true,
-      true,
-    );
+    // this.ui.setCollapsed(
+    //   (await storage.get('LAUNCHER_COLLAPSED')) ?? true,
+    //   true,
+    // );
+    this.ui.setCollapsed(true);
 
     // Update UI with current apps
     await this.updateUI();

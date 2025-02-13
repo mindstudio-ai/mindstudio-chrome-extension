@@ -59,7 +59,8 @@ export class ExpansionManager {
 
   public async initialize(): Promise<void> {
     const isCollapsed = (await storage.get('LAUNCHER_COLLAPSED')) ?? true;
-    await this.setInitialState(isCollapsed);
+    // Leaving this flagged as false for now, in case we bring back the expansion
+    await this.setInitialState(true);
   }
 
   public async setInitialState(collapsed: boolean): Promise<void> {
@@ -105,6 +106,10 @@ export class ExpansionManager {
   }
 
   public async setCollapsedState(collapsed: boolean): Promise<void> {
+    // Temp
+    await this.transitionToState(true);
+    return;
+
     // If we're already in that state and not transitioning, nothing to do
     if (collapsed === this.isCollapsed && !this.isTransitioning) {
       return;
@@ -262,6 +267,7 @@ export class ExpansionManager {
   }
 
   public getCollapsedState(): boolean {
+    return true;
     return this.isCollapsed;
   }
 }

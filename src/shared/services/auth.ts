@@ -22,7 +22,7 @@ function initializeStorageListener() {
     }
 
     // Expand launcher on successful login
-    await storage.set('LAUNCHER_COLLAPSED', false);
+    // await storage.set('LAUNCHER_COLLAPSED', false);
 
     // Notify handlers
     for (const handler of loginCompletionHandlers) {

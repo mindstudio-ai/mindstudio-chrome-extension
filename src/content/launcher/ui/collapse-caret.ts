@@ -36,6 +36,7 @@ export class CollapseCaret {
       width: 100%;
       height: 16px;
       overflow: hidden;
+      display: none;
       transition: height 0.2s ease, padding 0.2s ease;
     `;
 

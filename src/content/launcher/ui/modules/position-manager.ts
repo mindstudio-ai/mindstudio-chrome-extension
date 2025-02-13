@@ -95,7 +95,6 @@ export class PositionManager {
   public async savePosition(position: Position): Promise<void> {
     // If we're saving while expanded, the position we get already includes the offset
     // So we need to subtract it to get the true logo position
-    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
     const normalizedPosition = {
       ...position,
       distance: position.distance,
@@ -114,7 +113,8 @@ export class PositionManager {
     }
 
     // Check if we're expanded to apply the correct offset
-    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+    //const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+    const isExpanded = false;
 
     if (isExpanded) {
       const offsetPosition = {

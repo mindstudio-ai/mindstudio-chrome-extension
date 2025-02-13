@@ -260,12 +260,12 @@ export class LauncherContainer {
     document.body.appendChild(this.element);
 
     // Check if we're starting expanded
-    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+    // const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
 
+    // Leaving this flagged as false for now, in case we bring back the expansion
+    const isExpanded = false;
     // Initialize position first, with offset if expanded
     const savedPosition = await storage.get('LAUNCHER_POSITION');
-
-    console.log('INIT SAVED POSITION', savedPosition);
 
     const defaultPosition = {
       distance: DEFAULT_DIMENSIONS.MIN_EDGE_DISTANCE * 2,
@@ -283,12 +283,12 @@ export class LauncherContainer {
       this.positionManager.applyPosition(position);
     }
 
+    // Initialize expansion state
+    await this.expansionManager.initialize();
+
     setTimeout(() => {
       this.collapseCaret.updateStyleBasedOnCollapsedState(!isExpanded);
     }, 100);
-
-    // Initialize expansion state
-    await this.expansionManager.initialize();
 
     // Make visible after initialization
     requestAnimationFrame(() => {

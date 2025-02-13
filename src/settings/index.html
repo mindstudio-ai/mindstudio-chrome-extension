@@ -33,7 +33,7 @@
         text-decoration: none;
       }
       .container {
-        max-width: 800px;
+        max-width: 600px;
         margin: 0 auto;
         padding: 24px;
       }
@@ -45,7 +45,7 @@
         color: #333;
         font-size: 18px;
         font-weight: 600;
-        max-width: 800px;
+        max-width: 600px;
         margin: 0 auto;
       }
       .section {
@@ -330,6 +330,20 @@
         color: #0069ff;
       }
 
+      .toggle-button-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .toggle-button-label {
+        font-size: 14px;
+        font-weight: 400;
+        color: #29292a;
+        flex: 1;
+      }
+
       .toggle-button {
         position: relative;
         background: #0069ff;
@@ -389,175 +403,7 @@
         class="workspace-section"
         style="margin-top: 24px; border-top: 1px solid #1212131a"
       >
-        <h2>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="icon icon-tabler icons-tabler-outline icon-tabler-home"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
-            <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-            <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
-          </svg>
-          Workspace Settings
-        </h2>
-        <div class="workspace-select-container">
-          <div class="workspace-label">Workspace</div>
-          <div class="workspace-select-wrapper">
-            <select id="workspaceSelect" class="workspace-select" disabled>
-              <option value="">Loading workspaces...</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div id="apps-section">
-        <div class="workspace-section apps-section-header">
-          <h2 style="margin-bottom: 0">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-apps"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path
-                d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-              />
-              <path
-                d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-              />
-              <path
-                d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
-              />
-              <path d="M14 7l6 0" />
-              <path d="M17 4l0 6" />
-            </svg>
-            Manage Starred Agents
-          </h2>
-        </div>
-
-        <div class="workspace-section">
-          <div id="apps-header" class="apps-header">
-            <div>Agent</div>
-
-            <div>Hide/Show</div>
-          </div>
-
-          <div id="apps-container"></div>
-        </div>
-      </div>
-
-      <div class="workspace-section">
-        <h2>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="icon icon-tabler icons-tabler-outline icon-tabler-book"
-          >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
-            <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
-            <path d="M3 6l0 13" />
-            <path d="M12 6l0 13" />
-            <path d="M21 6l0 13" />
-          </svg>
-          Documentation & Support
-        </h2>
-
-        <div class="documentation-links">
-          <a href="https://www.youtube.com/watch?v=gLfpGgf8WQw" target="_blank"
-            >How to Create AI Agents
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path
-                d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"
-              />
-              <path d="M11 13l9 -9" />
-              <path d="M15 4h5v5" />
-            </svg>
-          </a>
-
-          <a href="https://www.youtube.com/watch?v=KjvXidv8cc0" target="_blank">
-            How to Use the MindStudio Chrome Extension
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path
-                d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"
-              />
-              <path d="M11 13l9 -9" />
-              <path d="M15 4h5v5" />
-            </svg>
-          </a>
-
-          <a href="https://help.mindstudio.ai/" target="_blank">
-            Documentation
-
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-external-link"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path
-                d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6"
-              />
-              <path d="M11 13l9 -9" />
-              <path d="M15 4h5v5" />
-            </svg>
-          </a>
-        </div>
+        <div id="settings-container"></div>
       </div>
 
       <div id="status"></div>

@@ -29,7 +29,7 @@ export class DragHandle {
     const element = document.createElement('div');
     element.id = DragHandle.ElementId.CARET;
     element.style.cssText = `
-      padding: 3px 0;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -38,7 +38,7 @@ export class DragHandle {
       cursor: pointer;
       border-radius: 6px;
       width: 100%;
-      height: 16px;
+      height: 0;
       overflow: hidden;
 
       transition: height 0.2s ease, padding 0.2s ease;
