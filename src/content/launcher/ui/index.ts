@@ -45,8 +45,6 @@ export class LauncherUI {
       if (this.tooltipGuides.get('OPEN_SIDE_PANEL')) {
         this.tooltipGuides.get('OPEN_SIDE_PANEL')?.hide();
       }
-
-      //this.addTooltipGuideUseWorkers();
     });
 
     this.handleCollapse = () => {
@@ -256,9 +254,9 @@ export class LauncherUI {
         title: 'Run AI Worker on the Web',
         text: 'Open the side panel to get started.',
         triangleSide: 'right',
-        triangleOffset: 42,
+        triangleOffset: 28,
         rightOffset: 60,
-        topOffset: -34,
+        topOffset: -16,
         anchorElement: targetElement,
         observeElement: this.container.getElement(),
         onCloseAction: async () => {
