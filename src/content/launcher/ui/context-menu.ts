@@ -11,6 +11,7 @@ export class ContextMenu {
   private element: HTMLDivElement;
   private isVisible = false;
   private container: HTMLElement | null = null;
+  private onHideCallback: (() => void) | undefined;
 
   constructor(
     private items: ContextMenuItem[],
@@ -148,7 +149,7 @@ export class ContextMenu {
 
     // Adjust position if menu would go off screen
     if (left + menuRect.width > window.innerWidth) {
-      left = anchorRect.left - menuRect.width - 8;
+      left = anchorRect.left - menuRect.width - 16;
     }
     if (top < 0) {
       top = 0;
@@ -165,6 +166,10 @@ export class ContextMenu {
   hide() {
     this.element.style.display = 'none';
     this.isVisible = false;
+
+    if (this.onHideCallback) {
+      this.onHideCallback();
+    }
   }
 
   toggle(anchorElement: HTMLElement) {
@@ -177,5 +182,9 @@ export class ContextMenu {
 
   getElement(): HTMLElement {
     return this.element;
+  }
+
+  setOnHideCallback(callback: () => void) {
+    this.onHideCallback = callback;
   }
 }

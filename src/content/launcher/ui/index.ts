@@ -1,67 +1,76 @@
 import { AppButton } from './app-button';
 import { LauncherContainer } from './container';
 import { Logo } from './logo';
-import { IconButton } from './icon-button';
+import { CollapseCaret } from './collapse-caret';
 import { ContextMenu } from './context-menu';
 import { AppData } from '../../../shared/types/app';
 import { runtime } from '../../../shared/services/messaging';
 import { storage } from '../../../shared/services/storage';
 import { sortApps } from '../../../shared/utils/sortApps';
-import { RootUrl } from '../../../shared/constants';
-import { AddNewAppButton } from './add-new-app-button';
 import { TooltipGuide } from './tooltip-guide';
 import { tooltipGuideStorage } from '../../../shared/services/tooltipGuideStorage';
+import { DragHandle } from './drag-handle';
 
 export class LauncherUI {
   private container: LauncherContainer;
   private logo: Logo;
-  private menuButton: IconButton;
+  private collapseCaret: CollapseCaret;
+  private dragHandle: DragHandle | undefined;
   private contextMenu: ContextMenu;
   private appButtons: Map<string, AppButton> = new Map();
+  private handleCollapse: () => void;
+  private handleExpand: () => void;
+  private tooltipGuides: Map<string, TooltipGuide> = new Map();
 
   constructor(
     private onAppClick: (app: AppData) => void,
     private onCollapse: () => void,
     private onExpand: () => void,
   ) {
-    this.container = new LauncherContainer();
+    this.collapseCaret = new CollapseCaret();
+
+    this.container = new LauncherContainer(this.collapseCaret);
     this.logo = new Logo();
 
-    const kebabIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M9.16602 10.0007C9.16602 10.2217 9.25381 10.4336 9.41009 10.5899C9.56637 10.7462 9.77834 10.834 9.99935 10.834C10.2204 10.834 10.4323 10.7462 10.5886 10.5899C10.7449 10.4336 10.8327 10.2217 10.8327 10.0007C10.8327 9.77964 10.7449 9.56768 10.5886 9.4114C10.4323 9.25512 10.2204 9.16732 9.99935 9.16732C9.77834 9.16732 9.56637 9.25512 9.41009 9.4114C9.25381 9.56768 9.16602 9.77964 9.16602 10.0007Z" stroke="#99999A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M9.16602 15.834C9.16602 16.055 9.25381 16.267 9.41009 16.4232C9.56637 16.5795 9.77834 16.6673 9.99935 16.6673C10.2204 16.6673 10.4323 16.5795 10.5886 16.4232C10.7449 16.267 10.8327 16.055 10.8327 15.834C10.8327 15.613 10.7449 15.401 10.5886 15.2447C10.4323 15.0884 10.2204 15.0007 9.99935 15.0007C9.77834 15.0007 9.56637 15.0884 9.41009 15.2447C9.25381 15.401 9.16602 15.613 9.16602 15.834Z" stroke="#99999A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M9.16602 4.16732C9.16602 4.38833 9.25381 4.60029 9.41009 4.75657C9.56637 4.91285 9.77834 5.00065 9.99935 5.00065C10.2204 5.00065 10.4323 4.91285 10.5886 4.75657C10.7449 4.60029 10.8327 4.38833 10.8327 4.16732C10.8327 3.9463 10.7449 3.73434 10.5886 3.57806C10.4323 3.42178 10.2204 3.33398 9.99935 3.33398C9.77834 3.33398 9.56637 3.42178 9.41009 3.57806C9.25381 3.73434 9.16602 3.9463 9.16602 4.16732Z" stroke="#99999A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
+    this.logo.addEventHandler('contextmenu', (e) => {
+      e.preventDefault();
+      this.onSettingsClick();
+    });
 
-    this.menuButton = new IconButton({
-      icon: kebabIcon,
-      onClick: () => {
-        this.onSettingsClick();
-      },
+    this.logo.addEventHandler('mousedown', () => {
+      this.contextMenu.hide();
+      runtime.send('history/open', undefined);
+      tooltipGuideStorage.set('OPEN_SIDE_PANEL', true);
+
+      if (this.tooltipGuides.get('OPEN_SIDE_PANEL')) {
+        this.tooltipGuides.get('OPEN_SIDE_PANEL')?.hide();
+      }
+    });
+
+    this.handleCollapse = () => {
+      this.onCollapse();
+      this.logo.updateStyleBasedOnCollapsedState(true);
+      this.collapseCaret.updateStyleBasedOnCollapsedState(true);
+      // this.dragHandle?.updateVisibility(true);
+    };
+
+    this.handleExpand = () => {
+      this.onExpand();
+      this.logo.updateStyleBasedOnCollapsedState(false);
+      this.collapseCaret.updateStyleBasedOnCollapsedState(false);
+      // this.dragHandle?.updateVisibility(false);
+    };
+
+    this.collapseCaret.addEventHandler('mousedown', () => {
+      if (this.container.isCollapsed()) {
+        this.handleExpand();
+      } else {
+        this.handleCollapse();
+      }
     });
 
     this.contextMenu = new ContextMenu(
       [
-        {
-          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none">
-          <path d="M9.33464 5.16602H13.3346M11.3346 3.16602V7.16602M2.66797 3.83268C2.66797 3.65587 2.73821 3.4863 2.86323 3.36128C2.98826 3.23625 3.15782 3.16602 3.33464 3.16602H6.0013C6.17811 3.16602 6.34768 3.23625 6.47271 3.36128C6.59773 3.4863 6.66797 3.65587 6.66797 3.83268V6.49935C6.66797 6.67616 6.59773 6.84573 6.47271 6.97075C6.34768 7.09578 6.17811 7.16602 6.0013 7.16602H3.33464C3.15782 7.16602 2.98826 7.09578 2.86323 6.97075C2.73821 6.84573 2.66797 6.67616 2.66797 6.49935V3.83268ZM2.66797 10.4993C2.66797 10.3225 2.73821 10.153 2.86323 10.0279C2.98826 9.90292 3.15782 9.83268 3.33464 9.83268H6.0013C6.17811 9.83268 6.34768 9.90292 6.47271 10.0279C6.59773 10.153 6.66797 10.3225 6.66797 10.4993V13.166C6.66797 13.3428 6.59773 13.5124 6.47271 13.6374C6.34768 13.7624 6.17811 13.8327 6.0013 13.8327H3.33464C3.15782 13.8327 2.98826 13.7624 2.86323 13.6374C2.73821 13.5124 2.66797 13.3428 2.66797 13.166V10.4993ZM9.33464 10.4993C9.33464 10.3225 9.40487 10.153 9.5299 10.0279C9.65492 9.90292 9.82449 9.83268 10.0013 9.83268H12.668C12.8448 9.83268 13.0143 9.90292 13.1394 10.0279C13.2644 10.153 13.3346 10.3225 13.3346 10.4993V13.166C13.3346 13.3428 13.2644 13.5124 13.1394 13.6374C13.0143 13.7624 12.8448 13.8327 12.668 13.8327H10.0013C9.82449 13.8327 9.65492 13.7624 9.5299 13.6374C9.40487 13.5124 9.33464 13.3428 9.33464 13.166V10.4993Z" stroke="#F6F6F7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>`,
-          label: 'Add Workers',
-          onClick: async () => {
-            window.open(`${RootUrl}/store`, '_blank');
-            await tooltipGuideStorage.set('ADD_WORKERS', true);
-          },
-        },
-        {
-          icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none">
-          <path d="M8.00182 5.83338V8.50005L9.33516 9.83338M2.03516 7.83338C2.18455 6.36675 2.86867 5.00645 3.95698 4.01202C5.04529 3.01759 6.46162 2.45864 7.93574 2.4418C9.40986 2.42496 10.8386 2.95142 11.9493 3.92074C13.0601 4.89005 13.7751 6.23436 13.9579 7.6972C14.1408 9.16003 13.7787 10.639 12.9407 11.8519C12.1028 13.0648 10.8476 13.9267 9.41468 14.2733C7.98177 14.6198 6.47143 14.4267 5.17182 13.7308C3.87221 13.0348 2.8743 11.8848 2.36849 10.5M2.03516 13.8334V10.5H5.36849" stroke="#F6F6F7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>`,
-          label: 'Open History',
-          onClick: () => {
-            runtime.send('history/open', undefined);
-          },
-          useMouseDown: true,
-        },
         {
           icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none">
           <path d="M6.88333 3.378C7.16733 2.20733 8.83267 2.20733 9.11667 3.378C9.15928 3.55387 9.24281 3.71719 9.36047 3.85467C9.47813 3.99215 9.62659 4.0999 9.79377 4.16916C9.96094 4.23843 10.1421 4.26723 10.3225 4.25325C10.5029 4.23926 10.6775 4.18287 10.832 4.08867C11.8607 3.462 13.0387 4.63933 12.412 5.66867C12.3179 5.8231 12.2616 5.99756 12.2477 6.17785C12.2337 6.35814 12.2625 6.53918 12.3317 6.70625C12.4009 6.87333 12.5085 7.02172 12.6458 7.13937C12.7831 7.25702 12.9463 7.3406 13.122 7.38333C14.2927 7.66733 14.2927 9.33267 13.122 9.61667C12.9461 9.65928 12.7828 9.74281 12.6453 9.86047C12.5079 9.97813 12.4001 10.1266 12.3308 10.2938C12.2616 10.4609 12.2328 10.6421 12.2468 10.8225C12.2607 11.0029 12.3171 11.1775 12.4113 11.332C13.038 12.3607 11.8607 13.5387 10.8313 12.912C10.6769 12.8179 10.5024 12.7616 10.3222 12.7477C10.1419 12.7337 9.96082 12.7625 9.79375 12.8317C9.62667 12.9009 9.47828 13.0085 9.36063 13.1458C9.24298 13.2831 9.1594 13.4463 9.11667 13.622C8.83267 14.7927 7.16733 14.7927 6.88333 13.622C6.84072 13.4461 6.75719 13.2828 6.63953 13.1453C6.52187 13.0079 6.37341 12.9001 6.20623 12.8308C6.03906 12.7616 5.85789 12.7328 5.67748 12.7468C5.49706 12.7607 5.3225 12.8171 5.168 12.9113C4.13933 13.538 2.96133 12.3607 3.588 11.3313C3.68207 11.1769 3.73837 11.0024 3.75232 10.8222C3.76628 10.6419 3.7375 10.4608 3.66831 10.2937C3.59913 10.1267 3.49151 9.97828 3.35418 9.86063C3.21686 9.74298 3.05371 9.6594 2.878 9.61667C1.70733 9.33267 1.70733 7.66733 2.878 7.38333C3.05387 7.34072 3.21719 7.25719 3.35467 7.13953C3.49215 7.02187 3.5999 6.87341 3.66916 6.70623C3.73843 6.53906 3.76723 6.35789 3.75325 6.17748C3.73926 5.99706 3.68287 5.8225 3.58867 5.668C2.962 4.63933 4.13933 3.46133 5.16867 4.088C5.83533 4.49333 6.69933 4.13467 6.88333 3.378Z" stroke="#F6F6F7" stroke-linecap="round" stroke-linejoin="round"/>
@@ -91,37 +100,37 @@ export class LauncherUI {
 
   private async setupUI(): Promise<void> {
     // Add components to container in the desired order
+
     this.container.addComponent(this.logo.getElement());
-    this.container.addComponent(this.menuButton.getElement());
 
     // Set up context menu
     this.contextMenu.setContainer(this.container.getElement());
     document.body.appendChild(this.contextMenu.getElement());
 
-    const menuTooltip = this.menuButton.getTooltip();
-    if (menuTooltip) {
-      this.container.addTooltip(menuTooltip);
-    }
-
-    // Set logo as drag handle
-    this.container.setDragHandle(this.logo.getElement());
+    this.dragHandle = new DragHandle();
+    this.container.setDragHandle(this.dragHandle);
+    this.container.setDragHandleElement(this.dragHandle.getElement());
+    this.container.addComponent(this.dragHandle.getElement());
 
     // Setup logo click handling
     const logoElement = this.logo.getElement();
     logoElement.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!this.container.getDragHandler().wasElementDragged()) {
-        if (this.container.isCollapsed()) {
-          this.onExpand();
-        } else {
-          this.onCollapse();
-        }
-      }
       this.container.getDragHandler().resetDragState();
     });
 
     // Initialize the container
     await this.container.initialize();
+
+    this.resolveLeftoverTooltipGuides();
+
+    //this.container.addComponent(this.collapseCaret.getElement());
+
+    setTimeout(async () => {
+      const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
+      this.logo.updateStyleBasedOnCollapsedState(isCollapsed);
+      this.collapseCaret.updateStyleBasedOnCollapsedState(isCollapsed);
+    }, 100);
   }
 
   async updateApps(apps: AppData[]): Promise<void> {
@@ -133,22 +142,10 @@ export class LauncherUI {
     });
     const sortedApps = sortApps(visibleApps, appsSettings);
 
-    // Add Workers button
     if (sortedApps.length === 0) {
-      const newButton = new AddNewAppButton(async () => {
-        window.open(`${RootUrl}/store`, '_blank');
-        await tooltipGuideStorage.set('ADD_WORKERS', true);
-      });
-      this.container.getAppsContainer().appendChild(newButton.getElement());
-      this.container.addTooltip(newButton.getTooltip());
-
-      const hasShownTooltipAddWorkers =
-        await tooltipGuideStorage.get('ADD_WORKERS');
-
-      if (newButton && !hasShownTooltipAddWorkers) {
-        this.onExpand();
-        this.addTooltipGuideAddWorkers(newButton.getElement());
-      }
+      this.collapseCaret.updateVisibility(false);
+    } else {
+      this.collapseCaret.updateVisibility(true);
     }
 
     // Quick equality check - if apps are the same, no need to update DOM
@@ -178,7 +175,7 @@ export class LauncherUI {
     this.appButtons.clear();
 
     // Update or create buttons
-    sortedApps.forEach(async (app, index) => {
+    sortedApps.forEach(async (app) => {
       const existingButton = existingButtons.get(app.id);
       if (existingButton) {
         // Update existing button
@@ -192,19 +189,6 @@ export class LauncherUI {
         fragment.appendChild(newButton.getElement());
         this.container.addTooltip(newButton.getTooltip());
         this.appButtons.set(app.id, newButton);
-
-        const hasShownTooltipFirstWorker =
-          (await tooltipGuideStorage.get('FIRST_WORKER')) ||
-          (await tooltipGuideStorage.get('SKIP_ALL'));
-
-        if (newButton && !hasShownTooltipFirstWorker && index === 0) {
-          this.onExpand();
-          this.addTooltipGuideFirstWorker(newButton.getElement());
-        }
-
-        if (index === 0 && hasShownTooltipFirstWorker) {
-          this.resolveLeftoverTooltipGuides();
-        }
       }
     });
 
@@ -227,14 +211,14 @@ export class LauncherUI {
 
   setCollapsed(collapsed: boolean, isInitial: boolean = false): void {
     this.container.setCollapsedState(collapsed, isInitial);
-    this.menuButton.setVisibility(!collapsed, !isInitial);
+
     if (collapsed) {
       this.contextMenu.hide();
     }
   }
 
   private onSettingsClick(): void {
-    this.contextMenu.toggle(this.menuButton.getElement());
+    this.contextMenu.toggle(this.logo.getElement());
   }
 
   public destroy(): void {
@@ -253,250 +237,67 @@ export class LauncherUI {
       return;
     }
 
-    const hasShownTooltipContextMenu =
-      await tooltipGuideStorage.get('CONTEXT_MENU');
+    const hasShownOpenSidePanel =
+      await tooltipGuideStorage.get('OPEN_SIDE_PANEL');
 
-    if (!hasShownTooltipContextMenu) {
-      this.addTooltipGuideContextMenu();
-      return;
-    }
-
-    const hasShownTooltipContextMenuExpanded = await tooltipGuideStorage.get(
-      'CONTEXT_MENU_EXPANDED',
-    );
-
-    if (!hasShownTooltipContextMenuExpanded) {
-      this.addTooltipGuideContextMenuExpanded();
-      return;
-    }
-
-    const hasShownTooltipMinimize = await tooltipGuideStorage.get('MINIMIZE');
-
-    if (!hasShownTooltipMinimize) {
-      this.addTooltipGuideMinimize();
-      return;
-    }
-
-    const hasShownTooltipDrag = await tooltipGuideStorage.get('DRAG');
-
-    if (!hasShownTooltipDrag) {
-      this.addTooltipGuideDrag();
-      return;
-    }
-
-    const hasShownTooltipPin = await tooltipGuideStorage.get('PIN');
-
-    if (!hasShownTooltipPin) {
-      this.addTooltipGuidePin();
+    if (!hasShownOpenSidePanel) {
+      this.addTooltipGuideOpenSidePanel(this.logo.getElement());
       return;
     }
   }
 
-  private async addTooltipGuideAddWorkers(
-    targetButton: HTMLElement,
+  private async addTooltipGuideOpenSidePanel(
+    targetElement: HTMLElement,
   ): Promise<void> {
     setTimeout(() => {
-      const top = targetButton.getBoundingClientRect().top;
-
-      if (top <= 0) {
-        return;
-      }
-
       const tooltip = new TooltipGuide({
-        title: 'Add Workers',
-        text: 'Go to Workers Store and add some of our featured AI Workers to start using them.',
+        title: 'Run AI Worker on the Web',
+        text: 'Open the side panel to get started.',
         triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: top - 34,
+        triangleOffset: 28,
+        rightOffset: 60,
+        topOffset: -16,
+        anchorElement: targetElement,
+        observeElement: this.container.getElement(),
         onCloseAction: async () => {
-          await tooltipGuideStorage.set('ADD_WORKERS', true);
-        },
-      });
+          await tooltipGuideStorage.set('OPEN_SIDE_PANEL', true);
 
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideFirstWorker(
-    targetButton: HTMLElement,
-  ): Promise<void> {
-    setTimeout(() => {
-      const top = targetButton.getBoundingClientRect().top;
-
-      const tooltip = new TooltipGuide({
-        title: 'Try AI Workers anywhere',
-        text: 'Just open the dock on any page and click a Worker to run it.',
-        triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: top - 34,
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-          if (!hasSkipped) {
-            this.addTooltipGuideContextMenu();
-          }
-          await tooltipGuideStorage.set('FIRST_WORKER', true);
-        },
-      });
-
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideContextMenu(): Promise<void> {
-    setTimeout(() => {
-      const targetButton = this.menuButton.getElement();
-      const newButtonTop = targetButton.getBoundingClientRect().top;
-
-      const tooltip = new TooltipGuide({
-        title: 'More options menu',
-        text: 'Access additional features and settings here.',
-        triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: newButtonTop - 34,
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-          if (!hasSkipped) {
-            this.addTooltipGuideContextMenuExpanded();
-          }
-          await tooltipGuideStorage.set('CONTEXT_MENU', true);
-        },
-      });
-
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideContextMenuExpanded(): Promise<void> {
-    this.contextMenu.show(this.menuButton.getElement());
-    setTimeout(() => {
-      const targetButton = this.contextMenu.getElement();
-      const newButtonTop = targetButton.getBoundingClientRect().top;
-
-      const tooltip = new TooltipGuide({
-        title: 'More options menu',
-        text: 'Access additional features and settings here.',
-        triangleSide: 'bottom',
-        triangleOffset: 36,
-        rightOffset: 54,
-        topOffset: newButtonTop - 116,
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-          if (!hasSkipped) {
-            this.contextMenu.hide();
-            this.addTooltipGuideMinimize();
-          }
-          await tooltipGuideStorage.set('CONTEXT_MENU_EXPANDED', true);
-        },
-      });
-
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideMinimize(): Promise<void> {
-    setTimeout(() => {
-      const targetButton = this.logo.getElement();
-      const newButtonTop = targetButton.getBoundingClientRect().top;
-
-      const tooltip = new TooltipGuide({
-        title: 'Minimize your dock',
-        text: 'Click the MindStudio icon to toggle between expanded and collapsed view.',
-        triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: newButtonTop - 34,
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-
-          if (!hasSkipped) {
-            this.onCollapse();
-            this.addTooltipGuideDrag();
-          }
-
-          this.contextMenu.hide();
-          await tooltipGuideStorage.set('MINIMIZE', true);
-        },
-      });
-
-      tooltip.show();
-
-      this.container.getAppsContainer().appendChild(tooltip.getElement());
-    }, 100);
-  }
-
-  private async addTooltipGuideDrag(): Promise<void> {
-    this.onCollapse();
-    setTimeout(() => {
-      const targetButton = this.logo.getElement();
-      const newButtonTop = targetButton.getBoundingClientRect().top;
-
-      const tooltip = new TooltipGuide({
-        title: 'Reposition your dock',
-        text: 'Drag the dock up or down to find the perfect spot on your screen.',
-        triangleSide: 'right',
-        triangleOffset: 48,
-        rightOffset: 54,
-        topOffset: newButtonTop - 34,
-        onSkipAction: async () => {
-          await tooltipGuideStorage.set('SKIP_ALL', true);
-        },
-        onNextAction: async () => {
-          const hasSkipped = await tooltipGuideStorage.get('SKIP_ALL');
-
-          if (!hasSkipped) {
-            this.addTooltipGuidePin();
-          }
-
-          await tooltipGuideStorage.set('DRAG', true);
+          this.addTooltipGuideUseWorkers();
         },
       });
 
       tooltip.show();
 
       document.body.appendChild(tooltip.getElement());
-    }, 200);
+      this.tooltipGuides.set('OPEN_SIDE_PANEL', tooltip);
+    }, 100);
   }
 
-  private async addTooltipGuidePin(): Promise<void> {
+  private async addTooltipGuideUseWorkers(): Promise<void> {
+    const hasShown = await tooltipGuideStorage.get('USE_WORKERS');
+
+    if (hasShown) {
+      return;
+    }
+
     setTimeout(() => {
       const tooltip = new TooltipGuide({
-        title: 'Pin to Chrome toolbar',
-        text: 'Pin MindStudio to your toolbar for quick access to the side panel.',
-        rightOffset: 54,
-        topOffset: 12,
-        nextActionLabel: 'Finish',
-        onNextAction: async () => {
-          await tooltipGuideStorage.set('PIN', true);
-          await tooltipGuideStorage.set('SKIP_ALL', true);
+        title: 'Click on any AI Worker icon to use it',
+        text: 'Or find out more information about the Worker by navigating to the details page.',
+        triangleSide: 'right',
+        triangleOffset: 42,
+        rightOffset: 16,
+        topOffset: 100,
+        onCloseAction: async () => {
+          await tooltipGuideStorage.set('USE_WORKERS', true);
         },
       });
 
       tooltip.show();
 
       document.body.appendChild(tooltip.getElement());
-    }, 200);
+      this.tooltipGuides.set('USE_WORKERS', tooltip);
+      tooltipGuideStorage.set('USE_WORKERS', true);
+    }, 100);
   }
 }
