@@ -60,6 +60,21 @@ export interface Events {
 
   // Sidepanel events
   'sidepanel/toggle': undefined;
+
+  // Cache events
+  'remote/request_cache': undefined;
+  'remote/resolved_cache': {
+    cache: {
+      [index: string]: any;
+    };
+  };
+  'remote/store_cached_value': {
+    key: string;
+    value: string;
+  };
+  'remote/remove_cached_value': {
+    key: string;
+  };
 }
 
 export interface LaunchVariables {
