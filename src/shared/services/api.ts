@@ -27,18 +27,14 @@ class ApiClient {
     return headers;
   }
 
-  private async request<T>(
-    path: string,
-    options: RequestInit = {},
-  ): Promise<T> {
+  private async request<T>(path: string, organizationId: string): Promise<T> {
     const url = `${ApiUrl}${path}`;
     const headers = await this.getHeaders();
 
     const response = await fetch(url, {
-      ...options,
       headers: {
         ...Object.fromEntries(headers.entries()),
-        ...options.headers,
+        'X-Organization-Id': organizationId,
       },
     });
 
@@ -51,9 +47,9 @@ class ApiClient {
 
   async getApps(organizationId: string): Promise<AppData[]> {
     const response = await this.request<{
-      userStarredApps: any[];
-    }>(`/v1/organizations/${organizationId}/apps`);
-    return (response?.userStarredApps || []).map((app) => ({
+      apps: any[];
+    }>(`/v1/pinned/list`, organizationId);
+    return (response?.apps || []).map((app) => ({
       id: app.id,
       name: app.name,
       iconUrl: app.iconUrl || DefaultIcons.APP,
