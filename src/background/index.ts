@@ -69,9 +69,7 @@ class BackgroundService {
     runtime.listen('player/launch_worker', async (payload, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
-        console.info(
-          '[MindStudio][Background] Worker launch failed: No tab ID',
-        );
+        console.info('[MindStudio][Background] Agent launch failed: No tab ID');
         return;
       }
 
@@ -80,7 +78,7 @@ class BackgroundService {
         const path = this.getPanelPath(tabId, payload.appId);
         this.tabsWithOpenSidePanels.set(tabId, path);
 
-        console.info('[MindStudio][Background] Launching worker:', {
+        console.info('[MindStudio][Background] Launching agent:', {
           tabId,
           appId: payload.appId,
         });
@@ -96,6 +94,10 @@ class BackgroundService {
         console.error('[MindStudio][Background] Launch failed:', error);
       }
     });
+
+    runtime.listen('remote/reload_apps', () => {
+      this.updateApps();
+    });
   }
 
   private setupSidePanelListeners(): void {
@@ -106,9 +108,6 @@ class BackgroundService {
       if (!tabId) {
         return;
       }
-
-      // Update apps on every tab switch
-      this.updateApps();
 
       const path = this.tabsWithOpenSidePanels.get(tabId);
       if (path) {

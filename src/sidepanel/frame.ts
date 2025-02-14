@@ -193,6 +193,11 @@ export class SidepanelFrame extends Frame {
       window.close();
     });
 
+    // Forward event to runtime to reload apps
+    frame.listen('remote/reload_apps', () => {
+      runtime.send('remote/reload_apps', undefined);
+    });
+
     // Listen for auth token changes
     storage.onChange('AUTH_TOKEN', async (token) => {
       const organizationId = await storage.get('SELECTED_ORGANIZATION');

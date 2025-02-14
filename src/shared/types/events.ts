@@ -56,6 +56,7 @@ export interface Events {
     showDock: boolean;
   };
   'remote/logout': undefined;
+  'remote/reload_apps': undefined;
 
   // Sidepanel events
   'sidepanel/toggle': undefined;

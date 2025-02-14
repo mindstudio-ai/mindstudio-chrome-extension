@@ -196,7 +196,7 @@ export class LauncherService {
         appId: app.id,
       });
     } catch (error) {
-      console.error('Failed to launch worker:', error);
+      console.error('Failed to launch agent:', error);
     }
   }
 
