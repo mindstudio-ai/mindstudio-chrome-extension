@@ -1,6 +1,6 @@
 # MindStudio Chrome Extension
 
-A Chrome extension that provides seamless access to MindStudio's AI workers directly from any webpage. Currently in beta.
+A Chrome extension that provides seamless access to MindStudio's AI Agents directly from any webpage. Currently in beta.
 
 ## Features
 
@@ -51,7 +51,6 @@ src/
 ├── assets/       # Static assets and resources
 ├── background/   # Service worker & background processes
 ├── content/      # Content scripts and UI components
-├── settings/     # Extension settings page
 ├── shared/       # Shared utilities, services, and types
 └── sidepanel/    # Chrome side panel implementation
 ```

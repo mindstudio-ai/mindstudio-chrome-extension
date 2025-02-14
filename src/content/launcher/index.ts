@@ -5,6 +5,7 @@ import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
 import { LaunchVariables } from '../../shared/types/events';
+import { api } from '../../shared/services/api';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -43,10 +44,6 @@ export class LauncherService {
     });
 
     storage.onChange('SELECTED_ORGANIZATION', async () => {
-      await this.updateAppsFromStorage();
-    });
-
-    storage.onChange('LAUNCHER_APPS_SETTINGS', async () => {
       await this.updateAppsFromStorage();
     });
 
@@ -149,8 +146,34 @@ export class LauncherService {
   }
 
   private async updateAppsFromStorage(): Promise<void> {
+    try {
+      const orgId = (await storage.get('SELECTED_ORGANIZATION')) as string;
+
+      if (orgId) {
+        const apps = await api.getApps(orgId);
+        const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
+
+        await storage.set('LAUNCHER_APPS', {
+          ...existingApps,
+          [orgId]: apps,
+        });
+
+        if (apps.length === 0) {
+          await storage.set('LAUNCHER_COLLAPSED', true);
+        }
+
+        console.info('[MindStudio][Background] Updated apps list:', {
+          orgId,
+          count: apps.length,
+        });
+      }
+    } catch (error) {
+      console.error('[MindStudio][Background] Failed to fetch apps:', error);
+    }
+
     const apps = await storage.get('LAUNCHER_APPS');
     const orgId = await storage.get('SELECTED_ORGANIZATION');
+
     if (!apps || !orgId) {
       this.apps = [];
     } else {
@@ -173,7 +196,7 @@ export class LauncherService {
         appId: app.id,
       });
     } catch (error) {
-      console.error('Failed to launch worker:', error);
+      console.error('Failed to launch agent:', error);
     }
   }
 

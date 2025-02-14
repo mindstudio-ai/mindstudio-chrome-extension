@@ -1,5 +1,4 @@
 import { Environment } from '../constants';
-import { AppSettings } from '../types/app';
 
 // Define the value types
 export type StorageValues = {
@@ -15,7 +14,6 @@ export type StorageValues = {
   LAUNCHER_COLLAPSED: boolean;
   LAUNCHER_HIDDEN: boolean;
   LAUNCHER_POSITION: {
-    anchor: 'top' | 'bottom';
     distance: number;
   } | null;
   SELECTED_ORGANIZATION: string | null;
@@ -23,7 +21,6 @@ export type StorageValues = {
     id: string;
     name: string;
   }> | null;
-  LAUNCHER_APPS_SETTINGS: Record<string, AppSettings> | null;
   TOOLTIP_GUIDES_SHOWN: Record<string, boolean>;
 };
 
@@ -39,7 +36,6 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   LAUNCHER_POSITION: createStorageKey('LauncherPosition'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
-  LAUNCHER_APPS_SETTINGS: createStorageKey('LauncherAppsSettings'),
   TOOLTIP_GUIDES_SHOWN: createStorageKey('TooltipGuidesShown'),
 } as const;
 

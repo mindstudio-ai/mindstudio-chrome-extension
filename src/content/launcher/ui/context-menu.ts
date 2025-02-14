@@ -133,19 +133,13 @@ export class ContextMenu {
 
     this.element.style.display = 'flex';
 
-    // Get current position to determine alignment
-    const position = this.getPosition();
-    const isTopAnchored = position?.anchor === 'top';
-
     // Get positions
     const anchorRect = anchorElement.getBoundingClientRect();
 
     // Calculate position relative to the anchor
     const menuRect = this.element.getBoundingClientRect();
     let left = anchorRect.right + 8;
-    let top = isTopAnchored
-      ? anchorRect.top
-      : anchorRect.bottom - menuRect.height;
+    let top = anchorRect.bottom - menuRect.height;
 
     // Adjust position if menu would go off screen
     if (left + menuRect.width > window.innerWidth) {

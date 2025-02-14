@@ -1,4 +1,5 @@
 import { RootUrl } from '../shared/constants';
+import { auth } from '../shared/services/auth';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
@@ -34,6 +35,16 @@ export class SidepanelFrame extends Frame {
   }
 
   private setupEventListeners(): void {
+    // Handle close events. If we are able to receive this event here, that
+    // means the side panel is open, so we can assume the event means to close it
+    runtime.listen('sidepanel/toggle', (_, sender) => {
+      if (sender?.tab?.id !== this.tabId) {
+        return;
+      }
+
+      window.close();
+    });
+
     // Listen for view loaded event
     frame.listen('remote/loaded', async () => {
       this.setLoaded(true);
@@ -129,16 +140,16 @@ export class SidepanelFrame extends Frame {
       });
     });
 
-    runtime.listen('sidepanel/open', (_, sender) => {
-      if (sender?.tab?.id !== this.tabId) {
-        return;
-      }
+    // runtime.listen('sidepanel/toggle', (_, sender) => {
+    //   if (sender?.tab?.id !== this.tabId) {
+    //     return;
+    //   }
 
-      console.info(
-        '[MindStudio][Sidepanel] Already-open side panel received open event, forwarding to remote',
-      );
-      frame.send(SidepanelFrame.ElementId.FRAME, 'remote/navigate/root');
-    });
+    //   console.info(
+    //     '[MindStudio][Sidepanel] Already-open side panel received open event, forwarding to remote',
+    //   );
+    //   frame.send(SidepanelFrame.ElementId.FRAME, 'remote/navigate/root');
+    // });
 
     runtime.listen('launcher/current_url_updated', (payload, sender) => {
       if (sender?.tab?.id !== this.tabId) {
@@ -166,8 +177,25 @@ export class SidepanelFrame extends Frame {
       }
     });
 
-    frame.listen('settings/open', () => {
-      runtime.send('settings/open', undefined);
+    frame.listen('remote/request_settings', async () => {
+      const isDockHidden = await storage.get('LAUNCHER_HIDDEN');
+      frame.send(SidepanelFrame.ElementId.FRAME, 'remote/resolved_settings', {
+        showDock: !isDockHidden,
+      });
+    });
+
+    frame.listen('remote/update_settings', async (payload) => {
+      await storage.set('LAUNCHER_HIDDEN', !payload.showDock);
+    });
+
+    frame.listen('remote/logout', async () => {
+      await auth.logout();
+      window.close();
+    });
+
+    // Forward event to runtime to reload apps
+    frame.listen('remote/reload_apps', () => {
+      runtime.send('remote/reload_apps', undefined);
     });
 
     // Listen for auth token changes

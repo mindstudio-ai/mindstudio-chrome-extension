@@ -1,3 +1,7 @@
+import {
+  defaultTransitionDuration,
+  defaultTransitionEase,
+} from '../../../../shared/constants';
 import { storage } from '../../../../shared/services/storage';
 import { LauncherContainer } from '../container';
 import {
@@ -86,13 +90,7 @@ export class ExpansionManager {
       const currentPosition = this.container
         .getPositionManager()
         .getCurrentPosition();
-      const isTopAnchored = currentPosition?.anchor === 'top';
-
-      if (isTopAnchored) {
-        containerElement.style.top = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
-      } else {
-        containerElement.style.bottom = `${currentPosition?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
-      }
+      containerElement.style.bottom = `${currentPosition?.distance!}px`;
 
       this.updateScrollClasses();
     }
@@ -101,10 +99,8 @@ export class ExpansionManager {
 
     // Restore transitions for future updates
     requestAnimationFrame(() => {
-      containerElement.style.transition =
-        'top 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-      this.appsWrapper.style.transition =
-        'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+      containerElement.style.transition = `top ${defaultTransitionDuration} ${defaultTransitionEase}, bottom ${defaultTransitionDuration} ${defaultTransitionEase}`;
+      this.appsWrapper.style.transition = `height ${defaultTransitionDuration} ${defaultTransitionEase}, opacity ${defaultTransitionDuration} ${defaultTransitionEase}`;
     });
 
     this.dispatchExpansionChange();
@@ -142,7 +138,6 @@ export class ExpansionManager {
     const position = collapsed
       ? positionManager.getSavedPosition()
       : positionManager.getCurrentPosition();
-    const isTopAnchored = position?.anchor === 'top';
 
     // Update handlers immediately for new state
     if (collapsed) {
@@ -155,11 +150,8 @@ export class ExpansionManager {
     }
 
     // Set up transitions
-    containerElement.style.transition = isTopAnchored
-      ? 'top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-      : 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-    this.appsWrapper.style.transition =
-      'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+    containerElement.style.transition = `bottom ${defaultTransitionDuration} ${defaultTransitionEase}`;
+    this.appsWrapper.style.transition = `height ${defaultTransitionDuration} ${defaultTransitionEase}, opacity ${defaultTransitionDuration} ${defaultTransitionEase}`;
 
     if (collapsed) {
       // Capture current height before collapse
@@ -168,11 +160,7 @@ export class ExpansionManager {
       this.appsWrapper.offsetHeight; // Force reflow
 
       // Start collapse transition
-      if (isTopAnchored) {
-        containerElement.style.top = `${position?.distance!}px`;
-      } else {
-        containerElement.style.bottom = `${position?.distance!}px`;
-      }
+      containerElement.style.bottom = `${position?.distance!}px`;
       this.appsWrapper.style.height = '0';
       this.appsWrapper.style.opacity = '0';
       this.appsContainer.scrollTop = 0;
@@ -186,11 +174,16 @@ export class ExpansionManager {
       this.appsWrapper.style.height = '0';
       this.appsWrapper.offsetHeight; // Force reflow
 
-      if (isTopAnchored) {
-        containerElement.style.top = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
-      } else {
-        containerElement.style.bottom = `${position?.distance! - this.dimensions.COLLAPSED_HEIGHT}px`;
-      }
+      const newPos = positionManager.getConstrainedPosition(
+        {
+          distance: position?.distance ?? 0 + targetHeight,
+        },
+        targetHeight + this.dimensions.COLLAPSED_HEIGHT + 64,
+      );
+
+      positionManager.applyPosition(newPos);
+
+      containerElement.style.bottom = `${newPos.distance}px`;
       this.appsWrapper.style.height = `${targetHeight}px`;
     }
 

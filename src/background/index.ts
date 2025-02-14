@@ -34,13 +34,8 @@ class BackgroundService {
   }
 
   private setupMessageListeners(): void {
-    // Handle settings/open event
-    runtime.listen('settings/open', () => {
-      chrome.runtime.openOptionsPage();
-    });
-
     // Handle open history event
-    runtime.listen('sidepanel/open', async (_, sender) => {
+    runtime.listen('sidepanel/toggle', async (_, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
         console.info('[MindStudio][Background] History open failed: No tab ID');
@@ -48,6 +43,15 @@ class BackgroundService {
       }
 
       try {
+        // If a panel exists, remove it from our list. The panel will handle its
+        // own close event using window.close() (there is no chrome.sidePanel.close
+        // event), and setting setOptions({ enabled: false }) closes it without
+        // any animation
+        if (this.tabsWithOpenSidePanels.get(tabId)) {
+          this.tabsWithOpenSidePanels.delete(tabId);
+          return;
+        }
+
         const path = this.getPanelPath(tabId);
         this.tabsWithOpenSidePanels.set(tabId, path);
         chrome.sidePanel.setOptions({
@@ -65,9 +69,7 @@ class BackgroundService {
     runtime.listen('player/launch_worker', async (payload, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
-        console.info(
-          '[MindStudio][Background] Worker launch failed: No tab ID',
-        );
+        console.info('[MindStudio][Background] Agent launch failed: No tab ID');
         return;
       }
 
@@ -76,7 +78,7 @@ class BackgroundService {
         const path = this.getPanelPath(tabId, payload.appId);
         this.tabsWithOpenSidePanels.set(tabId, path);
 
-        console.info('[MindStudio][Background] Launching worker:', {
+        console.info('[MindStudio][Background] Launching agent:', {
           tabId,
           appId: payload.appId,
         });
@@ -92,6 +94,10 @@ class BackgroundService {
         console.error('[MindStudio][Background] Launch failed:', error);
       }
     });
+
+    runtime.listen('remote/reload_apps', () => {
+      this.updateApps();
+    });
   }
 
   private setupSidePanelListeners(): void {
@@ -102,9 +108,6 @@ class BackgroundService {
       if (!tabId) {
         return;
       }
-
-      // Update apps on every tab switch
-      this.updateApps();
 
       const path = this.tabsWithOpenSidePanels.get(tabId);
       if (path) {
@@ -200,6 +203,10 @@ class BackgroundService {
           ...existingApps,
           [organizationId]: apps,
         });
+
+        if (apps.length === 0) {
+          await storage.set('LAUNCHER_COLLAPSED', true);
+        }
         console.info('[MindStudio][Background] Updated apps list:', {
           organizationId,
           count: apps.length,

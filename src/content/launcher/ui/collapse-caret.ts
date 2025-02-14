@@ -1,3 +1,4 @@
+import { defaultTransitionDuration } from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
 
 export class CollapseCaret {
@@ -6,7 +7,6 @@ export class CollapseCaret {
   };
 
   private element: HTMLElement;
-  private transformDiv: HTMLElement | undefined;
 
   constructor() {
     this.element = this.createElement();
@@ -23,8 +23,7 @@ export class CollapseCaret {
   private createElement(): HTMLElement {
     const element = document.createElement('div');
     element.id = CollapseCaret.ElementId.CARET;
-    this.transformDiv = document.createElement('div');
-    this.transformDiv.innerHTML = this.iconSvg();
+
     element.style.cssText = `
       padding: 0px;
       display: flex;
@@ -35,15 +34,13 @@ export class CollapseCaret {
       cursor: pointer;
       border-radius: 6px;
       width: 100%;
-      height: 16px;
+      height: 0;
       overflow: hidden;
-
       visibility: hidden;
-      transition: transform 0.2s ease, height 0.2s ease, padding 0.2s ease;
+      transition: height ${defaultTransitionDuration} ease;
     `;
 
-    element.appendChild(this.transformDiv);
-
+    element.innerHTML = this.iconSvg();
     return element;
   }
 
@@ -55,30 +52,29 @@ export class CollapseCaret {
     this.element.addEventListener(type, handler);
   }
 
-  public updateDirection(anchor: 'top' | 'bottom'): void {
-    this.element.style.transform =
-      anchor === 'top' ? 'rotate(180deg)' : 'rotate(0deg)';
-
-    this.element.style.visibility = 'visible';
-  }
-
   public updateStyleBasedOnCollapsedState(collapsed: boolean): void {
-    if (!this.transformDiv) {
+    if (!this.element) {
       return;
     }
 
     if (collapsed) {
-      this.transformDiv.style.transform = 'rotate(180deg)';
+      this.element.style.transform = 'rotate(180deg)';
     } else {
-      this.transformDiv.style.transform = 'rotate(0deg)';
+      this.element.style.transform = 'rotate(0deg)';
     }
   }
 
   public updateVisibility(visible: boolean): void {
-    const resolvedHeight = visible ? '16px' : '0px';
-    const resolvedPadding = visible ? '0px' : '0px';
+    const resolvedHeight = visible ? '20px' : '0px';
     this.element.style.height = resolvedHeight;
-    this.element.style.maxHeight = resolvedHeight;
-    this.element.style.padding = resolvedPadding;
+  }
+
+  public enable(): void {
+    this.element.style.display = 'flex';
+    this.element.style.visibility = 'visible';
+  }
+
+  public disable(): void {
+    this.element.style.display = 'none';
   }
 }
