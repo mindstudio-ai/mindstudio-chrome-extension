@@ -40,7 +40,7 @@ class BackgroundService {
     });
 
     // Handle open history event
-    runtime.listen('sidepanel/open', async (_, sender) => {
+    runtime.listen('sidepanel/toggle', async (_, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
         console.info('[MindStudio][Background] History open failed: No tab ID');
@@ -48,6 +48,15 @@ class BackgroundService {
       }
 
       try {
+        // If a panel exists, remove it from our list. The panel will handle its
+        // own close event using window.close() (there is no chrome.sidePanel.close
+        // event), and setting setOptions({ enabled: false }) closes it without
+        // any animation
+        if (this.tabsWithOpenSidePanels.get(tabId)) {
+          this.tabsWithOpenSidePanels.delete(tabId);
+          return;
+        }
+
         const path = this.getPanelPath(tabId);
         this.tabsWithOpenSidePanels.set(tabId, path);
         chrome.sidePanel.setOptions({

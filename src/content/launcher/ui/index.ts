@@ -44,7 +44,7 @@ export class LauncherUI {
       }
 
       this.contextMenu.hide();
-      runtime.send('sidepanel/open', undefined);
+      runtime.send('sidepanel/toggle', undefined);
       tooltipGuideStorage.set('OPEN_SIDE_PANEL', true);
 
       if (this.tooltipGuides.get('OPEN_SIDE_PANEL')) {

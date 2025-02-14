@@ -51,7 +51,7 @@ export interface Events {
   'settings/open': undefined;
 
   // Sidepanel events
-  'sidepanel/open': undefined;
+  'sidepanel/toggle': undefined;
 }
 
 export interface LaunchVariables {
