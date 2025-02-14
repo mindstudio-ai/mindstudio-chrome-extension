@@ -239,7 +239,7 @@ export class LauncherUI {
   ): Promise<void> {
     setTimeout(() => {
       const tooltip = new TooltipGuide({
-        title: 'Run AI Worker on the Web',
+        title: 'Run AI Agent on the Web',
         text: 'Open the side panel to get started.',
         triangleSide: 'right',
         triangleOffset: 28,
@@ -270,8 +270,8 @@ export class LauncherUI {
 
     setTimeout(() => {
       const tooltip = new TooltipGuide({
-        title: 'Click on any AI Worker icon to use it',
-        text: 'Or find out more information about the Worker by navigating to the details page.',
+        title: 'Click on any AI Agent icon to use it',
+        text: 'Or find out more information about the Agent by navigating to the details page.',
         triangleSide: 'right',
         triangleOffset: 42,
         rightOffset: 16,
