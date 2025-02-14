@@ -2,7 +2,7 @@ import { RootUrl } from '../shared/constants';
 import { auth } from '../shared/services/auth';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
-import { storage } from '../shared/services/storage';
+import { storage, StorageKeys } from '../shared/services/storage';
 import { getEmptyLaunchVariables } from '../shared/types/events';
 import { createElementId } from '../shared/utils/dom';
 import { removeQueryParam } from '../shared/utils/url';
@@ -207,6 +207,38 @@ export class SidepanelFrame extends Frame {
           organizationId,
         });
       }
+    });
+
+    // Listen for passthrough cache events
+    frame.listen('remote/store_cached_value', async ({ key, value }) => {
+      await chrome.storage.local.set({
+        [`${StorageKeys.REMOTE_CACHE_PREFIX}_${key}`]: value,
+      });
+    });
+    frame.listen('remote/remove_cached_value', async ({ key }) => {
+      await chrome.storage.local.remove(
+        `${StorageKeys.REMOTE_CACHE_PREFIX}_${key}`,
+      );
+    });
+    frame.listen('remote/request_cache', async () => {
+      // Load the full cache
+      const result = await chrome.storage.local.get();
+
+      // Filter down into only prefixed keys
+      const resolvedResult = Object.keys(result).reduce(
+        (acc: { [index: string]: any }, cur) => {
+          if (cur.startsWith(StorageKeys.REMOTE_CACHE_PREFIX)) {
+            acc[cur.replace(`${StorageKeys.REMOTE_CACHE_PREFIX}_`, '')] =
+              result[cur];
+          }
+          return acc;
+        },
+        {},
+      );
+
+      frame.send(SidepanelFrame.ElementId.FRAME, 'remote/resolved_cache', {
+        cache: resolvedResult,
+      });
     });
   }
 

@@ -22,13 +22,14 @@ export type StorageValues = {
     name: string;
   }> | null;
   TOOLTIP_GUIDES_SHOWN: Record<string, boolean>;
+  REMOTE_CACHE_PREFIX: undefined;
 };
 
 // Move key generation here
 const createStorageKey = (key: string) => `${key}_${Environment}` as const;
 
 // Define storage keys
-const StorageKeys: Record<keyof StorageValues, string> = {
+export const StorageKeys: Record<keyof StorageValues, string> = {
   AUTH_TOKEN: createStorageKey('AuthToken'),
   LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
   LAUNCHER_HIDDEN: createStorageKey('LauncherHidden'),
@@ -37,6 +38,7 @@ const StorageKeys: Record<keyof StorageValues, string> = {
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   ORGANIZATIONS: createStorageKey('Organizations'),
   TOOLTIP_GUIDES_SHOWN: createStorageKey('TooltipGuidesShown'),
+  REMOTE_CACHE_PREFIX: createStorageKey('RemoteCache'),
 } as const;
 
 export const storage = {
