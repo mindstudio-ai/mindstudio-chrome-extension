@@ -34,11 +34,6 @@ class BackgroundService {
   }
 
   private setupMessageListeners(): void {
-    // Handle settings/open event
-    runtime.listen('settings/open', () => {
-      chrome.runtime.openOptionsPage();
-    });
-
     // Handle open history event
     runtime.listen('sidepanel/toggle', async (_, sender) => {
       const tabId = sender?.tab?.id;

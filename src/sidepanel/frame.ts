@@ -1,4 +1,5 @@
 import { RootUrl } from '../shared/constants';
+import { auth } from '../shared/services/auth';
 import { Frame } from '../shared/services/frame';
 import { frame, runtime } from '../shared/services/messaging';
 import { storage } from '../shared/services/storage';
@@ -176,8 +177,20 @@ export class SidepanelFrame extends Frame {
       }
     });
 
-    frame.listen('settings/open', () => {
-      runtime.send('settings/open', undefined);
+    frame.listen('remote/request_settings', async () => {
+      const isDockHidden = await storage.get('LAUNCHER_HIDDEN');
+      frame.send(SidepanelFrame.ElementId.FRAME, 'remote/resolved_settings', {
+        showDock: !isDockHidden,
+      });
+    });
+
+    frame.listen('remote/update_settings', async (payload) => {
+      await storage.set('LAUNCHER_HIDDEN', !payload.showDock);
+    });
+
+    frame.listen('remote/logout', async () => {
+      await auth.logout();
+      window.close();
     });
 
     // Listen for auth token changes

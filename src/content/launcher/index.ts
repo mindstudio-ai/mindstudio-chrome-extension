@@ -51,6 +51,7 @@ export class LauncherService {
     });
 
     storage.onChange('LAUNCHER_HIDDEN', async (isHidden) => {
+      console.log('launcher state changed', isHidden);
       if (isHidden) {
         await this.destroyUI();
       } else {

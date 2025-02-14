@@ -48,7 +48,14 @@ export interface Events {
   };
 
   // Settings events
-  'settings/open': undefined;
+  'remote/request_settings': undefined;
+  'remote/resolved_settings': {
+    showDock: boolean;
+  };
+  'remote/update_settings': {
+    showDock: boolean;
+  };
+  'remote/logout': undefined;
 
   // Sidepanel events
   'sidepanel/toggle': undefined;
