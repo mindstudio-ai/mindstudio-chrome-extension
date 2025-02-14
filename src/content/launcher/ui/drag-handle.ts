@@ -1,3 +1,7 @@
+import {
+  defaultTransitionDuration,
+  defaultTransitionEase,
+} from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
 
 export class DragHandle {
@@ -40,11 +44,21 @@ export class DragHandle {
       width: 100%;
       height: 0;
       overflow: hidden;
-
-      transition: height 0.2s ease, padding 0.2s ease;
+      visibility: hidden;
+      transition: height ${defaultTransitionDuration} ${defaultTransitionEase};
     `;
 
-    element.innerHTML = this.iconSvg();
+    const inner = document.createElement('div');
+    inner.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 0;
+      height: 100%;
+    `;
+
+    inner.innerHTML = this.iconSvg();
+    element.appendChild(inner);
 
     return element;
   }
@@ -54,10 +68,8 @@ export class DragHandle {
   }
 
   public updateVisibility(visible: boolean): void {
-    const resolvedHeight = visible ? '16px' : '0px';
-    const resolvedPadding = visible ? '3px 0' : '0px';
+    const resolvedHeight = visible ? '20px' : '0px';
     this.element.style.height = resolvedHeight;
-    this.element.style.maxHeight = resolvedHeight;
-    this.element.style.padding = resolvedPadding;
+    this.element.style.visibility = 'visible';
   }
 }

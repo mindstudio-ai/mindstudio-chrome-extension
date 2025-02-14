@@ -1,3 +1,4 @@
+import { defaultTransitionDuration } from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
 
 export class CollapseCaret {
@@ -6,7 +7,6 @@ export class CollapseCaret {
   };
 
   private element: HTMLElement;
-  private transformDiv: HTMLElement | undefined;
 
   constructor() {
     this.element = this.createElement();
@@ -34,10 +34,10 @@ export class CollapseCaret {
       cursor: pointer;
       border-radius: 6px;
       width: 100%;
-      height: 16px;
+      height: 0;
       overflow: hidden;
-      display: none;
-      transition: height 0.2s ease, padding 0.2s ease;
+      visibility: hidden;
+      transition: height ${defaultTransitionDuration} ease;
     `;
 
     element.innerHTML = this.iconSvg();
@@ -65,9 +65,16 @@ export class CollapseCaret {
   }
 
   public updateVisibility(visible: boolean): void {
-    const resolvedHeight = visible ? '16px' : '0px';
-    const resolvedPadding = visible ? '0px' : '0px';
+    const resolvedHeight = visible ? '20px' : '0px';
     this.element.style.height = resolvedHeight;
-    this.element.style.padding = resolvedPadding;
+  }
+
+  public enable(): void {
+    this.element.style.display = 'flex';
+    this.element.style.visibility = 'visible';
+  }
+
+  public disable(): void {
+    this.element.style.display = 'none';
   }
 }

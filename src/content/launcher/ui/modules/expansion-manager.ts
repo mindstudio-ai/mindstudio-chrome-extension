@@ -1,3 +1,7 @@
+import {
+  defaultTransitionDuration,
+  defaultTransitionEase,
+} from '../../../../shared/constants';
 import { storage } from '../../../../shared/services/storage';
 import { LauncherContainer } from '../container';
 import {
@@ -59,8 +63,7 @@ export class ExpansionManager {
 
   public async initialize(): Promise<void> {
     const isCollapsed = (await storage.get('LAUNCHER_COLLAPSED')) ?? true;
-    // Leaving this flagged as false for now, in case we bring back the expansion
-    await this.setInitialState(true);
+    await this.setInitialState(isCollapsed);
   }
 
   public async setInitialState(collapsed: boolean): Promise<void> {
@@ -96,20 +99,14 @@ export class ExpansionManager {
 
     // Restore transitions for future updates
     requestAnimationFrame(() => {
-      containerElement.style.transition =
-        'top 0.3s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-      this.appsWrapper.style.transition =
-        'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+      containerElement.style.transition = `top ${defaultTransitionDuration} ${defaultTransitionEase}, bottom ${defaultTransitionDuration} ${defaultTransitionEase}`;
+      this.appsWrapper.style.transition = `height ${defaultTransitionDuration} ${defaultTransitionEase}, opacity ${defaultTransitionDuration} ${defaultTransitionEase}`;
     });
 
     this.dispatchExpansionChange();
   }
 
   public async setCollapsedState(collapsed: boolean): Promise<void> {
-    // Temp
-    await this.transitionToState(true);
-    return;
-
     // If we're already in that state and not transitioning, nothing to do
     if (collapsed === this.isCollapsed && !this.isTransitioning) {
       return;
@@ -153,10 +150,8 @@ export class ExpansionManager {
     }
 
     // Set up transitions
-    containerElement.style.transition =
-      'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-    this.appsWrapper.style.transition =
-      'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+    containerElement.style.transition = `bottom ${defaultTransitionDuration} ${defaultTransitionEase}`;
+    this.appsWrapper.style.transition = `height ${defaultTransitionDuration} ${defaultTransitionEase}, opacity ${defaultTransitionDuration} ${defaultTransitionEase}`;
 
     if (collapsed) {
       // Capture current height before collapse
@@ -267,7 +262,6 @@ export class ExpansionManager {
   }
 
   public getCollapsedState(): boolean {
-    return true;
     return this.isCollapsed;
   }
 }

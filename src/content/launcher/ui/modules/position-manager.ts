@@ -113,8 +113,7 @@ export class PositionManager {
     }
 
     // Check if we're expanded to apply the correct offset
-    //const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
-    const isExpanded = false;
+    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
 
     if (isExpanded) {
       const offsetPosition = {

@@ -1,3 +1,7 @@
+import {
+  defaultTransitionDuration,
+  defaultTransitionEase,
+} from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
 
 export class Logo {
@@ -38,7 +42,7 @@ export class Logo {
       width: 32px;
       height: 32px;
 
-      transition: background-color 0.2s ease;
+      transition: background-color ${defaultTransitionDuration} ${defaultTransitionEase};
     `;
     return logo;
   }
@@ -51,11 +55,11 @@ export class Logo {
     this.element.addEventListener(type, handler);
   }
 
-  public updateStyleBasedOnCollapsedState(collapsed: boolean): void {
-    if (collapsed) {
-      this.element.style.background = 'transparent';
-    } else {
+  public updateHoverStyle(hover: boolean): void {
+    if (hover) {
       this.element.style.background = '#121213';
+    } else {
+      this.element.style.background = 'transparent';
     }
   }
 }

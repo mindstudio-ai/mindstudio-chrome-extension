@@ -1,3 +1,7 @@
+import {
+  defaultTransitionDuration,
+  defaultTransitionEase,
+} from '../../../shared/constants';
 import { Tooltip } from './tooltip';
 
 export interface IconButtonOptions {
@@ -82,7 +86,7 @@ export class IconButton {
 
   public setVisibility(visible: boolean, animate: boolean = true): void {
     if (animate) {
-      this.element.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+      this.element.style.transition = `all ${defaultTransitionDuration} ${defaultTransitionEase}`;
     } else {
       this.element.style.transition = 'none';
     }
@@ -103,8 +107,7 @@ export class IconButton {
       // If not animating, restore transitions after the next frame
       if (!animate) {
         requestAnimationFrame(() => {
-          this.element.style.transition =
-            'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+          this.element.style.transition = `all ${defaultTransitionDuration} ${defaultTransitionEase}`;
         });
       }
     });

@@ -6,7 +6,6 @@ import { ContextMenu } from './context-menu';
 import { AppData } from '../../../shared/types/app';
 import { runtime } from '../../../shared/services/messaging';
 import { storage } from '../../../shared/services/storage';
-import { sortApps } from '../../../shared/utils/sortApps';
 import { TooltipGuide } from './tooltip-guide';
 import { tooltipGuideStorage } from '../../../shared/services/tooltipGuideStorage';
 import { DragHandle } from './drag-handle';
@@ -52,18 +51,22 @@ export class LauncherUI {
       }
     });
 
+    this.logo.addEventHandler('mouseenter', () => {
+      this.logo.updateHoverStyle(true);
+    });
+
+    this.logo.addEventHandler('mouseleave', () => {
+      this.logo.updateHoverStyle(false);
+    });
+
     this.handleCollapse = () => {
       this.onCollapse();
-      this.logo.updateStyleBasedOnCollapsedState(true);
       this.collapseCaret.updateStyleBasedOnCollapsedState(true);
-      // this.dragHandle?.updateVisibility(true);
     };
 
     this.handleExpand = () => {
       this.onExpand();
-      this.logo.updateStyleBasedOnCollapsedState(false);
       this.collapseCaret.updateStyleBasedOnCollapsedState(false);
-      // this.dragHandle?.updateVisibility(false);
     };
 
     this.collapseCaret.addEventHandler('mousedown', () => {
@@ -96,9 +99,6 @@ export class LauncherUI {
   private async setupUI(): Promise<void> {
     // Add components to container in the desired order
 
-    // Until we get it back
-    storage.set('LAUNCHER_COLLAPSED', true);
-
     this.container.addComponent(this.logo.getElement());
 
     // Set up context menu
@@ -121,40 +121,30 @@ export class LauncherUI {
     await this.container.initialize();
 
     this.resolveLeftoverTooltipGuides();
-
-    setTimeout(async () => {
-      // const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
-      const isCollapsed = true;
-      this.logo.updateStyleBasedOnCollapsedState(isCollapsed);
-      this.collapseCaret.updateStyleBasedOnCollapsedState(isCollapsed);
-      this.collapseCaret.updateVisibility(true);
-    }, 100);
+    const isCollapsed = await storage.get('LAUNCHER_COLLAPSED');
+    this.collapseCaret.updateStyleBasedOnCollapsedState(isCollapsed);
+    this.collapseCaret.updateVisibility(!isCollapsed);
+    this.dragHandle.updateVisibility(!isCollapsed);
   }
 
   async updateApps(apps: AppData[]): Promise<void> {
-    // Always use latest apps data
-    const appsSettings = (await storage.get('LAUNCHER_APPS_SETTINGS')) || {};
-    const visibleApps = apps.filter((app) => {
-      const appSettings = appsSettings[app.id];
-      return !appSettings || appSettings.isVisible !== false;
-    });
-    const sortedApps = sortApps(visibleApps, appsSettings);
-
-    if (sortedApps.length === 0) {
+    if (apps.length === 0) {
       this.collapseCaret.updateVisibility(false);
+      this.collapseCaret.disable();
     } else {
       this.collapseCaret.updateVisibility(true);
+      this.collapseCaret.enable();
     }
 
     // Quick equality check - if apps are the same, no need to update DOM
     const currentAppIds = Array.from(this.appButtons.keys());
-    const newAppIds = sortedApps.map((app) => app.id);
+    const newAppIds = apps.map((app) => app.id);
     if (
       currentAppIds.length === newAppIds.length &&
       currentAppIds.every((id, i) => id === newAppIds[i])
     ) {
       // Just update the app data in case it changed
-      sortedApps.forEach((app) => {
+      apps.forEach((app) => {
         const button = this.appButtons.get(app.id);
         if (button) {
           button.updateApp(app);
@@ -173,7 +163,7 @@ export class LauncherUI {
     this.appButtons.clear();
 
     // Update or create buttons
-    sortedApps.forEach(async (app) => {
+    apps.forEach(async (app) => {
       const existingButton = existingButtons.get(app.id);
       if (existingButton) {
         // Update existing button

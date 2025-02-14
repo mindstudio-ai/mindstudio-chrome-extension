@@ -48,8 +48,11 @@ class ApiClient {
   async getApps(organizationId: string): Promise<AppData[]> {
     const response = await this.request<{
       apps: any[];
-    }>(`/v1/pinned/list`, organizationId);
-    return (response?.apps || []).map((app) => ({
+    }>(`/v1/apps/pinned/list`, organizationId);
+
+    const resolvedApps = response?.apps || [];
+
+    return resolvedApps.map((app) => ({
       id: app.id,
       name: app.name,
       iconUrl: app.iconUrl || DefaultIcons.APP,

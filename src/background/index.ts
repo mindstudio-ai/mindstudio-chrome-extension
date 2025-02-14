@@ -175,8 +175,7 @@ class BackgroundService {
           });
           await chrome.sidePanel.open({ tabId: tab.id });
           await storage.set('LAUNCHER_HIDDEN', false);
-          // await storage.set('LAUNCHER_COLLAPSED', false);
-          await storage.set('LAUNCHER_COLLAPSED', true);
+          await storage.set('LAUNCHER_COLLAPSED', false);
         } catch (error) {
           console.error('[MindStudio][Background] Toggle failed:', error);
         }
@@ -205,6 +204,10 @@ class BackgroundService {
           ...existingApps,
           [organizationId]: apps,
         });
+
+        if (apps.length === 0) {
+          await storage.set('LAUNCHER_COLLAPSED', true);
+        }
         console.info('[MindStudio][Background] Updated apps list:', {
           organizationId,
           count: apps.length,

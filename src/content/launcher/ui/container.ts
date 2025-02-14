@@ -1,4 +1,9 @@
-import { FrameDimensions, ZIndexes } from '../../../shared/constants';
+import {
+  defaultTransitionDuration,
+  defaultTransitionEase,
+  FrameDimensions,
+  ZIndexes,
+} from '../../../shared/constants';
 import { createElementId } from '../../../shared/utils/dom';
 import { DragHandler } from './modules/drag-handler';
 import { ExpansionManager } from './modules/expansion-manager';
@@ -98,7 +103,6 @@ export class LauncherContainer {
 
   constructor(collapseCaret: CollapseCaret) {
     this.collapseCaret = collapseCaret;
-
     this.element = this.createContainerElement();
     this.inner = this.createInnerElement();
     this.appsWrapper = this.createAppsWrapperElement();
@@ -117,8 +121,7 @@ export class LauncherContainer {
     // Set initial collapsed state
     this.appsWrapper.style.height = '0';
     this.appsWrapper.style.opacity = '0';
-    this.appsWrapper.style.transition =
-      'height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out';
+    this.appsWrapper.style.transition = `height ${defaultTransitionDuration} ${defaultTransitionEase}, opacity 0.2s ease`;
     this.appsContainer.style.scrollbarWidth = 'none';
 
     // Add hover handler
@@ -260,10 +263,8 @@ export class LauncherContainer {
     document.body.appendChild(this.element);
 
     // Check if we're starting expanded
-    // const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
+    const isExpanded = !((await storage.get('LAUNCHER_COLLAPSED')) ?? true);
 
-    // Leaving this flagged as false for now, in case we bring back the expansion
-    const isExpanded = false;
     // Initialize position first, with offset if expanded
     const savedPosition = await storage.get('LAUNCHER_POSITION');
 
@@ -320,7 +321,6 @@ export class LauncherContainer {
         this.inner.style.width = `${DEFAULT_DIMENSIONS.HOVER_WIDTH}px`;
       }
     } else {
-      // this.dragHandler.disable();
       // Always reset width when expanding
       this.inner.style.width = `${DEFAULT_DIMENSIONS.BASE_WIDTH}px`;
     }
