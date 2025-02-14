@@ -41,6 +41,7 @@ export class Logo {
       border-radius: 6px;
       width: 32px;
       height: 32px;
+      box-sizing: border-box;
 
       transition: background-color ${defaultTransitionDuration} ${defaultTransitionEase};
     `;

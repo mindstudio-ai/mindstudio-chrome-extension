@@ -1,5 +1,4 @@
 import { Environment } from '../constants';
-import { AppSettings } from '../types/app';
 
 // Define the value types
 export type StorageValues = {

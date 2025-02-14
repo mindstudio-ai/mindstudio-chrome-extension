@@ -30,6 +30,7 @@ export class AppButton {
       height: ${DEFAULT_DIMENSIONS.APP_ICON_HEIGHT}px;
       pointer-events: auto;
       flex-shrink: 0;
+      box-sizing: border-box;
     `;
 
     // Create icon container
@@ -41,6 +42,7 @@ export class AppButton {
       width: 24px;
       height: 24px;
       transition: all 0.2s ease-in-out;
+      box-sizing: border-box;
     `;
 
     const icon = document.createElement('img');
@@ -52,6 +54,7 @@ export class AppButton {
       border-radius: 4px;
       object-fit: cover;
       transition: all 0.2s ease-in-out;
+      box-sizing: border-box;
     `;
 
     // Add hover effects

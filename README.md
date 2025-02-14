@@ -51,7 +51,6 @@ src/
 ├── assets/       # Static assets and resources
 ├── background/   # Service worker & background processes
 ├── content/      # Content scripts and UI components
-├── settings/     # Extension settings page
 ├── shared/       # Shared utilities, services, and types
 └── sidepanel/    # Chrome side panel implementation
 ```
