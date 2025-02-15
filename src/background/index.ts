@@ -1,10 +1,12 @@
-import { THANK_YOU_PAGE } from '../shared/constants';
+import { THANK_YOU_PAGE, WsUrl } from '../shared/constants';
 import { runtime } from '../shared/services/messaging';
-import { storage } from '../shared/services/storage';
+import { storage, StorageKeys } from '../shared/services/storage';
 import { api } from '../shared/services/api';
+import { sendRunCompleteNotification } from '../shared/services/notifications';
 
 class BackgroundService {
   private static instance: BackgroundService;
+  private ws?: WebSocket;
   private tabsWithOpenSidePanels = new Set<number>();
 
   private constructor() {
@@ -19,7 +21,8 @@ class BackgroundService {
     this.setupInstallationHandler();
     this.setupActionButtonListener();
     this.setupAuthListeners();
-    this.updateApps();
+    this.setupNotificationListeners();
+    this.onAuth();
   }
 
   static getInstance(): BackgroundService {
@@ -118,6 +121,19 @@ class BackgroundService {
     });
   }
 
+  private setupNotificationListeners(): void {
+    chrome.notifications.onClicked.addListener((notificationId) => {
+      const cacheKey = `${StorageKeys.NOTIFICATION_HREF_CACHE_PREFIX}_${notificationId}`;
+      chrome.storage.local.get(cacheKey, (data) => {
+        const url = data[cacheKey];
+        if (url) {
+          chrome.tabs.create({ url });
+        }
+        chrome.notifications.clear(notificationId);
+      });
+    });
+  }
+
   private setupInstallationHandler(): void {
     chrome.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'install') {
@@ -155,10 +171,15 @@ class BackgroundService {
 
   private setupAuthListeners(): void {
     // Listen for auth token changes
-    storage.onChange('AUTH_TOKEN', this.updateApps.bind(this));
+    storage.onChange('AUTH_TOKEN', this.onAuth.bind(this));
 
     // Listen for organization selection changes
-    storage.onChange('SELECTED_ORGANIZATION', this.updateApps.bind(this));
+    storage.onChange('SELECTED_ORGANIZATION', this.onAuth.bind(this));
+  }
+
+  private async onAuth() {
+    this.updateApps();
+    this.initializeSocket();
   }
 
   private async updateApps(): Promise<void> {
@@ -185,6 +206,51 @@ class BackgroundService {
       } catch (error) {
         console.error('[MindStudio][Background] Failed to fetch apps:', error);
       }
+    }
+  }
+
+  private async initializeSocket() {
+    const token = await storage.get('AUTH_TOKEN');
+    const organizationId = await storage.get('SELECTED_ORGANIZATION');
+
+    if (token && organizationId) {
+      if (this.ws) {
+        try {
+          this.ws.close();
+        } catch {
+          //
+        }
+        this.ws = undefined;
+      }
+
+      // New connection
+      this.ws = new WebSocket(`${WsUrl}/?authorization=${token}`);
+
+      // Receive message event
+      this.ws.onmessage = async (e) => {
+        try {
+          const messageData = JSON.parse(e.data);
+          switch (messageData.type) {
+            case 'General/UserUnreadThreadsChanged': {
+              const numUnreadThreads =
+                messageData.userUnreadThreadsChanged.unreadThreadIds.length;
+              storage.set('NUM_UNREAD_THREADS', numUnreadThreads);
+              return;
+            }
+            case 'Extension/SendNotification': {
+              const { title, message, href, iconUrl } =
+                messageData.extensionSendNotification;
+
+              sendRunCompleteNotification(title, message, href, iconUrl);
+              return;
+            }
+            default:
+              break;
+          }
+        } catch {
+          //
+        }
+      };
     }
   }
 }

@@ -7,6 +7,11 @@ export const RootUrl =
 export const ApiUrl =
   Environment === 'dev' ? 'http://localhost:3129' : 'https://api.mindstudio.ai';
 
+export const WsUrl =
+  Environment === 'dev'
+    ? 'ws://localhost:8888'
+    : 'wss://api-socket.mindstudio.ai';
+
 export const THANK_YOU_PAGE = `${RootUrl}/extension/thank-you`;
 
 export const QueryParams = {
