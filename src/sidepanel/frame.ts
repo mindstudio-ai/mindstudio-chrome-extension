@@ -14,7 +14,9 @@ export class SidepanelFrame extends Frame {
 
   private readonly tabId: number;
 
-  constructor(container: HTMLElement, tabId: number, initialPath: string) {
+  constructor(container: HTMLElement, tabId: number, appId: string | null) {
+    const initialPath = appId ? `/agents/${appId}/run` : '/';
+
     super({
       id: SidepanelFrame.ElementId.FRAME,
       src: `${RootUrl}${initialPath}?__displayContext=extension&__controlledAuth=1`,

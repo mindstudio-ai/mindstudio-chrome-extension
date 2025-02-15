@@ -17,12 +17,10 @@ export type StorageValues = {
     distance: number;
   } | null;
   SELECTED_ORGANIZATION: string | null;
-  ORGANIZATIONS: Array<{
-    id: string;
-    name: string;
-  }> | null;
   TOOLTIP_GUIDES_SHOWN: Record<string, boolean>;
+  NUM_UNREAD_THREADS: number | null;
   REMOTE_CACHE_PREFIX: undefined;
+  NOTIFICATION_HREF_CACHE_PREFIX: undefined;
 };
 
 // Move key generation here
@@ -36,9 +34,10 @@ export const StorageKeys: Record<keyof StorageValues, string> = {
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
   LAUNCHER_POSITION: createStorageKey('LauncherPosition'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
-  ORGANIZATIONS: createStorageKey('Organizations'),
   TOOLTIP_GUIDES_SHOWN: createStorageKey('TooltipGuidesShown'),
+  NUM_UNREAD_THREADS: createStorageKey('NumUnreadThreads'),
   REMOTE_CACHE_PREFIX: createStorageKey('RemoteCache'),
+  NOTIFICATION_HREF_CACHE_PREFIX: createStorageKey('NotificationHrefs'),
 } as const;
 
 export const storage = {
