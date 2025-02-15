@@ -5,7 +5,7 @@ import { api } from '../shared/services/api';
 
 class BackgroundService {
   private static instance: BackgroundService;
-  private tabsWithOpenSidePanels = new Map<number, string>();
+  private tabsWithOpenSidePanels = new Set<number>();
 
   private constructor() {
     chrome.sidePanel.setOptions({
@@ -30,7 +30,7 @@ class BackgroundService {
   }
 
   private getPanelPath(tabId: number, appId?: string): string {
-    return `panel.html?tabId=${tabId}#${appId ? `/agents/${appId}/run` : '/'}`;
+    return `panel.html?tabId=${tabId}${appId ? `&appId=${appId}` : ''}`;
   }
 
   private setupMessageListeners(): void {
@@ -38,22 +38,24 @@ class BackgroundService {
     runtime.listen('sidepanel/toggle', async (_, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
-        console.info('[MindStudio][Background] History open failed: No tab ID');
+        console.info(
+          '[MindStudio][Background] Side panel open failed: No tab ID',
+        );
         return;
       }
 
       try {
         // If a panel exists, remove it from our list. The panel will handle its
-        // own close event using window.close() (there is no chrome.sidePanel.close
-        // event), and setting setOptions({ enabled: false }) closes it without
-        // any animation
-        if (this.tabsWithOpenSidePanels.get(tabId)) {
+        // own close event using window.close() as there is no
+        // chrome.sidePanel.close event, and setting
+        // setOptions({ enabled: false }) closes it without any animation
+        if (this.tabsWithOpenSidePanels.has(tabId)) {
           this.tabsWithOpenSidePanels.delete(tabId);
           return;
         }
 
         const path = this.getPanelPath(tabId);
-        this.tabsWithOpenSidePanels.set(tabId, path);
+        this.tabsWithOpenSidePanels.add(tabId);
         chrome.sidePanel.setOptions({
           tabId,
           path,
@@ -61,7 +63,10 @@ class BackgroundService {
         });
         await chrome.sidePanel.open({ tabId });
       } catch (error) {
-        console.error('[MindStudio][Background] History open failed:', error);
+        console.error(
+          '[MindStudio][Background] Side panel open failed:',
+          error,
+        );
       }
     });
 
@@ -73,10 +78,16 @@ class BackgroundService {
         return;
       }
 
+      // If we already have a side panel open, let it handle the worker launch
+      // event
+      if (this.tabsWithOpenSidePanels.has(tabId)) {
+        return;
+      }
+
       try {
         // Generate a new run ID for this worker instance
         const path = this.getPanelPath(tabId, payload.appId);
-        this.tabsWithOpenSidePanels.set(tabId, path);
+        this.tabsWithOpenSidePanels.add(tabId);
 
         console.info('[MindStudio][Background] Launching agent:', {
           tabId,
@@ -101,54 +112,9 @@ class BackgroundService {
   }
 
   private setupSidePanelListeners(): void {
-    // Listen for tab change and show/hide the side panel depending on whether
-    // or not we have an active worker
-    chrome.tabs.onActivated.addListener(async (activeInfo) => {
-      const tabId = activeInfo.tabId;
-      if (!tabId) {
-        return;
-      }
-
-      const path = this.tabsWithOpenSidePanels.get(tabId);
-      if (path) {
-        console.info(
-          '[MindStudio][Background] Switched to tab with active panel, restoring side panel',
-          { tabId, path },
-        );
-        await chrome.sidePanel.setOptions({
-          enabled: true,
-          tabId,
-          path,
-        });
-      } else {
-        console.info(
-          '[MindStudio][Background] Switched to tab with no active panel, closing side panel',
-          { tabId },
-        );
-        await chrome.sidePanel.setOptions({
-          enabled: false,
-          tabId,
-        });
-      }
-    });
-
     // Handle tab removal
     chrome.tabs.onRemoved.addListener((tabId) => {
       this.tabsWithOpenSidePanels.delete(tabId);
-    });
-
-    // Handle tab updates (e.g. navigation)
-    chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
-      if (changeInfo.status === 'loading') {
-        const path = this.tabsWithOpenSidePanels.get(tabId);
-        if (path) {
-          await chrome.sidePanel.setOptions({
-            enabled: true,
-            tabId,
-            path,
-          });
-        }
-      }
     });
   }
 
@@ -164,9 +130,14 @@ class BackgroundService {
   private setupActionButtonListener(): void {
     chrome.action.onClicked.addListener(async (tab) => {
       if (tab.id) {
+        // If there's already something open, do nothing
+        if (this.tabsWithOpenSidePanels.has(tab.id)) {
+          return;
+        }
+
         try {
           const path = this.getPanelPath(tab.id);
-          this.tabsWithOpenSidePanels.set(tab.id, path);
+          this.tabsWithOpenSidePanels.add(tab.id);
           chrome.sidePanel.setOptions({
             tabId: tab.id,
             path,

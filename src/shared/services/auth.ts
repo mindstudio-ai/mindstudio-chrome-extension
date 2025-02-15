@@ -41,7 +41,6 @@ if (window.location.pathname === '/extension/thank-you') {
 
     console.info('[MindStudio][Auth] Login completed, storing credentials');
     storage.set('AUTH_TOKEN', token);
-    storage.set('ORGANIZATIONS', organizations);
 
     // Handle organization selection
     const currentSelectedOrg = await storage.get('SELECTED_ORGANIZATION');
@@ -98,7 +97,7 @@ export const auth = {
   async logout(): Promise<void> {
     console.info('[MindStudio][Auth] Logging out');
     await storage.set('LAUNCHER_COLLAPSED', true);
-    await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS', 'ORGANIZATIONS']);
+    await storage.remove(['AUTH_TOKEN', 'LAUNCHER_APPS']);
   },
 
   onLoginComplete(handler: LoginHandler): () => void {

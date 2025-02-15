@@ -13,15 +13,15 @@ class SidePanel {
     // Initialize the appropriate frame based on type
     const searchParams = new URLSearchParams(window.location.search);
     const tabId = searchParams.get('tabId');
+    const appId = searchParams.get('appId');
     if (!tabId) {
       throw new Error('Invalid tab ID');
     }
 
-    const initialPath = window.location.hash.replace('#', '');
-    this.frame = new SidepanelFrame(container, Number(tabId), initialPath);
+    this.frame = new SidepanelFrame(container, Number(tabId), appId);
 
     console.info('[MindStudio][Sidepanel] Initialized panel:', {
-      initialPath,
+      appId,
     });
   }
 }
