@@ -5,7 +5,6 @@ import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
 import { LaunchVariables } from '../../shared/types/events';
-import { api } from '../../shared/services/api';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -47,6 +46,14 @@ export class LauncherService {
       await this.updateAppsFromStorage();
     });
 
+    storage.onChange('SUGGESTED_APPS', async () => {
+      await this.updateAppsFromStorage();
+    });
+
+    storage.onChange('SUGGESTED_APPS_HIDDEN', async () => {
+      await this.updateAppsFromStorage();
+    });
+
     storage.onChange('LAUNCHER_HIDDEN', async (isHidden) => {
       if (isHidden) {
         await this.destroyUI();
@@ -61,6 +68,8 @@ export class LauncherService {
       }
     });
 
+    // Listen for requests for page data launch variables and respond to them
+    // (only used when invoking new runs)
     runtime.listen('remote/request_launch_variables', () => {
       console.info(
         '[MindStudio][Launcher] Side panel requested launch variables',
@@ -86,6 +95,8 @@ export class LauncherService {
       runtime.send('launcher/resolved_launch_variables', { launchVariables });
     });
 
+    // Listen for requests for the current URL (used by the side panel to show
+    // suggested agents based on the URL)
     runtime.listen('remote/request_current_url', () => {
       this.sendCurrentUrl();
     });
@@ -124,12 +135,19 @@ export class LauncherService {
     await this.updateUI();
   }
 
+  // We need to watch the current URL to see when it changes as event-based ways
+  // of doing this are unreliable. Store the current URL and check every 500ms
+  // to see if it has changed. If it has, notify the side panel (event will be
+  // ignore if the side panel is not open, so we can just fire it off
+  // regardless), and update the apps to see if we have any different
+  // suggestions.
   private startUrlChangeWatcher() {
-    const interval = 1e3; // every second
+    const interval = 500; // every 500ms
     this.urlChangeInterval = setInterval(() => {
       if (window.location.href !== this.currentHostUrl) {
         this.currentHostUrl = window.location.href;
         this.sendCurrentUrl();
+        this.updateAppsFromStorage();
       }
     }, interval);
   }
@@ -145,33 +163,11 @@ export class LauncherService {
     }
   }
 
+  // Get the user's pinned apps from storage and merge them with any suggested
+  // apps that work on the current page
   private async updateAppsFromStorage(): Promise<void> {
-    try {
-      const orgId = (await storage.get('SELECTED_ORGANIZATION')) as string;
-
-      if (orgId) {
-        const apps = await api.getApps(orgId);
-        const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
-
-        await storage.set('LAUNCHER_APPS', {
-          ...existingApps,
-          [orgId]: apps,
-        });
-
-        if (apps.length === 0) {
-          await storage.set('LAUNCHER_COLLAPSED', true);
-        }
-
-        console.info('[MindStudio][Background] Updated apps list:', {
-          orgId,
-          count: apps.length,
-        });
-      }
-    } catch (error) {
-      console.error('[MindStudio][Background] Failed to fetch apps:', error);
-    }
-
     const apps = await storage.get('LAUNCHER_APPS');
+    const suggestedApps = await storage.get('SUGGESTED_APPS');
     const orgId = await storage.get('SELECTED_ORGANIZATION');
 
     if (!apps || !orgId) {
@@ -180,11 +176,42 @@ export class LauncherService {
       this.apps = apps[orgId] || [];
     }
 
-    // Only update UI if it exists
+    const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
+    if (suggestedApps && orgId && !suggestedAppsHidden) {
+      // Filter to only include apps that match the current URL
+      const resolvedSuggestedApps = suggestedApps[orgId].filter(
+        ({ enabledSites }) => {
+          if (!enabledSites) {
+            return false;
+          }
+
+          return enabledSites.some((pattern) => {
+            if (!this.currentHostUrl) {
+              return false;
+            }
+
+            const escapedPattern = pattern.replace(
+              /[-/\\^$+?.()|[\]{}]/g,
+              '\\$&',
+            );
+
+            const regexPattern = new RegExp(
+              `^${escapedPattern.replace(/\*/g, '.*')}$`,
+            );
+
+            return regexPattern.test(this.currentHostUrl);
+          });
+        },
+      );
+
+      this.apps = [...this.apps, ...resolvedSuggestedApps];
+    }
+
     await this.updateUI();
   }
 
   private async updateUI(): Promise<void> {
+    // Only update UI if it exists
     if (this.ui) {
       await this.ui.updateApps(this.apps);
     }

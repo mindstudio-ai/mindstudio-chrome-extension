@@ -34,37 +34,18 @@ function initializeStorageListener() {
 
 // Setup frame listener immediately if we're in the login window
 if (window.location.pathname === '/extension/thank-you') {
-  frame.listen('auth/login_completed', async ({ token, organizations }) => {
-    if (!token) {
-      return;
-    }
-
-    console.info('[MindStudio][Auth] Login completed, storing credentials');
-    storage.set('AUTH_TOKEN', token);
-
-    // Handle organization selection
-    const currentSelectedOrg = await storage.get('SELECTED_ORGANIZATION');
-    if (organizations.length === 0) {
-      // Reset selection if there are no organizations
-      await storage.remove(['SELECTED_ORGANIZATION']);
-    } else if (currentSelectedOrg) {
-      // Check if the currently selected org still exists in the new list
-      const orgExists = organizations.some(
-        (org) => org.id === currentSelectedOrg,
-      );
-      if (!orgExists) {
-        // If not, select the first organization
-        console.info(
-          '[MindStudio][Auth] Updating to first available organization',
-        );
-        await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
+  frame.listen(
+    'auth/login_completed',
+    async ({ token, currentOrganizationId }) => {
+      if (!token) {
+        return;
       }
-    } else {
-      // If no organization was selected before, select the first one
-      console.info('[MindStudio][Auth] Setting initial organization');
-      await storage.set('SELECTED_ORGANIZATION', organizations[0].id);
-    }
-  });
+
+      console.info('[MindStudio][Auth] Login completed, storing credentials');
+      storage.set('AUTH_TOKEN', token);
+      await storage.set('SELECTED_ORGANIZATION', currentOrganizationId);
+    },
+  );
 }
 
 export const auth = {

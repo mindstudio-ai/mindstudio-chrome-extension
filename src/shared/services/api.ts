@@ -45,7 +45,7 @@ class ApiClient {
     return response.json();
   }
 
-  async getApps(organizationId: string): Promise<AppData[]> {
+  async getPinnedApps(organizationId: string): Promise<AppData[]> {
     const response = await this.request<{
       apps: any[];
     }>(`/v1/apps/pinned/list`, organizationId);
@@ -56,6 +56,21 @@ class ApiClient {
       id: app.id,
       name: app.name,
       iconUrl: app.iconUrl || DefaultIcons.APP,
+    }));
+  }
+
+  async getSuggestedApps(organizationId: string): Promise<AppData[]> {
+    const response = await this.request<{
+      apps: any[];
+    }>(`/v1/discovery/extension/list-site-specific`, organizationId);
+
+    const resolvedApps = response?.apps || [];
+
+    return resolvedApps.map((app) => ({
+      id: app.id,
+      name: app.name,
+      iconUrl: app.iconUrl || DefaultIcons.APP,
+      enabledSites: app.extensionSupportedSites,
     }));
   }
 }

@@ -53,12 +53,10 @@ export class SidepanelFrame extends Frame {
 
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
-      const organizationId = await storage.get('SELECTED_ORGANIZATION');
 
-      if (token && organizationId) {
+      if (token) {
         frame.send(SidepanelFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
-          organizationId,
         });
       }
 
@@ -181,13 +179,16 @@ export class SidepanelFrame extends Frame {
 
     frame.listen('remote/request_settings', async () => {
       const isDockHidden = await storage.get('LAUNCHER_HIDDEN');
+      const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
       frame.send(SidepanelFrame.ElementId.FRAME, 'remote/resolved_settings', {
         showDock: !isDockHidden,
+        showSuggestions: !suggestedAppsHidden,
       });
     });
 
     frame.listen('remote/update_settings', async (payload) => {
       await storage.set('LAUNCHER_HIDDEN', !payload.showDock);
+      await storage.set('SUGGESTED_APPS_HIDDEN', !payload.showSuggestions);
     });
 
     frame.listen('remote/logout', async () => {
@@ -202,11 +203,9 @@ export class SidepanelFrame extends Frame {
 
     // Listen for auth token changes
     storage.onChange('AUTH_TOKEN', async (token) => {
-      const organizationId = await storage.get('SELECTED_ORGANIZATION');
-      if (organizationId && token && this.isReady()) {
+      if (token && this.isReady()) {
         frame.send(SidepanelFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
-          organizationId,
         });
       }
     });

@@ -11,6 +11,16 @@ export type StorageValues = {
       iconUrl: string;
     }>
   > | null;
+  SUGGESTED_APPS: Record<
+    string,
+    Array<{
+      id: string;
+      name: string;
+      iconUrl: string;
+      enabledSites?: string[];
+    }>
+  > | null;
+  SUGGESTED_APPS_HIDDEN: boolean;
   LAUNCHER_COLLAPSED: boolean;
   LAUNCHER_HIDDEN: boolean;
   LAUNCHER_POSITION: {
@@ -32,6 +42,8 @@ export const StorageKeys: Record<keyof StorageValues, string> = {
   LAUNCHER_COLLAPSED: createStorageKey('LauncherCollapsed'),
   LAUNCHER_HIDDEN: createStorageKey('LauncherHidden'),
   LAUNCHER_APPS: createStorageKey('LauncherApps'),
+  SUGGESTED_APPS: createStorageKey('SuggestedApps'),
+  SUGGESTED_APPS_HIDDEN: createStorageKey('SuggestedAppsHidden'),
   LAUNCHER_POSITION: createStorageKey('LauncherPosition'),
   SELECTED_ORGANIZATION: createStorageKey('SelectedOrganization'),
   TOOLTIP_GUIDES_SHOWN: createStorageKey('TooltipGuidesShown'),
