@@ -1,15 +1,13 @@
 import { AppData } from './app';
-import { OrganizationData } from './organization';
 
 // Consolidate all event types in one place
 export interface Events {
   'auth/token_changed': {
     authToken: string;
-    organizationId: string;
   };
   'auth/login_completed': {
     token: string;
-    organizations: Array<OrganizationData>;
+    currentOrganizationId: string | null;
   };
   'auth/organization_id_changed': {
     organizationId: string;
@@ -51,9 +49,11 @@ export interface Events {
   'remote/request_settings': undefined;
   'remote/resolved_settings': {
     showDock: boolean;
+    showSuggestions: boolean;
   };
   'remote/update_settings': {
     showDock: boolean;
+    showSuggestions: boolean;
   };
   'remote/logout': undefined;
   'remote/reload_apps': undefined;

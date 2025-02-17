@@ -187,9 +187,10 @@ class BackgroundService {
     const organizationId = await storage.get('SELECTED_ORGANIZATION');
 
     if (token && organizationId) {
+      // Load the user's pinned apps
       console.info('[MindStudio][Background] Fetching apps');
       try {
-        const apps = await api.getApps(organizationId);
+        const apps = await api.getPinnedApps(organizationId);
         const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
         await storage.set('LAUNCHER_APPS', {
           ...existingApps,
@@ -206,14 +207,36 @@ class BackgroundService {
       } catch (error) {
         console.error('[MindStudio][Background] Failed to fetch apps:', error);
       }
+
+      // Load all the apps with suggested sites so we can hide/show without
+      // needing to send browsing data to the server
+      console.info(
+        '[MindStudio][Background] Fetching all apps with site listeners',
+      );
+      try {
+        const apps = await api.getSuggestedApps(organizationId);
+        const existingApps = (await storage.get('SUGGESTED_APPS')) ?? {};
+        await storage.set('SUGGESTED_APPS', {
+          ...existingApps,
+          [organizationId]: apps,
+        });
+        console.info('[MindStudio][Background] Updated suggested apps list:', {
+          organizationId,
+          count: apps.length,
+        });
+      } catch (error) {
+        console.error(
+          '[MindStudio][Background] Failed to fetch site-specific apps:',
+          error,
+        );
+      }
     }
   }
 
   private async initializeSocket() {
     const token = await storage.get('AUTH_TOKEN');
-    const organizationId = await storage.get('SELECTED_ORGANIZATION');
 
-    if (token && organizationId) {
+    if (token) {
       if (this.ws) {
         try {
           this.ws.close();
@@ -231,11 +254,38 @@ class BackgroundService {
         try {
           const messageData = JSON.parse(e.data);
           switch (messageData.type) {
+            case 'General/UserProfileChanged': {
+              const remoteOrganizationId =
+                messageData.userProfileChanged.userProfile.preferences
+                  .CurrentOrganizationId;
+
+              const currentOrganizationId = await storage.get(
+                'SELECTED_ORGANIZATION',
+              );
+
+              if (
+                remoteOrganizationId &&
+                remoteOrganizationId !== currentOrganizationId
+              ) {
+                console.info(
+                  '[MindStudio][Socket] Switching organization',
+                  remoteOrganizationId,
+                );
+
+                await storage.set(
+                  'SELECTED_ORGANIZATION',
+                  remoteOrganizationId,
+                );
+              }
+            }
             case 'General/UserUnreadThreadsChanged': {
               const numUnreadThreads =
                 messageData.userUnreadThreadsChanged.unreadThreadIds.length;
               storage.set('NUM_UNREAD_THREADS', numUnreadThreads);
               return;
+            }
+            case 'General/UserPinnedAppsChanged': {
+              this.updateApps();
             }
             case 'Extension/SendNotification': {
               const { title, message, href, iconUrl } =
