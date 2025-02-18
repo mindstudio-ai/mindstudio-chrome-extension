@@ -24,29 +24,30 @@ export class Tooltip {
     const tooltip = document.createElement('div');
     tooltip.id = Tooltip.ElementId.TOOLTIP;
     tooltip.style.cssText = `
+      user-select: none;
       opacity: 0;
       display: flex;
       padding: 8px 12px;
       flex-direction: column;
       align-items: flex-end;
       gap: 8px;
-      
+
       position: fixed;
       right: ${rightOffset}px;
       transform: translateY(-50%);
-      
+
       border-radius: 8px;
       background: #121213;
       box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
-      
+
       color: #FEFEFF;
       font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 12px;
       font-weight: 400;
       line-height: 120%;
       text-align: right;
-      
-      
+
+
       pointer-events: none;
       z-index: ${ZIndexes.LAUNCHER + 2};
       transition: opacity 0.2s ease-in-out;

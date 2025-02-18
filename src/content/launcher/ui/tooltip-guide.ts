@@ -99,13 +99,15 @@ export class TooltipGuide {
     this.onNextAction = onNextAction;
 
     const tooltip = document.createElement('div');
+    tooltip.id = TooltipGuide.ElementId.TOOLTIP_GUIDE;
     tooltip.style.cssText = `
+      user-select: none;
       opacity: 0;
       padding: 8px 12px;
       gap: 8px;
       max-width: 310px;
       min-width: 310px;
-      
+
       position: fixed;
       right: ${rightOffset}px;
       top: ${this.getAnchorElementY()}px;
@@ -113,14 +115,14 @@ export class TooltipGuide {
       border-radius: 8px;
       background: #121213;
       box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.04), 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
-      
+
       color: #FEFEFF;
       font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 12px;
       font-weight: 400;
       line-height: 120%;
       text-align: left;
-      
+
       z-index: ${ZIndexes.LAUNCHER + 1};
       transition: opacity 0.2s ease-in-out;
 
@@ -242,39 +244,39 @@ export class TooltipGuide {
       border-style: solid;
     `;
 
-    const triangleSize = '6px';
+    const triangleSize = 6;
 
     switch (triangleSide) {
       case 'left':
         return `
                 ${baseTriangleCSS}
-                left: -${triangleSize};
+                left: -${triangleSize - 1}px;
                 top: ${triangleOffset}px;
-                border-width: ${triangleSize} ${triangleSize} ${triangleSize} 0;
+                border-width: ${triangleSize}px ${triangleSize}px ${triangleSize}px 0;
                 border-color: transparent #121213 transparent transparent;
             `;
       case 'right':
         return `
                 ${baseTriangleCSS}
-                right: -${triangleSize};
+                right: -${triangleSize - 1}px;
                 top: ${triangleOffset}px;
-                border-width: ${triangleSize} 0 ${triangleSize} ${triangleSize};
+                border-width: ${triangleSize}px 0 ${triangleSize}px ${triangleSize}px;
                 border-color: transparent transparent transparent #121213;
             `;
       case 'top':
         return `
                 ${baseTriangleCSS}
-                top: -${triangleSize};
+                top: -${triangleSize - 1}px;
                 right: ${triangleOffset}px;
-                border-width: 0 ${triangleSize} ${triangleSize} ${triangleSize};
+                border-width: 0 ${triangleSize}px ${triangleSize}px ${triangleSize}px;
                 border-color: transparent transparent #121213 transparent;
             `;
       case 'bottom':
         return `
                 ${baseTriangleCSS}
-                bottom: -${triangleSize};
+                bottom: -${triangleSize - 1}px;
                 right: ${triangleOffset}px;
-                border-width: ${triangleSize} ${triangleSize} 0 ${triangleSize};
+                border-width: ${triangleSize}px ${triangleSize}px 0 ${triangleSize}px;
                 border-color: #121213 transparent transparent transparent;
             `;
       default:
