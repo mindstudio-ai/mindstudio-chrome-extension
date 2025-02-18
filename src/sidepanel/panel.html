@@ -13,6 +13,7 @@
         width: 100%;
         overflow: hidden;
         position: fixed;
+        background-color: white;
       }
       #player-container {
         width: 100%;
@@ -21,6 +22,17 @@
         position: fixed;
         top: 0;
         left: 0;
+        background-color: white;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background-color: #121213;
+        }
+        #player-container {
+          background-color: #121213;
+        }
       }
     </style>
   </head>
