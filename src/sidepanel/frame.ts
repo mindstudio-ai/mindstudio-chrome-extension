@@ -37,17 +37,7 @@ export class SidepanelFrame extends Frame {
   }
 
   private setupEventListeners(): void {
-    // Handle close events. If we are able to receive this event here, that
-    // means the side panel is open, so we can assume the event means to close it
-    runtime.listen('sidepanel/toggle', (_, sender) => {
-      if (sender?.tab?.id !== this.tabId) {
-        return;
-      }
-
-      window.close();
-    });
-
-    // Listen for view loaded event
+    // Listen for view loaded event so we can sync auth
     frame.listen('remote/loaded', async () => {
       this.setLoaded(true);
 
@@ -60,7 +50,8 @@ export class SidepanelFrame extends Frame {
         });
       }
 
-      // Request the current URL from the page
+      // Request the current URL from the page on load so we can show suggested
+      // apps
       chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
         if (tabs.length > 0 && tabs[0].id) {
           try {
@@ -140,16 +131,18 @@ export class SidepanelFrame extends Frame {
       });
     });
 
-    // runtime.listen('sidepanel/toggle', (_, sender) => {
-    //   if (sender?.tab?.id !== this.tabId) {
-    //     return;
-    //   }
+    // Handle close events. If we are able to receive this event here, that
+    // means the side panel is open, so we can assume the event means to close
+    // it. The backgrounds script will, at the same time, be attempting to open
+    // a new side panel. So we need to close it after a brief delay to make sure
+    // this event wins.
+    runtime.listen('sidepanel/toggle', (_, sender) => {
+      if (sender?.tab?.id !== this.tabId) {
+        return;
+      }
 
-    //   console.info(
-    //     '[MindStudio][Sidepanel] Already-open side panel received open event, forwarding to remote',
-    //   );
-    //   frame.send(SidepanelFrame.ElementId.FRAME, 'remote/navigate/root');
-    // });
+      setTimeout(() => window.close(), 50);
+    });
 
     runtime.listen('launcher/current_url_updated', (payload, sender) => {
       if (sender?.tab?.id !== this.tabId) {
@@ -177,6 +170,7 @@ export class SidepanelFrame extends Frame {
       }
     });
 
+    // Handle extension settings
     frame.listen('remote/request_settings', async () => {
       const isDockHidden = await storage.get('LAUNCHER_HIDDEN');
       const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
@@ -191,6 +185,7 @@ export class SidepanelFrame extends Frame {
       await storage.set('SUGGESTED_APPS_HIDDEN', !payload.showSuggestions);
     });
 
+    // Handle logout
     frame.listen('remote/logout', async () => {
       await auth.logout();
       window.close();

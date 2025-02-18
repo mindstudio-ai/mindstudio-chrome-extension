@@ -13,7 +13,7 @@ class SidePanel {
     // Initialize the appropriate frame based on type
     const searchParams = new URLSearchParams(window.location.search);
     const tabId = searchParams.get('tabId');
-    const appId = searchParams.get('appId');
+    const appId = window.location.hash.replace('#', '');
     if (!tabId) {
       throw new Error('Invalid tab ID');
     }
