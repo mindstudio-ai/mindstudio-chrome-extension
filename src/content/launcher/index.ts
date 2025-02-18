@@ -179,7 +179,7 @@ export class LauncherService {
     const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
     if (suggestedApps && orgId && !suggestedAppsHidden) {
       // Filter to only include apps that match the current URL
-      const resolvedSuggestedApps = suggestedApps[orgId].filter(
+      const resolvedSuggestedApps = (suggestedApps[orgId] ?? []).filter(
         ({ enabledSites }) => {
           if (!enabledSites) {
             return false;
