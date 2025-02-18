@@ -7,7 +7,6 @@ import { sendRunCompleteNotification } from '../shared/services/notifications';
 class BackgroundService {
   private static instance: BackgroundService;
   private ws?: WebSocket;
-  private tabsWithOpenSidePanels = new Set<number>();
 
   private constructor() {
     chrome.sidePanel.setOptions({
@@ -17,7 +16,6 @@ class BackgroundService {
       openPanelOnActionClick: false,
     });
     this.setupMessageListeners();
-    this.setupSidePanelListeners();
     this.setupInstallationHandler();
     this.setupActionButtonListener();
     this.setupAuthListeners();
@@ -33,11 +31,17 @@ class BackgroundService {
   }
 
   private getPanelPath(tabId: number, appId?: string): string {
-    return `panel.html?tabId=${tabId}${appId ? `&appId=${appId}` : ''}`;
+    return `panel.html?tabId=${tabId}${appId ? `#${appId}` : ''}`;
   }
 
+  // We have no way of knowning whether or not the side panel is actually open
+  // or has been manually closed by the user (there is no event for this), so we
+  // just need to attempt to construct a new one each time. We store the app ID
+  // in the hash # of the URL, so that way we dont actually instantiate a new
+  // iframe if the sidepanel is already open. The sidepanel will also receive
+  // these events if it is open, and it can handle its own navigation.
   private setupMessageListeners(): void {
-    // Handle open history event
+    // Handle open side panel
     runtime.listen('sidepanel/toggle', async (_, sender) => {
       const tabId = sender?.tab?.id;
       if (!tabId) {
@@ -48,20 +52,9 @@ class BackgroundService {
       }
 
       try {
-        // If a panel exists, remove it from our list. The panel will handle its
-        // own close event using window.close() as there is no
-        // chrome.sidePanel.close event, and setting
-        // setOptions({ enabled: false }) closes it without any animation
-        if (this.tabsWithOpenSidePanels.has(tabId)) {
-          this.tabsWithOpenSidePanels.delete(tabId);
-          return;
-        }
-
-        const path = this.getPanelPath(tabId);
-        this.tabsWithOpenSidePanels.add(tabId);
         chrome.sidePanel.setOptions({
           tabId,
-          path,
+          path: this.getPanelPath(tabId),
           enabled: true,
         });
         await chrome.sidePanel.open({ tabId });
@@ -81,17 +74,7 @@ class BackgroundService {
         return;
       }
 
-      // If we already have a side panel open, let it handle the worker launch
-      // event
-      if (this.tabsWithOpenSidePanels.has(tabId)) {
-        return;
-      }
-
       try {
-        // Generate a new run ID for this worker instance
-        const path = this.getPanelPath(tabId, payload.appId);
-        this.tabsWithOpenSidePanels.add(tabId);
-
         console.info('[MindStudio][Background] Launching agent:', {
           tabId,
           appId: payload.appId,
@@ -100,7 +83,7 @@ class BackgroundService {
         // Configure and open the panel with the run ID
         chrome.sidePanel.setOptions({
           tabId,
-          path,
+          path: this.getPanelPath(tabId, payload.appId),
           enabled: true,
         });
         await chrome.sidePanel.open({ tabId });
@@ -114,14 +97,9 @@ class BackgroundService {
     });
   }
 
-  private setupSidePanelListeners(): void {
-    // Handle tab removal
-    chrome.tabs.onRemoved.addListener((tabId) => {
-      this.tabsWithOpenSidePanels.delete(tabId);
-    });
-  }
-
   private setupNotificationListeners(): void {
+    // When the user clicks a desktop notification, open the attached URL and
+    // clear the notification
     chrome.notifications.onClicked.addListener((notificationId) => {
       const cacheKey = `${StorageKeys.NOTIFICATION_HREF_CACHE_PREFIX}_${notificationId}`;
       chrome.storage.local.get(cacheKey, (data) => {
@@ -135,6 +113,7 @@ class BackgroundService {
   }
 
   private setupInstallationHandler(): void {
+    // Open the thank you/auth page when the extension is installed
     chrome.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'install') {
         console.info('[MindStudio][Background] Extension installed');
@@ -144,19 +123,15 @@ class BackgroundService {
   }
 
   private setupActionButtonListener(): void {
+    // The action button (browser top bar) always open the side panel. This
+    // isn't a commonly used way of accessing the extension, so we don't need to
+    // account for it much beyond just opening the side panel.
     chrome.action.onClicked.addListener(async (tab) => {
       if (tab.id) {
-        // If there's already something open, do nothing
-        if (this.tabsWithOpenSidePanels.has(tab.id)) {
-          return;
-        }
-
         try {
-          const path = this.getPanelPath(tab.id);
-          this.tabsWithOpenSidePanels.add(tab.id);
           chrome.sidePanel.setOptions({
             tabId: tab.id,
-            path,
+            path: this.getPanelPath(tab.id),
             enabled: true,
           });
           await chrome.sidePanel.open({ tabId: tab.id });
