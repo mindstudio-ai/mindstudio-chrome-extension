@@ -5,6 +5,7 @@ import { storage } from '../../shared/services/storage';
 import { page } from '../../shared/utils/page';
 import { LauncherUI } from './ui';
 import { LaunchVariables } from '../../shared/types/events';
+import { filterAppsForUrl } from '../../shared/utils/filterAppsForUrl';
 
 export class LauncherService {
   private static instance: LauncherService;
@@ -179,30 +180,10 @@ export class LauncherService {
     const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
     if (suggestedApps && orgId && !suggestedAppsHidden) {
       // Filter to only include apps that match the current URL
-      const resolvedSuggestedApps = (suggestedApps[orgId] ?? []).filter(
-        ({ enabledSites }) => {
-          if (!enabledSites) {
-            return false;
-          }
-
-          return enabledSites.some((pattern) => {
-            if (!this.currentHostUrl) {
-              return false;
-            }
-
-            const escapedPattern = pattern.replace(
-              /[-/\\^$+?.()|[\]{}]/g,
-              '\\$&',
-            );
-
-            const regexPattern = new RegExp(
-              `^${escapedPattern.replace(/\*/g, '.*')}$`,
-            );
-
-            return regexPattern.test(this.currentHostUrl);
-          });
-        },
-      );
+      const resolvedSuggestedApps = filterAppsForUrl(
+        suggestedApps[orgId] ?? [],
+        this.currentHostUrl || '',
+      ).filter((app) => !this.apps.some((a) => a.id === app.id));
 
       this.apps = [...this.apps, ...resolvedSuggestedApps];
     }
@@ -213,7 +194,11 @@ export class LauncherService {
   private async updateUI(): Promise<void> {
     // Only update UI if it exists
     if (this.ui) {
-      await this.ui.updateApps(this.apps);
+      const resolvedApps = filterAppsForUrl(
+        this.apps,
+        this.currentHostUrl || '',
+      );
+      await this.ui.updateApps(resolvedApps);
     }
   }
 

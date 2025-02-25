@@ -165,6 +165,7 @@ export class LauncherUI {
     // Update or create buttons
     apps.forEach(async (app) => {
       const existingButton = existingButtons.get(app.id);
+
       if (existingButton) {
         // Update existing button
         buttonsToRemove.delete(existingButton);

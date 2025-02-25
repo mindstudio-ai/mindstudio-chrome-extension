@@ -166,6 +166,7 @@ class BackgroundService {
       console.info('[MindStudio][Background] Fetching apps');
       try {
         const apps = await api.getPinnedApps(organizationId);
+
         const existingApps = (await storage.get('LAUNCHER_APPS')) ?? {};
         await storage.set('LAUNCHER_APPS', {
           ...existingApps,
