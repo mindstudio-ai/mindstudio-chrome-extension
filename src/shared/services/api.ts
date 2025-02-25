@@ -56,6 +56,7 @@ class ApiClient {
       id: app.id,
       name: app.name,
       iconUrl: app.iconUrl || DefaultIcons.APP,
+      enabledSites: app.extensionSupportedSites,
     }));
   }
 
