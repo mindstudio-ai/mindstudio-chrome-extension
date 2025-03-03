@@ -199,8 +199,6 @@ export class LauncherService {
         this.currentHostUrl || '',
       );
 
-      console.log('suggestedApps', resolvedApps);
-
       await this.ui.updateApps(resolvedApps);
     }
   }
