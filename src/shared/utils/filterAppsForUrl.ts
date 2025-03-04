@@ -1,9 +1,17 @@
 import { AppData } from '../types/app';
 
-export const filterAppsForUrl = (apps: AppData[], currentUrl: string) => {
+export const filterAppsForUrl = (
+  apps: AppData[],
+  currentUrl: string,
+  allowIfNoEnabledSites?: boolean,
+) => {
   return apps.filter((app: AppData) => {
     const { enabledSites } = app;
-    if (!enabledSites || enabledSites.length === 0) {
+    if (!enabledSites) {
+      return true;
+    }
+
+    if (allowIfNoEnabledSites && enabledSites.length === 0) {
       return true;
     }
 
