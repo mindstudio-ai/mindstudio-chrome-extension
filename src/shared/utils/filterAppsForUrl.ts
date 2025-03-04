@@ -7,12 +7,12 @@ export const filterAppsForUrl = (
 ) => {
   return apps.filter((app: AppData) => {
     const { enabledSites } = app;
-    if (!enabledSites) {
+    if (allowIfNoEnabledSites && (!enabledSites || enabledSites.length === 0)) {
       return true;
     }
 
-    if (allowIfNoEnabledSites && enabledSites.length === 0) {
-      return true;
+    if (!enabledSites) {
+      return false;
     }
 
     return enabledSites.some((pattern) => {
