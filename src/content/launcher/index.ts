@@ -197,7 +197,9 @@ export class LauncherService {
       const resolvedApps = filterAppsForUrl(
         this.apps,
         this.currentHostUrl || '',
+        true,
       );
+
       await this.ui.updateApps(resolvedApps);
     }
   }
