@@ -9,7 +9,6 @@ import { filterAppsForUrl } from '../../shared/utils/filterAppsForUrl';
 
 export class LauncherService {
   private static instance: LauncherService;
-  private apps: AppData[] = [];
 
   private urlChangeInterval?: any;
   private currentHostUrl?: string;
@@ -40,19 +39,19 @@ export class LauncherService {
   private async setupListeners(): Promise<void> {
     // Set up storage listeners that should always be active
     storage.onChange('LAUNCHER_APPS', async () => {
-      await this.updateAppsFromStorage();
+      await this.updateLauncher();
     });
 
     storage.onChange('SELECTED_ORGANIZATION', async () => {
-      await this.updateAppsFromStorage();
+      await this.updateLauncher();
     });
 
     storage.onChange('SUGGESTED_APPS', async () => {
-      await this.updateAppsFromStorage();
+      await this.updateLauncher();
     });
 
     storage.onChange('SUGGESTED_APPS_HIDDEN', async () => {
-      await this.updateAppsFromStorage();
+      await this.updateLauncher();
     });
 
     storage.onChange('LAUNCHER_HIDDEN', async (isHidden) => {
@@ -105,7 +104,7 @@ export class LauncherService {
 
   private async initializeState(): Promise<void> {
     // Always update apps first, regardless of UI state
-    await this.updateAppsFromStorage();
+    await this.updateLauncher();
 
     // Then check if we should show UI
     const isHidden = await storage.get('LAUNCHER_HIDDEN');
@@ -133,7 +132,7 @@ export class LauncherService {
     );
 
     // Update UI with current apps
-    await this.updateUI();
+    await this.updateLauncher();
   }
 
   // We need to watch the current URL to see when it changes as event-based ways
@@ -148,7 +147,7 @@ export class LauncherService {
       if (window.location.href !== this.currentHostUrl) {
         this.currentHostUrl = window.location.href;
         this.sendCurrentUrl();
-        this.updateAppsFromStorage();
+        this.updateLauncher();
       }
     }, interval);
   }
@@ -166,42 +165,39 @@ export class LauncherService {
 
   // Get the user's pinned apps from storage and merge them with any suggested
   // apps that work on the current page
-  private async updateAppsFromStorage(): Promise<void> {
-    const apps = await storage.get('LAUNCHER_APPS');
-    const suggestedApps = await storage.get('SUGGESTED_APPS');
+  private async updateLauncher(): Promise<void> {
+    // Only update if UI exists
+    if (!this.ui) {
+      return;
+    }
+
+    const apps: AppData[] = [];
+
+    const pinnedApps = await storage.get('LAUNCHER_APPS');
     const orgId = await storage.get('SELECTED_ORGANIZATION');
 
-    if (!apps || !orgId) {
-      this.apps = [];
-    } else {
-      this.apps = apps[orgId] || [];
+    if (pinnedApps && orgId) {
+      apps.push(...pinnedApps[orgId]);
     }
 
     const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
+    const suggestedApps = await storage.get('SUGGESTED_APPS');
     if (suggestedApps && orgId && !suggestedAppsHidden) {
-      // Filter to only include apps that match the current URL
-      const resolvedSuggestedApps = filterAppsForUrl(
-        suggestedApps[orgId] ?? [],
-        this.currentHostUrl || '',
-      ).filter((app) => !this.apps.some((a) => a.id === app.id));
-
-      this.apps = [...this.apps, ...resolvedSuggestedApps];
-    }
-
-    await this.updateUI();
-  }
-
-  private async updateUI(): Promise<void> {
-    // Only update UI if it exists
-    if (this.ui) {
-      const resolvedApps = filterAppsForUrl(
-        this.apps,
-        this.currentHostUrl || '',
-        true,
+      const filteredSuggestedApps = filterAppsForUrl(
+        suggestedApps[orgId],
+        this.currentHostUrl,
       );
-
-      await this.ui.updateApps(resolvedApps);
+      apps.push(...filteredSuggestedApps);
     }
+
+    // Dedup array
+    const resolvedApps = apps.filter(
+      (item, index, arr) =>
+        arr.findIndex((app) => app.id === item.id) === index,
+    );
+
+    // Update the actual UI
+    await this.ui.updateApps(resolvedApps);
   }
 
   private async handleAppClick(app: AppData): Promise<void> {
