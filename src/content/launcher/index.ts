@@ -177,7 +177,12 @@ export class LauncherService {
     const orgId = await storage.get('SELECTED_ORGANIZATION');
 
     if (pinnedApps && orgId) {
-      apps.push(...pinnedApps[orgId]);
+      const filteredPinnedApps = filterAppsForUrl(
+        pinnedApps[orgId],
+        this.currentHostUrl,
+        true,
+      );
+      apps.push(...filteredPinnedApps);
     }
 
     const suggestedAppsHidden = await storage.get('SUGGESTED_APPS_HIDDEN');
