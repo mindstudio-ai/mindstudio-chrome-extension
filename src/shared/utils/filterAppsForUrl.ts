@@ -2,7 +2,7 @@ import { AppData } from '../types/app';
 
 export const filterAppsForUrl = (
   apps: AppData[],
-  currentUrl: string,
+  currentUrl?: string,
   allowIfNoEnabledSites?: boolean,
 ) => {
   return apps.filter((app: AppData) => {
