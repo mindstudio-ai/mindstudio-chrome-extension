@@ -40,7 +40,6 @@ export class SidepanelFrame extends Frame {
     // Listen for view loaded event so we can sync auth
     frame.listen('remote/loaded', async () => {
       this.setLoaded(true);
-
       // Send auth token if available
       const token = await storage.get('AUTH_TOKEN');
 
@@ -48,6 +47,10 @@ export class SidepanelFrame extends Frame {
         frame.send(SidepanelFrame.ElementId.FRAME, 'auth/token_changed', {
           authToken: token,
         });
+      } else {
+        this.setSrc(
+          `${RootUrl}/extension/thank-you?__displayContext=extension_logged_out`,
+        );
       }
 
       // Request the current URL from the page on load so we can show suggested
