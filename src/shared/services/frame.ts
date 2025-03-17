@@ -93,8 +93,4 @@ export abstract class Frame {
       check();
     });
   }
-
-  setSrc(src: string): void {
-    this.element.src = src;
-  }
 }
