@@ -74,6 +74,86 @@ class ApiClient {
       enabledSites: app.extensionSupportedSites,
     }));
   }
+
+  async getSignedUploadUrl(): Promise<{
+    fields: { [index: string]: string };
+    url: string;
+    path: string;
+  }> {
+    const organizationId = await storage.get('SELECTED_ORGANIZATION');
+    if (!organizationId) {
+      throw new Error();
+    }
+
+    const url = `${ApiUrl}/v1/cdn/upload-private`;
+    const headers = await this.getHeaders();
+
+    const request = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...Object.fromEntries(headers.entries()),
+        'X-Organization-Id': organizationId,
+      },
+      body: JSON.stringify({
+        extension: 'pdf',
+        appId: '_extensionTemp',
+      }),
+    });
+
+    if (!request.ok) {
+      throw new Error(`API request failed: ${request.statusText}`);
+    }
+
+    const response = await request.json();
+
+    return response;
+  }
+
+  uploadFile(
+    route: string,
+    file: FormData,
+    onProgress?: (progress: number) => void,
+  ) {
+    return new Promise((resolve, reject) => {
+      const req = new XMLHttpRequest();
+      req.open('post', route);
+
+      req.addEventListener(
+        'load',
+        () => {
+          if (req.status >= 200 && req.status <= 299) {
+            resolve(req.response);
+          } else {
+            reject();
+          }
+        },
+        false,
+      );
+
+      req.addEventListener(
+        'error',
+        () => {
+          reject();
+        },
+        false,
+      );
+
+      req.upload.addEventListener(
+        'progress',
+        (e) => {
+          try {
+            const { loaded, total } = e;
+            const progress = Math.floor((loaded / total) * 100) / 100;
+            onProgress?.(progress);
+          } catch {}
+        },
+        false,
+      );
+
+      // Send file
+      req.send(file);
+    });
+  }
 }
 
 export const api = ApiClient.getInstance();

@@ -83,6 +83,7 @@ export interface LaunchVariables {
   fullText: string;
   metadata: string;
   userSelection: string | null;
+  _rehostedPdfPath?: string;
 }
 
 export const getEmptyLaunchVariables = (): LaunchVariables => ({
