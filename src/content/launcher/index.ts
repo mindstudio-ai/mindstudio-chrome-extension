@@ -70,7 +70,7 @@ export class LauncherService {
 
     // Listen for requests for page data launch variables and respond to them
     // (only used when invoking new runs)
-    runtime.listen('remote/request_launch_variables', () => {
+    runtime.listen('remote/request_launch_variables', async () => {
       console.info(
         '[MindStudio][Launcher] Side panel requested launch variables',
       );
@@ -79,12 +79,24 @@ export class LauncherService {
       const fullText = page.getCleanTextContent();
       const metadata = page.getMetadataBundle();
 
+      // If it's a PDF, we need to rehost it and pass the rehosted path to the
+      // launch variables for extraction
+      let rehostedPdfPath: string | undefined = undefined;
+      if (
+        window.location.href.endsWith('.pdf') ||
+        document.querySelector('embed')?.type.includes('pdf')
+      ) {
+        console.info('Rehosting PDF for extraction');
+        rehostedPdfPath = await page.getRehostedPdfSecurePath();
+      }
+
       const launchVariables: LaunchVariables = {
         url: window.location.href,
         userSelection,
         rawHtml,
         fullText,
         metadata,
+        _rehostedPdfPath: rehostedPdfPath,
       };
 
       console.info(

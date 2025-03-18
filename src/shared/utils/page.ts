@@ -1,3 +1,4 @@
+import { api } from '../services/api';
 import { isMindStudioElement } from './dom';
 
 /**
@@ -5,6 +6,31 @@ import { isMindStudioElement } from './dom';
  * These utilities only work in the content script context.
  */
 export const page = {
+  /**
+   * The way chrome renders PDFs makes them impossible to grab content inside,
+   * because they're actually rendering in a separate private extension. So
+   * if the current page is a PDF, we call fetch('') on the current URL and get
+   * the PDF as a blob, upload it to MindStudio, and then pass that URL (in case
+   * the URL is not publicly accessible) to MindStudio
+   */
+  async getRehostedPdfSecurePath(): Promise<string> {
+    const request = await fetch('');
+    const blob = await request.blob();
+
+    // Get a signed upload URL
+    const { fields, path, url } = await api.getSignedUploadUrl();
+
+    const data = new FormData();
+    Object.keys(fields).forEach((key) => {
+      data.append(key, fields[key]);
+    });
+    data.append('file', blob);
+
+    await api.uploadFile(url, data);
+
+    return path;
+  },
+
   /**
    * Gets the currently selected content from the page.
    * Works with both text selections and input fields.
