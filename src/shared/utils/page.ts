@@ -169,7 +169,9 @@ function cleanNode(node: Node): void {
     }
     // Remove all non-essential attributes
     for (const attr of [...el.attributes]) {
-      if (!['href', 'src', 'alt', 'title'].includes(attr.name)) {
+      if (
+        !['href', 'src', 'alt', 'title', 'srcset', 'alt'].includes(attr.name)
+      ) {
         el.removeAttribute(attr.name);
       }
     }

@@ -47,7 +47,6 @@ export class Tooltip {
       line-height: 120%;
       text-align: right;
 
-
       pointer-events: none;
       z-index: ${ZIndexes.LAUNCHER + 2};
       transition: opacity 0.2s ease-in-out;

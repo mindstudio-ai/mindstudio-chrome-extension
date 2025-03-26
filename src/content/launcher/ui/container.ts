@@ -30,6 +30,7 @@ export class LauncherContainer {
       right: 0;
       background: transparent;
       pointer-events: none;
+      user-select: none;
     `,
     inner: `
       margin-left: auto;
@@ -56,6 +57,7 @@ export class LauncherContainer {
       flex-direction: column;
       max-height: ${DEFAULT_DIMENSIONS.MAX_APPS_CONTAINER_HEIGHT}px;
       overflow: hidden;
+      user-select: none;
     `,
     appsContainer: `
       display: flex;
@@ -65,6 +67,7 @@ export class LauncherContainer {
       width: 100%;
       overflow-y: auto;
       scrollbar-width: none;
+      user-select: none;
     `,
     scrollFade: `
       position: absolute;
