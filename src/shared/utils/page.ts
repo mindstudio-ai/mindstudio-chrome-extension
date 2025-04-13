@@ -145,9 +145,64 @@ export const page = {
       openGraphImage: getMetaContent('og:image') || '',
       openGraphTags: getAllOpenGraphTags(),
       favicon: getBestFavicon(),
+      brand: this.getBrandBundle(),
     };
 
     return JSON.stringify(pageMetadata, null, 2);
+  },
+
+  /**
+   * Get a "brand guide" from the site based on most-used fonts and colors
+   */
+  getBrandBundle() {
+    const rgbToHex = (color: string): string => {
+      const rgbaMatch = color.match(
+        /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
+      );
+      if (!rgbaMatch) {
+        return color;
+      }
+
+      const r = parseInt(rgbaMatch[1], 10);
+      const g = parseInt(rgbaMatch[2], 10);
+      const b = parseInt(rgbaMatch[3], 10);
+      const a = rgbaMatch[4] !== undefined ? parseFloat(rgbaMatch[4]) : 1;
+
+      const toHex = (n: number) => n.toString(16).padStart(2, '0');
+
+      const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+      return a < 1 ? `${hex}${toHex(Math.round(a * 255))}` : hex;
+    };
+
+    const getStyleFrequencies = (
+      property: 'fontFamily' | 'color' | 'backgroundColor',
+    ): { value: string; count: number }[] => {
+      const frequencies: Record<string, number> = {};
+      const elements = document.querySelectorAll<HTMLElement>('*');
+
+      elements.forEach((el) => {
+        const style = getComputedStyle(el);
+        let value = style[property];
+
+        if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') {
+          if (property === 'color' || property === 'backgroundColor') {
+            value = rgbToHex(value);
+          }
+
+          frequencies[value] = (frequencies[value] || 0) + 1;
+        }
+      });
+
+      return Object.entries(frequencies)
+        .map(([value, count]) => ({ value, count }))
+        .sort((a, b) => b.count - a.count);
+    };
+
+    return {
+      fonts: getStyleFrequencies('fontFamily').slice(0, 5),
+      textColors: getStyleFrequencies('color').slice(0, 5),
+      backgroundColors: getStyleFrequencies('backgroundColor').slice(0, 5),
+    };
   },
 };
 
