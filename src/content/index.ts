@@ -11,9 +11,11 @@ class ContentScript {
     }
 
     // Don't initialize on MindStudio app pages except for the thank you page
+    // or any asset pages
     if (
       window.location.origin === RootUrl &&
-      window.location.href !== THANK_YOU_PAGE
+      window.location.href !== THANK_YOU_PAGE &&
+      !window.location.href.includes('/asset')
     ) {
       return;
     }
