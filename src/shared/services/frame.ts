@@ -26,6 +26,9 @@ export abstract class Frame {
     const frame = document.createElement('iframe');
     frame.id = id;
     frame.src = this.appendVersionToUrl(src);
+    frame.allow =
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    frame.allowFullscreen = true;
 
     if (hidden) {
       frame.style.cssText = `
