@@ -5,12 +5,14 @@ export const RootUrl =
   Environment === 'dev' ? 'http://localhost:3000' : 'https://app.mindstudio.ai';
 
 export const ApiUrl =
-  Environment === 'dev' ? 'http://localhost:3129' : 'https://api.mindstudio.ai';
+  Environment === 'dev'
+    ? 'http://localhost:3129'
+    : 'https://v1.mindstudio-api.com';
 
 export const WsUrl =
   Environment === 'dev'
     ? 'ws://localhost:8888'
-    : 'wss://api-socket.mindstudio.ai';
+    : 'wss://v1-socket.mindstudio-api.com';
 
 export const THANK_YOU_PAGE = `${RootUrl}/extension/thank-you`;
 
